@@ -60,3 +60,13 @@ Next action: Implement deterministic triage behind an interface first; verify Op
 Owner: Agent
 ```
 
+### 2026-04-29 - Workspace Dependency Install Incomplete
+
+```txt
+Area: Workspace / package manager
+Status: RISK
+What happened: `pnpm.cmd install` was attempted after adding the workspace scaffold, but it timed out after 10 minutes. A partial `node_modules` directory exists locally, but no `pnpm-lock.yaml` was produced.
+Why it matters: Package manifests exist, but the full dependency graph and lockfile are not verified yet. Root `pnpm run typecheck` also failed before direct package checks because workspace dependencies were not fully installed.
+Next action: Retry `pnpm.cmd install` with enough time/network stability before relying on root workspace scripts or committing a lockfile.
+Owner: Both
+```

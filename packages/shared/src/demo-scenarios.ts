@@ -1,0 +1,98 @@
+import {
+  ActorRole,
+  AuditEventStatus,
+  AuditProofStatus,
+  CaseType,
+  ChainStatus,
+  DemoScenarioSeed,
+  DemoWorldSeed,
+  MovementDirection,
+  ProofType,
+  ScenarioKey,
+  Severity,
+  StorageStatus,
+  TriageOutcome,
+} from './types';
+
+export const demoWorldSeed: DemoWorldSeed = {
+  owner: {
+    name: 'Arka Owner',
+    role: ActorRole.OWNER,
+  },
+  cashier: {
+    name: 'Nina',
+    role: ActorRole.CASHIER,
+  },
+  handler: {
+    name: 'Joni',
+    role: ActorRole.HANDLER,
+  },
+  systemAgent: {
+    name: 'OpenClaw / ARKA Agent',
+    role: ActorRole.OPENCLAW_AGENT,
+  },
+  productName: 'Protein Shake',
+  inventoryItemName: 'Whey Protein',
+  containerId: 'RACK-WHEY-01',
+  usageRule: {
+    productName: 'Protein Shake',
+    inventoryItemName: 'Whey Protein',
+    gramsPerUnit: 30,
+  },
+};
+
+export const demoScenarioSeeds = {
+  STATE_A: {
+    scenarioKey: ScenarioKey.STATE_A,
+    caseType: CaseType.ORDER_LINKED_AUDIT,
+    label: 'State A',
+    orderQuantity: 3,
+    actualMovementGrams: 90,
+    movementDirection: MovementDirection.OUT,
+    expectedUsageGrams: 90,
+    variancePercent: 0,
+    status: AuditEventStatus.CLEAR,
+    severity: Severity.NORMAL,
+    triageOutcome: TriageOutcome.AUTO_CLEAR,
+    auditProofStatus: AuditProofStatus.LOCAL_ONLY,
+    storageStatus: StorageStatus.NOT_STARTED,
+    chainStatus: ChainStatus.NOT_REGISTERED,
+    proofType: ProofType.AUDIT_EVENT_CREATED,
+  },
+  STATE_C: {
+    scenarioKey: ScenarioKey.STATE_C,
+    caseType: CaseType.ORDER_LINKED_AUDIT,
+    label: 'State C',
+    orderQuantity: 3,
+    actualMovementGrams: 99,
+    movementDirection: MovementDirection.OUT,
+    expectedUsageGrams: 90,
+    variancePercent: 10,
+    status: AuditEventStatus.OVER_EXPECTED_USAGE,
+    severity: Severity.MODERATE_VARIANCE,
+    triageOutcome: TriageOutcome.REQUEST_EXPLANATION,
+    auditProofStatus: AuditProofStatus.LOCAL_ONLY,
+    storageStatus: StorageStatus.NOT_STARTED,
+    chainStatus: ChainStatus.NOT_REGISTERED,
+    proofType: ProofType.AUDIT_EVENT_CREATED,
+  },
+  STATE_D: {
+    scenarioKey: ScenarioKey.STATE_D,
+    caseType: CaseType.ORDER_LINKED_AUDIT,
+    label: 'State D',
+    orderQuantity: 3,
+    actualMovementGrams: 160,
+    movementDirection: MovementDirection.OUT,
+    expectedUsageGrams: 90,
+    variancePercent: 77.77777777777777,
+    status: AuditEventStatus.OVER_EXPECTED_USAGE,
+    severity: Severity.CRITICAL_REVIEW,
+    triageOutcome: TriageOutcome.ESCALATE,
+    auditProofStatus: AuditProofStatus.LOCAL_ONLY,
+    storageStatus: StorageStatus.NOT_STARTED,
+    chainStatus: ChainStatus.NOT_REGISTERED,
+    proofType: ProofType.AUDIT_EVENT_CREATED,
+  },
+} as const satisfies Record<ScenarioKey, DemoScenarioSeed>;
+
+export type DemoScenarioKey = keyof typeof demoScenarioSeeds;

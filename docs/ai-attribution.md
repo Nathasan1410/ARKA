@@ -41,6 +41,7 @@ This document tracks material AI-assisted work in ARKA.
 - Updated `AGENTS.md` with planning-to-implementation workflow rules and `technical-debt.md` tracking expectations.
 - Created `technical-debt.md` with current known blockers and deferred decisions for implementation readiness.
 - Added `docs/project-brief.md` as the canonical full-vision and roadmap brief based on the human-provided project brief.
+- Drafted `docs/implementation-plan.md` with the detailed P0 execution sequence, module boundaries, verification gates, and fallback rules.
 
 ### Files / Areas Affected
 - `docs/mvp-demo-interaction-brief.md`
@@ -49,6 +50,7 @@ This document tracks material AI-assisted work in ARKA.
 - `AGENTS.md`
 - `technical-debt.md`
 - `docs/project-brief.md`
+- `docs/implementation-plan.md`
 - `CHANGELOG.md`
 
 ### Human Review
@@ -57,6 +59,45 @@ This document tracks material AI-assisted work in ARKA.
 ### Verification
 - Documentation-only change.
 - No code executed.
+
+## 2026-04-29 - Initial Workspace Scaffold and Core A/C/D Logic
+
+### AI Tool Used
+- OpenAI Codex CLI (GPT-5.x)
+- GPT-5.4 Mini worker subagents for bounded scaffold/core/docs tasks
+
+### What AI Helped With
+- Created the initial pnpm workspace scaffold for `apps/web`, `packages/shared`, `packages/core`, `packages/agent`, and `contracts`.
+- Added shared domain enums, demo seeds, pure reconciliation functions, AuditEvent creation, and deterministic triage for State A/C/D.
+- Added `docs/code-map.md` and `docs/database-structure-plan.md`.
+- Reviewed and corrected the first implementation boundary by separating `ScenarioKey` from `CaseType`.
+- Updated truthfulness, reused-libraries, changelog, and technical-debt docs after implementation.
+
+### Files / Areas Affected
+- `.env.example`
+- `.gitignore`
+- `package.json`
+- `pnpm-workspace.yaml`
+- `tsconfig.base.json`
+- `apps/web/package.json`
+- `contracts/package.json`
+- `packages/shared/*`
+- `packages/core/*`
+- `packages/agent/*`
+- `docs/code-map.md`
+- `docs/database-structure-plan.md`
+- `docs/real-vs-simulated.md`
+- `docs/reused-libraries.md`
+- `technical-debt.md`
+- `CHANGELOG.md`
+- `docs/ai-attribution.md`
+
+### Human Review
+- Pending / to be confirmed by repo owner.
+
+### Verification
+- Direct TypeScript checks passed with global `tsc.cmd` for `packages/shared`, `packages/core`, and `packages/agent`.
+- `pnpm.cmd install` timed out before producing `pnpm-lock.yaml`; dependency install remains a tracked risk in `technical-debt.md`.
 
 ### Status
 - Planning / documentation.

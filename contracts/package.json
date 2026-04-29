@@ -1,0 +1,17 @@
+{
+  "name": "@arka/contracts",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "build": "hardhat compile",
+    "compile": "hardhat compile",
+    "test": "hardhat test"
+  },
+  "devDependencies": {
+    "@nomicfoundation/hardhat-ethers": "latest",
+    "ethers": "latest",
+    "hardhat": "latest",
+    "typescript": "latest"
+  }
+}

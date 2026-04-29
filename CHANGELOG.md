@@ -13,15 +13,20 @@ All meaningful ARKA changes should be recorded here in human-readable language.
 - Updated `AGENTS.md` with planning-to-implementation workflow rules and required `technical-debt.md` tracking for skipped work, blockers, and human-needed actions.
 - Added `technical-debt.md` with current open implementation blockers for 0G Storage, 0G Chain, Telegram, and OpenClaw runtime verification.
 - Added `docs/project-brief.md` as the canonical full-vision and roadmap brief for ARKA.
+- Added `docs/implementation-plan.md` with the detailed P0 execution order, module targets, verification gates, and integration fallback rules.
+- Added the first workspace scaffold (`apps/web`, `packages/shared`, `packages/core`, `packages/agent`, `contracts`) and pure TypeScript A/C/D domain logic.
+- Added `docs/code-map.md` and `docs/database-structure-plan.md` to document implementation ownership and the planned P0 database boundary.
+- Updated `docs/real-vs-simulated.md`, `docs/reused-libraries.md`, and `technical-debt.md` to reflect partial core implementation and incomplete dependency installation.
 
 ### Why
 - Establishes a practical 1-week hackathon implementation direction before coding begins.
 - Keeps the stack aligned with the AuditEvent-first architecture and the 0G Storage / 0G Chain split.
 
 ### Verification
-- Documentation-only change.
-- Retried Context7 MCP for Next.js, Drizzle ORM, and Hardhat documentation.
-- No code executed.
+- Documentation and scaffold changes.
+- Retried Context7 MCP for Next.js, Drizzle ORM, and Hardhat documentation earlier in planning.
+- Ran direct TypeScript checks with global `tsc.cmd` for `packages/shared`, `packages/core`, and `packages/agent`.
+- `pnpm.cmd install` timed out before producing `pnpm-lock.yaml`; recorded in `technical-debt.md`.
 
 ### Added - Initial Planning Docs
 - Added initial ARKA planning documents for Backend, Database, OpenClaw, and 0G Storage.

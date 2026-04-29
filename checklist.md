@@ -32,6 +32,7 @@ Implementation status values used in this checklist:
 
 ```txt
 NOT_IMPLEMENTED (docs-only so far)
+PARTIAL (some implementation exists, but not enough to claim the full feature works)
 ```
 
 ## P0 Checklist (MVP)
@@ -52,6 +53,20 @@ Required scenario cards for P0: State A (CLEAR), State C (REQUEST_EXPLANATION), 
 | 10 | 0G Storage Proof Package | NEEDS_DETAIL | P0 (Proof panel statuses) | NOT_IMPLEMENTED | Confirm 0G Storage SDK package/methods/endpoints; implement AuditEvent Proof Package builder + upload; show failure/retry states without deleting AuditEvent. | `0G Storage Brief.md`, `docs/mvp-demo-interaction-brief.md` (Proof Panel), `docs/technical-stack-brief.md` (open questions). |
 | 11 | 0G Chain Proof Registry | NEEDS_DETAIL | P0 (Proof panel statuses) | NOT_IMPLEMENTED | Confirm 0G testnet RPC/chain ID/faucet; implement `AuditProofRegistry` + anchor registration; track `ANCHOR_CONFIRMED` vs failure states. | `docs/0g-chain-brief.md`, `docs/mvp-demo-interaction-brief.md`, `docs/technical-stack-brief.md` (open questions). |
 | 12 | Demo Video + README | NEEDS_DETAIL | P0 (demo packaging) | NOT_IMPLEMENTED | Draft only after at least one A/C/D path works end-to-end; keep "real vs simulated" claims honest. | `AGENTS.md` (honesty rules), `docs/real-vs-simulated.md`, `docs/mvp-demo-interaction-brief.md` (DoD). |
+
+### Current Implementation Status Notes
+
+The P0 table above still tracks the full user-facing feature status. As of the first scaffold pass:
+
+```txt
+Usage Rule / Recipe: PARTIAL (shared seed + core calculation only)
+Inventory Movement Simulator: PARTIAL (scenario payload values only, no simulator UI/API)
+Reconciliation Engine: PARTIAL (pure core A/C/D only)
+AuditEvent Generator: PARTIAL (pure core A/C/D AuditEvent creation only)
+OpenClaw Triage Layer: PARTIAL (deterministic adapter only)
+```
+
+These are not complete P0 features until they are wired into API/UI, persisted or displayed where required, and verified through the dashboard demo flow.
 
 ## P1 Checklist (Demo Polish + Expansion)
 
