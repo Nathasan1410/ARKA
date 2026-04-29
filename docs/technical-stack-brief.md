@@ -76,6 +76,8 @@ Proof status view
 Optional landing page
 ```
 
+The MVP UI should be scenario-card driven first; do not build a fully free-form POS/inventory editor before State A/C/D work end-to-end.
+
 Why:
 
 ```txt
@@ -138,6 +140,8 @@ Why:
 One app is faster to deploy and reason about.
 The backend workload is request/response oriented for MVP.
 OpenClaw, Dashboard, Telegram, and proof services can consume the same local model.
+Do not make Telegram webhooks wait on slow 0G Storage upload or 0G Chain registration.
+For MVP, proof work can be triggered separately, retried manually, or handled after the immediate Telegram response.
 ```
 
 When to add `apps/api`:
@@ -201,6 +205,8 @@ Boundary:
 
 ```txt
 Database = operational evidence layer, not ERP.
+Start with P0 tables only.
+Do not model ERP, warehouse management, full POS, complex auth, or complex permissions.
 ```
 
 ## 5. Core Logic Package
@@ -302,6 +308,8 @@ viem or ethers for backend transaction calls
 
 Context7 confirmed Hardhat is used to write, test, compile, and deploy Solidity contracts. Official 0G docs describe 0G Chain as EVM-compatible and show Hardhat/Foundry/Remix-style deployment direction.
 
+Before coding, choose the Hardhat version based on current 0G examples. For the first pass, avoid mixing viem and ethers; choose one transaction client and keep the integration consistent.
+
 MVP contract responsibilities:
 
 ```txt
@@ -366,6 +374,8 @@ Implementation posture:
 Start with deterministic policy/scripted triage for the core demo.
 Add LLM/OpenClaw runtime only behind the same interface.
 Use the public OpenClaw framework only if setup is fast enough and properly attributed.
+Deterministic triage must work even if OpenClaw runtime or LLM integration slips.
+The MVP should not depend on the agent runtime being fully integrated.
 Do not build multi-agent swarm for MVP.
 ```
 
@@ -570,6 +580,8 @@ OpenClaw runtime setup and attribution requirements.
 Telegram webhook vs polling for selected deployment.
 Whether separate API server or worker is necessary.
 Whether viem or ethers is better for the selected contract tooling.
+Choose package manager/workspace setup before scaffolding.
+pnpm workspaces is the likely default, but confirm before implementation.
 ```
 
 ## 16. Sources Consulted

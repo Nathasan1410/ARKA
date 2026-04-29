@@ -7,6 +7,12 @@ All meaningful ARKA changes should be recorded here in human-readable language.
 ### Added
 - Added `docs/technical-stack-brief.md` with the recommended MVP stack for ARKA.
 - Documented the intended monorepo shape, frontend/backend/database choices, proof-layer tooling, Telegram flow, testing plan, deployment approach, and open verification questions.
+- Added `docs/mvp-demo-interaction-brief.md` as the canonical MVP demo interaction spec (scenario-card driven dashboard flow).
+- Clarified proof status separation (audit proof lifecycle vs storage ops vs chain ops), proof sequencing (proof package creation must not depend on OpenClaw), and canonical enum names for MVP planning.
+- Added `checklist.md` as a feature-scope tracker across P0/P1/P2 (docs-only, implementation not started).
+- Updated `AGENTS.md` with planning-to-implementation workflow rules and required `technical-debt.md` tracking for skipped work, blockers, and human-needed actions.
+- Added `technical-debt.md` with current open implementation blockers for 0G Storage, 0G Chain, Telegram, and OpenClaw runtime verification.
+- Added `docs/project-brief.md` as the canonical full-vision and roadmap brief for ARKA.
 
 ### Why
 - Establishes a practical 1-week hackathon implementation direction before coding begins.

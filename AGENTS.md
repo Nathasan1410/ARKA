@@ -174,6 +174,24 @@ copied public examples
 major external libraries
 ```
 
+### technical-debt.md
+
+Update when an agent skips, defers, blocks, or knowingly leaves unfinished work that matters for implementation or demo reliability.
+
+Use it for:
+
+```txt
+skipped verification steps
+deferred implementation details
+external setup needed from the human
+integration blockers
+temporary fallbacks
+known risks accepted for the current milestone
+follow-up tasks needed before claiming a feature is real
+```
+
+Do not use it for tiny TODOs that are handled in the same turn.
+
 ---
 
 ## 5. Engineering Behavior
@@ -216,6 +234,61 @@ Refactor = preserve behavior before and after.
 ```
 
 For multi-step work, state a brief plan, implement the change, verify it, and document anything important.
+
+### Planning-to-Implementation Workflow
+
+Before implementing a feature, agents should check the current planning docs and tracker:
+
+```txt
+AGENTS.md
+checklist.md
+docs/mvp-demo-interaction-brief.md
+docs/technical-stack-brief.md
+docs/real-vs-simulated.md
+relevant domain brief (Backend, Database, OpenClaw, 0G Storage, 0G Chain)
+```
+
+Implementation should follow this order unless the human explicitly redirects:
+
+```txt
+1. Preserve the AuditEvent-first architecture.
+2. Keep P0 focused on State A, State C, and State D.
+3. Implement local deterministic core behavior before optional integrations.
+4. Verify the smallest meaningful slice.
+5. Update truthfulness/docs only when the feature status changes.
+6. Record blockers, skipped checks, or human-needed setup in technical-debt.md.
+```
+
+Agents should not silently promote P1/P2 ideas into P0.
+
+When a requested implementation depends on external setup, agents should make the dependency explicit and continue with a safe local interface or documented fallback when possible.
+
+### Skipped Work and Human-Needed Actions
+
+If an agent cannot complete a relevant step, the final response is not enough. Add an entry to `technical-debt.md` when the skipped or blocked step affects:
+
+```txt
+feature correctness
+demo reliability
+integration truthfulness
+deployment
+security / secrets
+0G Storage or 0G Chain verification
+Telegram behavior
+manual demo verification
+```
+
+Each `technical-debt.md` entry should include:
+
+```txt
+Date
+Area
+Status: BLOCKED / DEFERRED / RISK / NEEDS_HUMAN
+What happened
+Why it matters
+Next action
+Owner: Human / Agent / Both
+```
 
 ---
 
@@ -332,6 +405,8 @@ Create these files early and keep them updated by the triggers above:
 
 ```txt
 CHANGELOG.md
+checklist.md
+technical-debt.md
 docs/ai-attribution.md
 docs/real-vs-simulated.md
 docs/reused-libraries.md
@@ -341,6 +416,8 @@ Purpose:
 
 ```txt
 CHANGELOG.md = human-readable project progress
+checklist.md = feature scope and implementation tracker
+technical-debt.md = skipped work, blockers, deferred decisions, and human-needed actions
 docs/ai-attribution.md = material AI-assisted work
 docs/real-vs-simulated.md = feature truthfulness status
 docs/reused-libraries.md = reused libraries, starter kits, templates, and copied public examples
@@ -360,7 +437,8 @@ When files change, report:
 1. Files changed
 2. Verification performed
 3. Docs updated: yes/no and why
-4. Anything skipped and why
+4. technical-debt.md updated: yes/no and why
+5. Anything skipped and why
 ```
 
 Keep the report concise and factual.

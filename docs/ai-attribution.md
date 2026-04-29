@@ -26,6 +26,38 @@ This document tracks material AI-assisted work in ARKA.
 - Documentation-only change.
 - No code executed.
 
+## 2026-04-29 - MVP Demo Interaction Brief (Canonicalization + Precision Fixes)
+
+### AI Tool Used
+- OpenAI Codex CLI (GPT-5.x)
+
+### What AI Helped With
+- Copied the MVP demo interaction brief into the repo as the canonical reference doc.
+- Split proof display statuses into: `auditProofStatus`, `storage_status`, and `chain_status` (to avoid conflating lifecycle and operational failures).
+- Updated the reconciliation trigger sequencing so proof package creation does not depend on OpenClaw already running.
+- Added a docs-only canonical enum list for MVP planning, including `ANCHOR_CONFIRMED` (and avoiding `VERIFIED_ON_CHAIN` naming drift).
+- Added a one-line reminder in the technical stack brief to keep the MVP UI scenario-card driven first.
+- Created `checklist.md` as a feature-scope and implementation tracking checklist derived from the current planning docs.
+- Updated `AGENTS.md` with planning-to-implementation workflow rules and `technical-debt.md` tracking expectations.
+- Created `technical-debt.md` with current known blockers and deferred decisions for implementation readiness.
+- Added `docs/project-brief.md` as the canonical full-vision and roadmap brief based on the human-provided project brief.
+
+### Files / Areas Affected
+- `docs/mvp-demo-interaction-brief.md`
+- `docs/technical-stack-brief.md`
+- `checklist.md`
+- `AGENTS.md`
+- `technical-debt.md`
+- `docs/project-brief.md`
+- `CHANGELOG.md`
+
+### Human Review
+- Pending / to be confirmed by repo owner.
+
+### Verification
+- Documentation-only change.
+- No code executed.
+
 ### Status
 - Planning / documentation.
 
