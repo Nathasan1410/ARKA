@@ -39,6 +39,15 @@ Semua data yang disimpan harus membantu salah satu dari ini:
 5. Review AuditEvent through Dashboard
 ```
 
+OpenClaw research impact:
+
+```txt
+OpenClaw is a sidecar gateway/runtime/plugin/skills system.
+The local DB stores ARKA-owned OpenClaw outputs, not OpenClaw internal runtime/session state.
+For P0, do not mirror OpenClaw transcripts into the ARKA DB.
+If needed later, store references such as triage_source, openclaw_run_id, openclaw_session_id, or channel_message_ref.
+```
+
 Anti-bloat test:
 
 ```txt

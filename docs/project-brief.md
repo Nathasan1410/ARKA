@@ -206,6 +206,14 @@ It is not the public proof layer.
 
 OpenClaw is ARKA’s Layer-1 conversational dashboard.
 
+Implementation note:
+
+```txt
+OpenClaw is a gateway/runtime/plugin/skills system.
+ARKA should integrate it as a sidecar gateway with an ARKA-specific skill/plugin when verified.
+packages/agent is ARKA's app-facing client boundary and deterministic fallback, not the full OpenClaw runtime.
+```
+
 It reads AuditEvent first.
 
 It does not reconstruct truth directly from raw tables.
@@ -1088,7 +1096,7 @@ Contracts: Solidity AuditProofRegistry
 0G Storage: 0G TypeScript SDK, CLI fallback
 0G Chain: Hardhat deploy/test, viem or ethers for backend calls
 Telegram: grammY
-OpenClaw / LLM: packages/agent wrapper, deterministic policy first
+OpenClaw / LLM: OpenClaw sidecar gateway + ARKA skill/plugin when verified; packages/agent fallback/client boundary
 Testing: Vitest + Hardhat tests + manual demo verification
 Deployment: Vercel + hosted Postgres + 0G testnet + Telegram webhook
 ```
@@ -1136,7 +1144,7 @@ seed scenarios A/C/D
 AuditEvent generation
 dashboard scenario runner
 AuditEvent list/detail
-OpenClaw deterministic triage
+OpenClaw deterministic fallback triage
 ```
 
 ### Phase 2 — Proof MVP

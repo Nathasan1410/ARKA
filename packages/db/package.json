@@ -1,5 +1,5 @@
 {
-  "name": "@arka/shared",
+  "name": "@arka/db",
   "private": true,
   "version": "0.0.0",
   "main": "dist/index.js",
@@ -10,12 +10,18 @@
       "default": "./dist/index.js"
     }
   },
+  "dependencies": {
+    "@arka/shared": "workspace:*",
+    "drizzle-orm": "latest",
+    "pg": "latest"
+  },
   "devDependencies": {
+    "drizzle-kit": "latest",
     "typescript": "latest"
   },
   "scripts": {
     "build": "tsc -p tsconfig.json",
-    "test": "vitest run",
+    "generate": "drizzle-kit generate --config drizzle.config.ts",
     "typecheck": "tsc -p tsconfig.json --noEmit"
   }
 }

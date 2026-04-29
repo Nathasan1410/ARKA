@@ -4,7 +4,7 @@ Last updated: 2026-04-29
 
 This file is a tracking checklist. It reflects what is currently described in repo docs and what is not implemented yet.
 
-Current truthfulness status: planning-only. As of 2026-04-29, all features are still `PLANNED` in `docs/real-vs-simulated.md`.
+Current truthfulness status: mixed planning + partial local implementation. See `docs/real-vs-simulated.md` for the current source of truth.
 
 Core architecture to preserve:
 
@@ -47,7 +47,7 @@ Required scenario cards for P0: State A (CLEAR), State C (REQUEST_EXPLANATION), 
 | 4 | Usage Batch | NEEDS_DETAIL | P0 (backend-only), no UI required | NOT_IMPLEMENTED | Decide minimal data shape + when it is used; keep UI out of P0 unless it becomes necessary to prevent false alerts. | `Backend-Final.md` (Movement-first lifecycle), `Database.md` (UsageBatch). |
 | 5 | Reconciliation Engine | READY | P0 (`Run Reconciliation`) | NOT_IMPLEMENTED | Implement expected vs actual comparison, variance, status, severity in core logic first (scenario-driven). | `docs/mvp-demo-interaction-brief.md` (Reconciliation Trigger), `Backend-Final.md`. |
 | 6 | AuditEvent Generator | READY | P0 (list + detail) | NOT_IMPLEMENTED | Define `AuditEvent` shape + canonical enums; generate from reconciliation output; ensure append-only downstream actions do not rewrite facts. | `docs/mvp-demo-interaction-brief.md` (List/Detail + canonical enums), `Backend-Final.md`, `Database.md`. |
-| 7 | OpenClaw Triage Layer | READY | P0 (OpenClaw panel + triageOutcome) | NOT_IMPLEMENTED | Implement deterministic policy first (no LLM dependency); enforce "OpenClaw does not mutate reconciliation facts". | `Arka - OpenClaw Agent.md`, `Database.md` (OpenClaw writes), `docs/mvp-demo-interaction-brief.md`. |
+| 7 | OpenClaw Triage Layer | NEEDS_DETAIL | P0 (OpenClaw panel + triageOutcome) | PARTIAL | Keep deterministic fallback, then run OpenClaw smoke setup and build ARKA OpenClaw skill/plugin path; do not claim real OpenClaw runtime from fallback alone. | `Arka - OpenClaw Agent.md`, `docs/openclaw-research-and-integration-plan.md`, `Database.md` (OpenClaw writes), `docs/mvp-demo-interaction-brief.md`. |
 | 8 | Telegram Conversation Flow | NEEDS_DETAIL | P0 (real or simulated; staff reply optional) | NOT_IMPLEMENTED | Decide P0 delivery mode: dashboard-simulated owner flow vs real owner alert; keep staff reply + final resolution as better-if-time. | `docs/mvp-demo-interaction-brief.md` (Telegram rules + OpenClaw panel), `docs/technical-stack-brief.md` (Telegram notes). |
 | 9 | Dashboard / Audit Arena | READY | P0 (single-page panels) | NOT_IMPLEMENTED | Implement the scenario runner + panels: Order, Movement, AuditEvent list/detail, OpenClaw panel, Proof panel. | `docs/mvp-demo-interaction-brief.md` (MVP Screens), `docs/technical-stack-brief.md` (Frontend stack). |
 | 10 | 0G Storage Proof Package | NEEDS_DETAIL | P0 (Proof panel statuses) | NOT_IMPLEMENTED | Confirm 0G Storage SDK package/methods/endpoints; implement AuditEvent Proof Package builder + upload; show failure/retry states without deleting AuditEvent. | `0G Storage Brief.md`, `docs/mvp-demo-interaction-brief.md` (Proof Panel), `docs/technical-stack-brief.md` (open questions). |
@@ -63,7 +63,7 @@ Usage Rule / Recipe: PARTIAL (shared seed + core calculation only)
 Inventory Movement Simulator: PARTIAL (scenario payload values only, no simulator UI/API)
 Reconciliation Engine: PARTIAL (pure core A/C/D only)
 AuditEvent Generator: PARTIAL (pure core A/C/D AuditEvent creation only)
-OpenClaw Triage Layer: PARTIAL (deterministic adapter only)
+OpenClaw Triage Layer: PARTIAL (packages/agent fallback/client boundary only; OpenClaw researched but gateway/plugin/skill integration not verified)
 ```
 
 These are not complete P0 features until they are wired into API/UI, persisted or displayed where required, and verified through the dashboard demo flow.
@@ -124,7 +124,7 @@ Confirm 0G Storage SDK package + upload method + response shape
 Confirm 0G testnet RPC + chain ID + faucet + explorer link format
 Choose Hardhat version based on current 0G examples
 Decide viem vs ethers (pick one for MVP)
-Confirm OpenClaw runtime posture (deterministic-first regardless)
+Run OpenClaw smoke setup; decide sidecar gateway + ARKA skill/plugin vs other integration mode; keep deterministic fallback regardless
 Confirm Telegram webhook vs polling for deployment target
 Confirm package manager/workspace setup before scaffolding (pnpm likely, but confirm)
 ```

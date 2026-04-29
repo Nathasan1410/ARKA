@@ -80,12 +80,15 @@ Must not include:
 
 Owns the OpenClaw-facing adapter layer.
 
+The deterministic triage code in this package is fallback behavior only. It should not be presented as the full OpenClaw runtime. OpenClaw is a sidecar gateway/runtime/plugin/skills system; the preferred ARKA path is an OpenClaw gateway plus ARKA skill/plugin, with `packages/agent` acting as the app-facing client/fallback boundary.
+
 Must include:
 
-- Deterministic triage logic
+- OpenClaw client/adapter interface
+- Deterministic triage fallback
 - Owner recommendation formatting
 - Case note and action log generation helpers
-- Thin boundary code for future LLM or agent runtime integration
+- Thin boundary code for OpenClaw sidecar/plugin integration
 
 Must not include:
 
@@ -142,10 +145,9 @@ Sequence:
 
 1. Define shared types and enums.
 2. Implement core deterministic reconciliation.
-3. Add agent triage boundaries on top of AuditEvent output.
+3. Add an OpenClaw-facing client boundary with deterministic fallback on top of AuditEvent output.
 4. Add `apps/web` screens and handlers that consume the shared/core layer.
 5. Add database schema work after the above contracts are stable.
 6. Add `contracts` and proof anchoring once the P0 loop is stable.
 
 The database is not the first implementation layer. Drizzle schema should follow shared types and core logic, not define them.
-

@@ -2,12 +2,15 @@
   "name": "arka-monorepo",
   "private": true,
   "version": "0.0.0",
+  "devDependencies": {
+    "vitest": "^3.2.4"
+  },
   "scripts": {
     "dev": "pnpm --filter @arka/web dev",
     "dev:web": "pnpm --filter @arka/web dev",
     "build": "pnpm -r --if-present run build",
     "build:web": "pnpm --filter @arka/web build",
-    "typecheck": "pnpm --filter @arka/shared --filter @arka/core --filter @arka/agent run typecheck",
+    "typecheck": "pnpm --filter @arka/shared --filter @arka/core --filter @arka/agent --filter @arka/db run typecheck",
     "lint": "pnpm -r --if-present run lint",
     "clean": "pnpm -r --if-present run clean"
   }

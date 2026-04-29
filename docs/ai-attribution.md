@@ -2,6 +2,231 @@
 
 This document tracks material AI-assisted work in ARKA.
 
+## 2026-04-29 - S1-S5 Remediation Report Consolidation
+
+### AI Tool Used
+- OpenAI Codex CLI (GPT-5.x)
+
+### What AI Helped With
+- Consolidated worker reports from S1-S5 into the remediation plan.
+- Summarized the remediation verdict, verification reported by each worker, remaining risks, and next-step recommendation.
+- Kept the consolidation documentation-only and did not modify worker source code.
+
+### Files / Areas Affected
+- `docs/remediation-plan.md`
+- `CHANGELOG.md`
+- `docs/ai-attribution.md`
+
+### Human Review
+- Pending / to be confirmed by repo owner.
+
+### Verification
+- Based on S1-S5 worker reports supplied by the repo owner.
+- PM global verification gate later passed for shared/core/agent tests, DB typecheck/generate, web build, and root typecheck.
+
+## 2026-04-29 - Remediation Plan
+
+### AI Tool Used
+- OpenAI Codex CLI (GPT-5.x)
+
+### What AI Helped With
+- Created a focused remediation plan for the five completed worker streams after the OpenClaw boundary correction.
+- Split remediation responsibilities across shared/core, agent/OpenClaw boundary, dashboard truthfulness, database alignment, and proof independence.
+- Defined a global verification gate and completion report format for worker handoff.
+
+### Files / Areas Affected
+- `docs/remediation-plan.md`
+- `CHANGELOG.md`
+- `docs/ai-attribution.md`
+
+### Human Review
+- Pending / to be confirmed by repo owner.
+
+### Verification
+- Documentation-only planning update.
+
+## 2026-04-29 - OpenClaw Impact Assessment
+
+### AI Tool Used
+- OpenAI Codex CLI (GPT-5.x)
+
+### What AI Helped With
+- Performed a targeted impact audit after the OpenClaw integration misunderstanding was identified as high severity.
+- Checked whether the finding invalidates the existing shared/core/db/proof/dashboard work.
+- Mapped affected code boundaries, especially `packages/agent`, dashboard imports, database OpenClaw metadata gaps, and truthfulness documentation.
+- Attempted verification checks and recorded that current session verification is blocked by EPERM permission errors.
+
+### Files / Areas Affected
+- `docs/openclaw-impact-assessment.md`
+- `technical-debt.md`
+- `CHANGELOG.md`
+- `docs/ai-attribution.md`
+
+### Human Review
+- Pending / to be confirmed by repo owner.
+
+### Verification
+- Inspected OpenClaw research docs, implementation plan, code map, agent source, shared types, core reconciliation, core proof code, DB schema, and dashboard shell/data code.
+- Attempted shared/core/agent tests and root typecheck, but they failed due EPERM environment/process permission errors in this session.
+
+## 2026-04-29 - OpenClaw Research and Integration Plan
+
+### AI Tool Used
+- OpenAI Codex CLI (GPT-5.x)
+
+### What AI Helped With
+- Cloned and inspected the upstream OpenClaw repository in a research-only folder outside `ARKA-github`.
+- Researched OpenClaw's gateway, agent runtime, workspace, skills, plugin SDK, hooks, configuration, and Telegram channel support.
+- Corrected ARKA's OpenClaw implementation direction from "local deterministic adapter" to "OpenClaw sidecar gateway plus ARKA plugin/skill, with deterministic fallback."
+- Documented a phased plan for OpenClaw smoke setup, ARKA workspace skill, ARKA OpenClaw plugin, and later packages/agent integration.
+- Updated impacted backend, database, dashboard, technical stack, implementation, checklist, code-map, project-brief, and parallel-session docs to reflect the OpenClaw gateway/plugin model.
+
+### Files / Areas Affected
+- `docs/openclaw-research-and-integration-plan.md`
+- `AGENTS.md`
+- `Arka - OpenClaw Agent.md`
+- `Backend-Final.md`
+- `Database.md`
+- `checklist.md`
+- `docs/technical-stack-brief.md`
+- `docs/implementation-plan.md`
+- `docs/code-map.md`
+- `docs/project-brief.md`
+- `docs/mvp-demo-interaction-brief.md`
+- `docs/database-structure-plan.md`
+- `docs/parallel-codex-session-prompts.md`
+- `docs/real-vs-simulated.md`
+- `technical-debt.md`
+- `CHANGELOG.md`
+- `docs/ai-attribution.md`
+
+### Human Review
+- Pending / to be confirmed by repo owner.
+
+### Verification
+- Cloned `https://github.com/openclaw/openclaw` into `D:\Projekan\Macam2Hackathon\ARKA\_research\openclaw`.
+- Inspected upstream README, package metadata, architecture docs, agent runtime docs, agent loop docs, plugin docs, skills docs, workspace docs, configuration docs, and Telegram docs.
+- No OpenClaw install/run was performed yet.
+
+## 2026-04-29 - OpenClaw Adapter Boundary Refactor
+
+### AI Tool Used
+- OpenAI Codex CLI (GPT-5.x)
+
+### What AI Helped With
+- Confirmed through a narrow local repo search that no OpenClaw source/runtime exists in the workspace yet.
+- Refactored `packages/agent` so it reads as an OpenClaw-facing adapter boundary with deterministic fallback, rather than a standalone fake OpenClaw implementation.
+- Split deterministic policy from the public triage entry point, added an explicit adapter/fallback boundary, and extended tests to cover runtime-unavailable fallback behavior.
+- Replaced the brittle version-pinned `tsx` path in the agent test script with a normal package script.
+- Updated truthfulness, changelog, and technical-debt docs to match the corrected boundary.
+
+### Files / Areas Affected
+- `packages/agent/src/openclaw-adapter.ts`
+- `packages/agent/src/policy.ts`
+- `packages/agent/src/triage.ts`
+- `packages/agent/src/index.ts`
+- `packages/agent/src/triage.test.mjs`
+- `packages/agent/package.json`
+- `technical-debt.md`
+- `docs/real-vs-simulated.md`
+- `CHANGELOG.md`
+- `docs/ai-attribution.md`
+
+### Human Review
+- Pending / to be confirmed by repo owner.
+
+### Verification
+- `pnpm.cmd --filter @arka/agent test`
+- `pnpm.cmd --filter @arka/agent run typecheck`
+
+## 2026-04-29 - OpenClaw Agent Boundary Correction
+
+### AI Tool Used
+- OpenAI Codex CLI (GPT-5.x)
+
+### What AI Helped With
+- Audited the current agent direction after the deterministic triage slice was identified as too narrow for ARKA's OpenClaw-backed product story.
+- Updated planning docs to state that `packages/agent` currently contains deterministic fallback behavior only.
+- Added a dedicated OpenClaw source integration prompt for a later worker session.
+- Updated truthfulness and technical debt docs so ARKA does not claim OpenClaw source/runtime integration before it exists.
+
+### Files / Areas Affected
+- `docs/parallel-codex-session-prompts.md`
+- `docs/implementation-plan.md`
+- `docs/code-map.md`
+- `docs/real-vs-simulated.md`
+- `technical-debt.md`
+- `CHANGELOG.md`
+- `docs/ai-attribution.md`
+
+### Human Review
+- Pending / to be confirmed by repo owner.
+
+### Verification
+- Documentation-only correction.
+- Inspected the repo for local OpenClaw source; only the ARKA OpenClaw brief is currently present.
+
+## 2026-04-29 - Shared/Core Test Harness and A/C/D Regression Coverage
+
+### AI Tool Used
+- OpenAI Codex CLI (GPT-5.x)
+
+### What AI Helped With
+- Added Vitest setup for `packages/shared` and `packages/core`.
+- Wrote shared fixture tests for the canonical protein-bar demo world and scenario seeds.
+- Wrote core reconciliation tests for State A, State C, State D, severity threshold boundaries, and `ScenarioKey` vs `CaseType` separation.
+- Updated the changelog and reused-libraries docs for the new test dependency and coverage milestone.
+
+### Files / Areas Affected
+- `package.json`
+- `pnpm-lock.yaml`
+- `packages/shared/package.json`
+- `packages/shared/vitest.config.ts`
+- `packages/shared/test/demo-scenarios.test.ts`
+- `packages/core/package.json`
+- `packages/core/vitest.config.ts`
+- `packages/core/test/reconciliation.test.ts`
+- `CHANGELOG.md`
+- `docs/reused-libraries.md`
+- `docs/ai-attribution.md`
+
+### Human Review
+- Pending / to be confirmed by repo owner.
+
+### Verification
+- `pnpm.cmd --filter @arka/shared test`
+- `pnpm.cmd --filter @arka/core test`
+- `pnpm.cmd --filter @arka/shared run typecheck`
+- `pnpm.cmd --filter @arka/core run typecheck`
+
+## 2026-04-29 - Initial Drizzle/Postgres Schema Package
+
+### AI Tool Used
+- OpenAI Codex CLI (GPT-5.4)
+
+### What AI Helped With
+- Chose `packages/db` as the dedicated schema package to keep DB ownership separate from UI and deterministic business logic.
+- Implemented the first Drizzle/Postgres schema for ARKA P0 persistence, covering actors, products, inventory items, usage rules, orders, inventory movements, audit events, notes, action logs, proof records, and owner policy defaults.
+- Added a package-local Drizzle config and migration-generation script.
+- Updated database-boundary and attribution docs, plus the changelog and technical debt entry for blocked DB verification.
+
+### Files / Areas Affected
+- `packages/db/*`
+- `package.json`
+- `docs/database-structure-plan.md`
+- `docs/reused-libraries.md`
+- `technical-debt.md`
+- `CHANGELOG.md`
+- `docs/ai-attribution.md`
+
+### Human Review
+- Pending / to be confirmed by repo owner.
+
+### Verification
+- `pnpm.cmd install`
+- `pnpm.cmd run typecheck`
+- `pnpm.cmd --filter @arka/db run generate`
+
 ## 2026-04-29 - Technical Stack Brief
 
 ### AI Tool Used
@@ -25,6 +250,33 @@ This document tracks material AI-assisted work in ARKA.
 ### Verification
 - Documentation-only change.
 - No code executed.
+
+## 2026-04-29 - Local AuditEvent Proof Package + Canonical Hashing
+
+### AI Tool Used
+- OpenAI Codex CLI (GPT-5.x)
+
+### What AI Helped With
+- Implemented pure `packages/core` proof helpers for AuditEvent proof package assembly.
+- Added deterministic canonical JSON serialization and local SHA-256 package hashing.
+- Added proof tests for stable hashes and verified package creation for State C and State D.
+- Updated truthfulness and changelog docs for the new local proof milestone.
+
+### Files / Areas Affected
+- `packages/core/src/proof.ts`
+- `packages/core/src/index.ts`
+- `packages/core/test/proof.test.ts`
+- `docs/real-vs-simulated.md`
+- `CHANGELOG.md`
+- `docs/ai-attribution.md`
+
+### Human Review
+- Pending / to be confirmed by repo owner.
+
+### Verification
+- `pnpm.cmd install`
+- `pnpm.cmd --filter @arka/core test`
+- `pnpm.cmd run typecheck`
 
 ## 2026-04-29 - MVP Demo Interaction Brief (Canonicalization + Precision Fixes)
 
@@ -72,11 +324,13 @@ This document tracks material AI-assisted work in ARKA.
 - Added `docs/code-map.md` and `docs/database-structure-plan.md`.
 - Reviewed and corrected the first implementation boundary by separating `ScenarioKey` from `CaseType`.
 - Updated truthfulness, reused-libraries, changelog, and technical-debt docs after implementation.
+- Drafted `docs/parallel-codex-session-prompts.md` for six parallel Codex implementation sessions.
 
 ### Files / Areas Affected
 - `.env.example`
 - `.gitignore`
 - `package.json`
+- `pnpm-lock.yaml`
 - `pnpm-workspace.yaml`
 - `tsconfig.base.json`
 - `apps/web/package.json`
@@ -86,6 +340,7 @@ This document tracks material AI-assisted work in ARKA.
 - `packages/agent/*`
 - `docs/code-map.md`
 - `docs/database-structure-plan.md`
+- `docs/parallel-codex-session-prompts.md`
 - `docs/real-vs-simulated.md`
 - `docs/reused-libraries.md`
 - `technical-debt.md`
@@ -97,7 +352,8 @@ This document tracks material AI-assisted work in ARKA.
 
 ### Verification
 - Direct TypeScript checks passed with global `tsc.cmd` for `packages/shared`, `packages/core`, and `packages/agent`.
-- `pnpm.cmd install` timed out before producing `pnpm-lock.yaml`; dependency install remains a tracked risk in `technical-debt.md`.
+- Repo owner completed `pnpm.cmd install`, producing `pnpm-lock.yaml`.
+- Repo owner ran `pnpm.cmd run typecheck`, which passed for `packages/shared`, `packages/core`, and `packages/agent`.
 
 ### Status
 - Planning / documentation.

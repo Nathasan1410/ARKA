@@ -15,7 +15,7 @@ Scenario card
 -> Order / Usage Rule / Movement
 -> Reconciliation
 -> AuditEvent
--> OpenClaw deterministic triage
+-> OpenClaw sidecar/plugin triage or deterministic fallback triage
 -> Dashboard visibility
 -> AuditEvent Proof Package
 -> 0G Storage upload attempt
@@ -99,7 +99,7 @@ Steps:
 2. Scaffold Next.js App Router app in apps/web.
 3. Add packages/core for deterministic audit/reconciliation logic.
 4. Add packages/shared for enums, types, and validation schemas.
-5. Add packages/agent as a thin deterministic-first OpenClaw adapter boundary.
+5. Add packages/agent as ARKA's OpenClaw client boundary with deterministic fallback.
 6. Add contracts for AuditProofRegistry and deployment scripts.
 7. Add .env.example categories, without secrets.
 ```
@@ -225,17 +225,40 @@ Tests prove expected quantity, actual quantity, variance, status, and severity.
 No database, UI, Telegram, or 0G required for these tests.
 ```
 
-## 5. Phase 4 - Deterministic OpenClaw Adapter
+## 5. Phase 4 - OpenClaw Agent Boundary
 
-Goal: produce triage outcomes from AuditEvents without requiring LLM or full OpenClaw runtime.
+Goal: make ARKA's agent layer ready for a real OpenClaw sidecar gateway/plugin path while preserving a deterministic fallback that can triage AuditEvents without requiring LLM or full OpenClaw runtime.
+
+Important correction:
+
+```txt
+The deterministic policy is not the final OpenClaw agent.
+It is the fallback behavior behind the ARKA agent interface.
+OpenClaw is a gateway/runtime/plugin/skills system, not just a local adapter.
+The preferred path is OpenClaw sidecar gateway + ARKA OpenClaw skill/plugin + packages/agent client/fallback boundary.
+See docs/openclaw-research-and-integration-plan.md.
+```
 
 Implement in `packages/agent`:
 
 ```txt
+OpenClaw client/adapter interface
+deterministic fallback policy
 triageAuditEvent(auditEvent, ownerPolicy)
 formatOwnerRecommendation(auditEvent, triageOutcome)
 createActionLogForTriage(...)
 createCaseNoteForTriage(...)
+```
+
+Before claiming OpenClaw integration:
+
+```txt
+1. Run OpenClaw smoke setup or document why it is blocked.
+2. Create an ARKA OpenClaw workspace skill or plugin plan.
+3. Prefer sidecar gateway + plugin/skill before vendoring or forking OpenClaw.
+4. Document reused OpenClaw code/framework in docs/reused-libraries.md only if code/dependency is added to ARKA.
+5. Keep ARKA-specific behavior in packages/agent as a wrapper around AuditEvent input/output.
+6. Keep deterministic fallback available if OpenClaw runtime/provider fails.
 ```
 
 P0 deterministic rules:
@@ -265,7 +288,7 @@ Test that triage does not mutate reconciliation facts.
 Truthfulness:
 
 ```txt
-If deterministic only, label OpenClaw as REAL deterministic triage / PARTIAL OpenClaw runtime in README and docs/real-vs-simulated.md.
+If deterministic only, label OpenClaw as deterministic fallback only / no verified OpenClaw runtime in README and docs/real-vs-simulated.md.
 Do not claim full OpenClaw runtime unless verified.
 ```
 
@@ -662,7 +685,7 @@ Use this order during implementation:
 3. Add demo fixtures.
 4. Add core reconciliation tests for A/C/D.
 5. Add AuditEvent generator.
-6. Add deterministic OpenClaw triage.
+6. Add OpenClaw-facing agent boundary with deterministic fallback.
 7. Add basic dashboard with A/C/D.
 8. Add local proof package builder and hashing.
 9. Add 0G Storage upload.

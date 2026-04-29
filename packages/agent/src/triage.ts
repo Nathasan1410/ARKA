@@ -1,68 +1,42 @@
 import {
-  AuditEvent,
-  AuditEventStatus,
-  ScenarioKey,
-  Severity,
   TriageOutcome,
+  type AuditEvent,
 } from '@arka/shared';
+import {
+  resolveOpenClawTriageDecision,
+  TriageOptions,
+  TriageSource,
+} from './openclaw-adapter';
 
 export type TriageAuditEvent = AuditEvent & {
   triageOutcome: TriageOutcome;
+  triageSource: TriageSource;
 };
 
-export function triageAuditEvent(auditEvent: AuditEvent): TriageAuditEvent {
-  const triageOutcome = determineTriageOutcome(auditEvent);
+export function triageAuditEvent(auditEvent: Readonly<AuditEvent>, options?: TriageOptions): TriageAuditEvent {
+  const { triageOutcome, triageSource } = resolveOpenClawTriageDecision(auditEvent, options);
 
   return {
     ...auditEvent,
     triageOutcome,
+    triageSource,
   };
 }
 
-export function determineTriageOutcome(auditEvent: AuditEvent): TriageOutcome {
-  if (auditEvent.scenarioKey === ScenarioKey.STATE_A) {
-    return TriageOutcome.AUTO_CLEAR;
-  }
-
-  if (auditEvent.scenarioKey === ScenarioKey.STATE_C) {
-    return TriageOutcome.REQUEST_EXPLANATION;
-  }
-
-  if (auditEvent.scenarioKey === ScenarioKey.STATE_D) {
-    return TriageOutcome.ESCALATE;
-  }
-
-  if (auditEvent.status === AuditEventStatus.CLEAR && auditEvent.severity === Severity.NORMAL) {
-    return TriageOutcome.AUTO_CLEAR;
-  }
-
-  if (
-    auditEvent.status === AuditEventStatus.OVER_EXPECTED_USAGE &&
-    auditEvent.severity === Severity.MODERATE_VARIANCE
-  ) {
-    return TriageOutcome.REQUEST_EXPLANATION;
-  }
-
-  if (
-    auditEvent.status === AuditEventStatus.OVER_EXPECTED_USAGE &&
-    auditEvent.severity === Severity.CRITICAL_REVIEW
-  ) {
-    return TriageOutcome.ESCALATE;
-  }
-
-  return TriageOutcome.AUTO_CLEAR;
+export function determineTriageOutcome(auditEvent: Readonly<AuditEvent>, options?: TriageOptions): TriageOutcome {
+  return resolveOpenClawTriageDecision(auditEvent, options).triageOutcome;
 }
 
 export function formatOwnerRecommendation(auditEvent: AuditEvent, triageOutcome: TriageOutcome): string {
   if (triageOutcome === TriageOutcome.AUTO_CLEAR) {
-    return `State ${auditEvent.caseId} can be auto-cleared.`;
+    return `Case ${auditEvent.caseId} can be auto-cleared.`;
   }
 
   if (triageOutcome === TriageOutcome.REQUEST_EXPLANATION) {
-    return `State ${auditEvent.caseId} should request an explanation from ${auditEvent.handlerName}.`;
+    return `Case ${auditEvent.caseId} needs owner approval before asking ${auditEvent.handlerName} for an explanation.`;
   }
 
-  return `State ${auditEvent.caseId} should escalate for immediate review.`;
+  return `Case ${auditEvent.caseId} should escalate for immediate owner review.`;
 }
 
 export function createActionLogForTriage(auditEvent: AuditEvent, triageOutcome: TriageOutcome): string {

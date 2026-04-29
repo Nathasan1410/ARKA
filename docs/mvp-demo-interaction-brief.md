@@ -497,6 +497,14 @@ Show ARKA as a visible triage assistant.
 
 This panel can show either real Telegram events or simulated Telegram preview depending on implementation status.
 
+OpenClaw implementation status must be displayed honestly:
+
+```txt
+If only packages/agent fallback is active, label it as deterministic fallback / OpenClaw preview.
+If OpenClaw gateway + ARKA skill/plugin is running, label it as OpenClaw-backed.
+Do not claim real OpenClaw runtime from deterministic fallback alone.
+```
+
 P0 required panel states:
 
 ```txt

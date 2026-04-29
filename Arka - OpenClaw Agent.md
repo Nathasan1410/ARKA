@@ -1,5 +1,14 @@
 # ARKA OpenClaw Brief & Action Policy 
 
+Research update:
+
+```txt
+OpenClaw is a gateway/runtime/plugin/skills system, not just a local TypeScript adapter.
+ARKA should build on OpenClaw through an OpenClaw sidecar gateway plus ARKA-specific skill/plugin work.
+packages/agent is ARKA's app-facing boundary and deterministic fallback, not the full OpenClaw runtime.
+No OpenClaw runtime has been installed, modified, or verified inside ARKA yet.
+```
+
 ## 0. Positioning
 
 OpenClaw is ARKA’s Layer-1 conversational dashboard and conflict-resolution agent.

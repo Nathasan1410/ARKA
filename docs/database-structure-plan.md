@@ -6,14 +6,39 @@ This document is planning only. It does not define schema code yet.
 
 The database comes after shared types and core logic.
 
+Implementation note:
+
+- Schema code lives in `packages/db` so Drizzle ownership stays separate from `apps/web` UI code and from `packages/shared` / `packages/core`, which remain the business-vocabulary and deterministic-logic sources of truth.
+
 Order of work:
 
 1. Define `packages/shared` types and enums.
 2. Implement `packages/core` reconciliation and AuditEvent creation.
-3. Add `packages/agent` triage boundaries.
+3. Add `packages/agent` triage boundaries and deterministic fallback.
 4. Then translate the agreed data model into Drizzle schema.
 
 The database should store operational evidence and proof metadata. It should not become the source of business rules.
+
+OpenClaw research impact:
+
+```txt
+OpenClaw is a sidecar gateway/runtime/plugin/skills system.
+The ARKA database should store ARKA-owned outputs from OpenClaw, not OpenClaw internal session state.
+Do not mirror OpenClaw transcripts into the ARKA DB for P0.
+If needed later, add optional references such as triage_source, openclaw_run_id, openclaw_session_id, or channel_message_ref.
+```
+
+Database boundary remains:
+
+```txt
+OpenClaw may append triage/action records.
+OpenClaw must not overwrite AuditEvent reconciliation facts.
+```
+
+Current implementation note:
+
+- `triageSource` is worth storing now because ARKA already distinguishes deterministic fallback vs future OpenClaw runtime output at the agent boundary, and the dashboard/docs need that truthfulness to survive persistence.
+- OpenClaw run/session/message references remain deferred until a real sidecar/plugin write path exists.
 
 ## P0 Models
 
@@ -109,11 +134,26 @@ Purpose:
 
 - Store expected quantity, actual quantity, variance, status, severity, and evidence references
 - Act as the primary object for OpenClaw and dashboard triage
+- Allow appended triage metadata such as `triageOutcome` and `triageSource` without changing reconciliation facts
 
 Must not store:
 
 - Mutating policy decisions that overwrite history
 - UI-specific presentation state
+
+### `StaffClarificationRequest`
+
+Represents the owner-approved request for a staff explanation.
+
+Purpose:
+
+- Track explanation-request lifecycle separately from immutable reconciliation facts
+- Preserve request status such as `REQUESTED`, `REMINDED`, `RESPONDED`, `TIMEOUT`, and `ESCALATED`
+
+Must not store:
+
+- Rewritten audit facts
+- Full chat transcript mirroring from OpenClaw internals
 
 ### `CaseNote`
 
@@ -191,6 +231,7 @@ Do not promote it into a large planning surface before the A/C/D loop works.
 - `Order` and `InventoryMovement` feed `AuditEvent`.
 - `AuditEvent` is the parent object for triage visibility.
 - `CaseNote`, `ActionLog`, and `ProofRecord` attach to the audit case lifecycle.
+- `StaffClarificationRequest` attaches to `AuditEvent` as an append-only explanation workflow record.
 - `OwnerPolicy` is the default policy baseline, not a business-rule engine.
 
 ## What This Layer Is Not
@@ -214,4 +255,3 @@ Update this doc when:
 - The boundary between core logic and database storage changes
 - Proof metadata or status fields change
 - `UsageBatch` stops being minimal or deferred
-

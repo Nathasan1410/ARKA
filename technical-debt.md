@@ -16,6 +16,40 @@ Owner: Human / Agent / Both
 
 ## Current Open Items
 
+### 2026-04-29 - Verification Blocked By Local EPERM
+
+```txt
+Area: Verification / Tooling
+Status: RESOLVED FOR GLOBAL GATE
+What happened: A follow-up impact audit attempted `pnpm.cmd --filter @arka/shared test`, `pnpm.cmd --filter @arka/core test`, `pnpm.cmd --filter @arka/agent test`, and `pnpm.cmd run typecheck`. All failed in this session due EPERM open/spawn permission errors in the current PowerShell/Node environment. The failures occurred at test runner or process startup, not at project assertions.
+Why it matters: Earlier worker reports claimed these checks passed, but the PM session initially could not independently confirm that state.
+Resolution: The remediation global gate was re-run successfully from an escalated PowerShell command path on 2026-04-29. Shared/core/agent tests, DB typecheck/generate, web build, and root typecheck passed.
+Next action: Keep this closed unless EPERM returns in later sessions.
+Owner: Both
+```
+
+### 2026-04-29 - OpenClaw Impact Remediation
+
+```txt
+Area: OpenClaw / Dashboard / Package Boundaries
+Status: RISK
+What happened: The OpenClaw misunderstanding does not require a full project restart, but it exposed code-boundary cleanup that must happen before demo claims. `packages/agent` is only an adapter/fallback boundary, not a real OpenClaw runtime. The dashboard currently imports built `dist` paths through relative paths, and the UI does not expose `triageSource` clearly enough.
+Why it matters: ARKA must not blur deterministic fallback, dashboard simulation, and real OpenClaw runtime behavior. Package-boundary shortcuts also make parallel work more fragile.
+Next action: Replace internal/relative shared imports with workspace package imports, show triage source in the dashboard, keep OpenClaw runtime marked unverified, and run checks again after cleanup.
+Owner: Both
+```
+
+### 2026-04-29 - Postgres Migration Application Verification
+
+```txt
+Area: Database / Postgres
+Status: NEEDS_HUMAN
+What happened: The first Drizzle schema package can typecheck and generate migrations locally, but no real Postgres instance or confirmed DATABASE_URL has been provided yet for applying migrations or verifying write/read behavior against a database.
+Why it matters: ARKA should not claim real database persistence beyond schema definition and SQL generation until migrations run successfully against a real Postgres target.
+Next action: Provide a Postgres DATABASE_URL, run the generated migration against that database, and verify the demo world can persist and read back an AuditEvent path.
+Owner: Both
+```
+
 ### 2026-04-29 - 0G Storage SDK Verification
 
 ```txt
@@ -53,20 +87,20 @@ Owner: Human
 
 ```txt
 Area: OpenClaw
-Status: DEFERRED
-What happened: The MVP is allowed to use deterministic triage first. Full OpenClaw runtime / LLM integration has not been verified or implemented.
-Why it matters: ARKA should still demo correctly if agent runtime integration slips, but docs and README must be honest about whether OpenClaw is deterministic, partial, or real.
-Next action: Implement deterministic triage behind an interface first; verify OpenClaw runtime only after local A/C/D flow works.
-Owner: Agent
+Status: RISK
+What happened: packages/agent currently contains deterministic A/C/D triage fallback only. The upstream OpenClaw repo was cloned for research outside ARKA-github at D:\Projekan\Macam2Hackathon\ARKA\_research\openclaw and documented in docs/openclaw-research-and-integration-plan.md, but no OpenClaw source/runtime has been imported, modified, installed, or verified inside ARKA yet.
+Why it matters: ARKA's product story says the agent is built on top of OpenClaw. OpenClaw is a full gateway/runtime/plugin system, not just a local adapter function. The deterministic fallback is useful for MVP resilience, but it must not be mistaken for a real OpenClaw-backed agent.
+Next action: Run an OpenClaw smoke setup or create an ARKA OpenClaw workspace skill/plugin plan. Choose whether ARKA uses OpenClaw as a sidecar gateway plus plugin/skill, a fork/submodule, or a copied-source strategy. Do not claim real OpenClaw integration until the gateway/plugin path is implemented and verified.
+Owner: Both
 ```
 
-### 2026-04-29 - Workspace Dependency Install Incomplete
+### 2026-04-29 - Dashboard Manual UI Verification
 
 ```txt
-Area: Workspace / package manager
+Area: Dashboard UI
 Status: RISK
-What happened: `pnpm.cmd install` was attempted after adding the workspace scaffold, but it timed out after 10 minutes. A partial `node_modules` directory exists locally, but no `pnpm-lock.yaml` was produced.
-Why it matters: Package manifests exist, but the full dependency graph and lockfile are not verified yet. Root `pnpm run typecheck` also failed before direct package checks because workspace dependencies were not fully installed.
-Next action: Retry `pnpm.cmd install` with enough time/network stability before relying on root workspace scripts or committing a lockfile.
+What happened: The dashboard shell was verified with `pnpm.cmd --filter @arka/web build`. A follow-up `pnpm.cmd --filter @arka/web dev` attempt timed out after 24044ms in this environment before manual browser interaction could be completed, so State A / State C / State D were not clicked in a browser during this session.
+Why it matters: Static build success confirms compilation, not actual in-browser layout, button flow, triageSource visibility, or fallback/OpenClaw copy clarity for the A/C/D demo.
+Next action: Run `pnpm.cmd --filter @arka/web dev` from an interactive terminal, open `/dashboard`, and manually verify State A, State C, and State D before claiming the dashboard flow is demo-ready.
 Owner: Both
 ```

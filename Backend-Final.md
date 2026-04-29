@@ -6,6 +6,14 @@ Backend ARKA tugasnya:
 
 > Mengubah **POS order + usage rule + inventory movement** menjadi **AuditEvent** yang bisa dibaca Dashboard, OpenClaw, Telegram, dan 0G.
 
+OpenClaw research impact:
+
+```txt
+OpenClaw is a sidecar gateway/runtime/plugin/skills system.
+Backend should expose controlled AuditEvent context to OpenClaw later, but must not depend on OpenClaw to create AuditEvents.
+packages/agent deterministic fallback can be used when OpenClaw gateway/plugin is unavailable.
+```
+
 Backend ARKA harus menjawab satu pertanyaan utama:
 
 > **Can we prove what happened between a business transaction and physical inventory movement?**
@@ -59,6 +67,14 @@ Untuk MVP, backend hanya perlu capture:
    Apakah expected vs actual cocok?
 
 Kalau empat ini rapi, OpenClaw, Dashboard, Telegram, dan 0G tinggal consume.
+
+OpenClaw consumption rule:
+
+```txt
+OpenClaw consumes backend-created AuditEvent.
+OpenClaw may append triage/recommendation/action outputs.
+OpenClaw must not rewrite expected qty, actual qty, variance, status, severity, or evidence references.
+```
 
 ---
 

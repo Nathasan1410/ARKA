@@ -28,7 +28,8 @@ apps/web              Next.js app: dashboard, simulator UI, API route handlers
 contracts             AuditProofRegistry.sol and deployment scripts
 packages/core         pure audit/reconciliation/proof logic
 packages/shared       shared types, enums, validation schemas
-packages/agent        OpenClaw/LLM orchestration wrapper if needed
+packages/agent        ARKA agent client boundary and deterministic fallback
+packages/openclaw-plugin-arka  optional later OpenClaw plugin after smoke setup
 docs                  briefs, attribution, real-vs-simulated, reused libraries
 hardware              optional P1 only
 ```
@@ -356,7 +357,18 @@ Whether viem or ethers integrates better with the selected Hardhat setup.
 Recommended choice:
 
 ```txt
-packages/agent as a thin ARKA-specific wrapper
+OpenClaw sidecar gateway/runtime plus ARKA-specific OpenClaw skill/plugin when verified
+packages/agent as ARKA's app-facing client boundary and deterministic fallback
+```
+
+Current research result:
+
+```txt
+OpenClaw is a local-first gateway/runtime/plugin/skills system.
+It is not just a small agent function to import into packages/agent.
+Research clone lives outside the repo at D:\Projekan\Macam2Hackathon\ARKA\_research\openclaw.
+OpenClaw has not been installed, modified, or verified as ARKA runtime integration yet.
+See docs/openclaw-research-and-integration-plan.md.
 ```
 
 MVP behavior:
@@ -372,8 +384,9 @@ Implementation posture:
 
 ```txt
 Start with deterministic policy/scripted triage for the core demo.
-Add LLM/OpenClaw runtime only behind the same interface.
-Use the public OpenClaw framework only if setup is fast enough and properly attributed.
+Run OpenClaw smoke setup before claiming OpenClaw runtime.
+Use OpenClaw through a sidecar gateway plus ARKA skill/plugin if setup is stable.
+Use packages/agent to call OpenClaw or fall back to deterministic policy.
 Deterministic triage must work even if OpenClaw runtime or LLM integration slips.
 The MVP should not depend on the agent runtime being fully integrated.
 Do not build multi-agent swarm for MVP.
@@ -383,15 +396,16 @@ Reason:
 
 ```txt
 The product promise is AuditEvent triage, not agent framework complexity.
-The interface matters more than the runtime in week one.
+The OpenClaw story matters, but demo reliability still requires deterministic fallback.
 ```
 
 Needs verification:
 
 ```txt
-OpenClaw runtime setup.
-License/attribution expectations.
-Whether Telegram integration from OpenClaw is useful or whether ARKA should own Telegram directly.
+OpenClaw install/run smoke test on this machine.
+Whether native Windows is enough or WSL2 is needed.
+Whether ARKA should use OpenClaw Telegram or ARKA-owned grammY for P0.
+Whether ARKA plugin starts inside OpenClaw gateway and can expose safe AuditEvent tools.
 ```
 
 ## 9. Telegram Flow
@@ -561,7 +575,7 @@ Contracts: Solidity AuditProofRegistry
 0G Storage: 0G TypeScript SDK, CLI fallback
 0G Chain: Hardhat deploy/test, viem or ethers for backend calls
 Telegram: grammY
-OpenClaw / LLM: packages/agent wrapper, deterministic policy first, LLM/OpenClaw adapter later
+OpenClaw / LLM: OpenClaw sidecar gateway + ARKA skill/plugin when verified; packages/agent fallback/client boundary
 Testing: Vitest + Hardhat tests + manual demo verification
 Deployment: Vercel + hosted Postgres + 0G testnet + Telegram webhook
 ```
@@ -576,7 +590,7 @@ Whether 0G Storage upload returns tx hash.
 Current 0G Storage indexer endpoint.
 Current 0G testnet RPC, chain ID, faucet, and token availability.
 Hardhat 3 vs Hardhat 2 compatibility with current 0G examples.
-OpenClaw runtime setup and attribution requirements.
+OpenClaw smoke setup, ARKA skill/plugin shape, and attribution requirements.
 Telegram webhook vs polling for selected deployment.
 Whether separate API server or worker is necessary.
 Whether viem or ethers is better for the selected contract tooling.
@@ -609,6 +623,7 @@ Vitest guide: https://vitest.dev/guide/
 Playwright intro: https://playwright.dev/docs/intro
 Vercel Next.js hosting: https://vercel.com/docs/frameworks/full-stack/nextjs
 OpenClaw repository: https://github.com/openclaw/openclaw
+OpenClaw research plan: docs/openclaw-research-and-integration-plan.md
 ```
 
 Assumptions:
@@ -629,5 +644,5 @@ Next.js + Postgres + Drizzle + packages/core + Hardhat + 0G SDK + grammY.
 Remaining open questions:
 
 ```txt
-Mostly 0G SDK/runtime details, OpenClaw runtime setup, and deployment constraints.
+Mostly 0G SDK/runtime details, OpenClaw smoke setup / ARKA skill-plugin integration, and deployment constraints.
 ```

@@ -21,6 +21,14 @@ Dashboard = Layer-2 visual investigation
 0G Chain = proof anchors
 ```
 
+OpenClaw implementation rule:
+
+```txt
+OpenClaw is a gateway/runtime/plugin/skills system.
+Do not claim real OpenClaw integration from packages/agent deterministic fallback alone.
+Use docs/openclaw-research-and-integration-plan.md before changing OpenClaw-related code.
+```
+
 Product anchor:
 
 > ARKA is an AuditEvent generator with an OpenClaw triage layer and 0G proof layer.
@@ -244,6 +252,7 @@ AGENTS.md
 checklist.md
 docs/mvp-demo-interaction-brief.md
 docs/technical-stack-brief.md
+docs/openclaw-research-and-integration-plan.md
 docs/real-vs-simulated.md
 relevant domain brief (Backend, Database, OpenClaw, 0G Storage, 0G Chain)
 ```
