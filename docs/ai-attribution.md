@@ -12,6 +12,7 @@ This document tracks material AI-assisted work in ARKA.
 - Reviewed the Web2 MVP dashboard, shared/core proof path, and DB boundary for State A/C/D demo clarity.
 - Refactored the dashboard to consume `POST /api/demo/run-scenario` results instead of creating AuditEvents and proof hashes in the browser.
 - Added a server-side demo run service for order-shaped data, movement-shaped data, AuditEvent creation, deterministic fallback triage, local proof package hashing, and in-memory demo repository state.
+- Added a dashboard-only simulated agent action route for owner approval, simulated staff message send, simulated staff reply, and final owner decision.
 - Wired the dashboard to display deterministic local AuditEvent proof package hashes returned by the backend route while preserving honest 0G/OpenClaw/Telegram status labels.
 - Improved dashboard copy and data display for expected vs actual usage, movement before/after quantities, proof failure/retry placeholders, and owner/staff simulated-message boundaries.
 
@@ -19,6 +20,7 @@ This document tracks material AI-assisted work in ARKA.
 - `apps/web/app/dashboard/dashboard-data.ts`
 - `apps/web/app/dashboard/dashboard-shell.tsx`
 - `apps/web/app/dashboard/demo-run-service.ts`
+- `apps/web/app/api/demo/agent-action/route.ts`
 - `apps/web/app/api/demo/run-scenario/route.ts`
 - `apps/web/app/dashboard/page.tsx`
 - `apps/web/app/globals.css`
@@ -42,6 +44,7 @@ This document tracks material AI-assisted work in ARKA.
 - `pnpm.cmd run verify:arka-openclaw`
 - Local dev-server HTTP smoke: `http://127.0.0.1:3010/dashboard` returned 200 with dashboard/proof-panel content.
 - Local API route smoke for State A, State C, and State D returned expected status, severity, deterministic triage source, `LOCAL_ONLY`, `NOT_STARTED`, `NOT_REGISTERED`, and local package hashes.
+- Local simulated-agent HTTP smoke for State C completed owner approval, simulated staff send, simulated staff reply, and final decision. State D completed owner-reviewed final decision.
 
 ## 2026-04-30 - Parallel Worker Handoff
 
@@ -141,10 +144,12 @@ This document tracks material AI-assisted work in ARKA.
 ### What AI Helped With
 - Fixed the ARKA/OpenClaw secret-scan regression test so it no longer walks the entire local OpenClaw source fork on HDD.
 - Kept the secret guard meaningful by scanning ARKA repo env files and bounded OpenClaw env locations without storing or echoing secrets.
+- Stabilized `test:arka-openclaw` on Node 24 by forcing Vitest to run in a single-thread threads pool (avoids a fork-pool SSR fetch timeout before test collection).
 - Added cross-layer next-slice planning for frontend, backend, database, proof, 0G Storage, and 0G Chain sequencing.
 
 ### Files / Areas Affected
 - `test/arka-openclaw.verify.test.ts`
+- `package.json`
 - `docs/openclaw-cross-layer-next-slices.md`
 - `docs/mvp-demo-interaction-brief.md`
 - `CHANGELOG.md`

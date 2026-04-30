@@ -303,6 +303,65 @@ textarea {
   margin-top: 16px;
 }
 
+.agent-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.action-button {
+  border: 1px solid rgba(110, 168, 254, 0.48);
+  border-radius: 8px;
+  background: rgba(44, 70, 114, 0.64);
+  color: var(--text);
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 700;
+  padding: 10px 12px;
+}
+
+.action-button:hover {
+  border-color: var(--accent);
+}
+
+.action-button:disabled {
+  cursor: wait;
+  opacity: 0.64;
+}
+
+.timeline-list {
+  display: grid;
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.timeline-entry {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 14px;
+  align-items: start;
+  border-top: 1px solid rgba(153, 167, 194, 0.12);
+  padding-top: 12px;
+}
+
+.timeline-entry strong {
+  display: block;
+  font-size: 14px;
+}
+
+.timeline-entry p {
+  margin: 5px 0 0;
+  color: var(--text-soft);
+  line-height: 1.5;
+}
+
+.timeline-entry span {
+  color: var(--text-soft);
+  font-size: 12px;
+  text-align: right;
+}
+
 .hash-value {
   max-width: 100%;
   overflow-wrap: anywhere;
@@ -383,7 +442,12 @@ textarea {
   .scenario-body,
   .scenario-meta,
   .kv-row,
-  .history-row {
+  .history-row,
+  .timeline-entry {
     grid-template-columns: 1fr;
+  }
+
+  .timeline-entry span {
+    text-align: left;
   }
 }

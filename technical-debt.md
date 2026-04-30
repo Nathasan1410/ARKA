@@ -38,6 +38,31 @@ Next action: Retry with a concrete selector and a short timeout, for example `no
 Owner: Human / Agent
 ```
 
+### 2026-04-30 - OpenClaw Model-Backed Turn Blocked (CLI Hangs)
+
+```txt
+Area: OpenClaw / Model turn / MiniMax
+Status: BLOCKED
+What happened: MiniMax network connectivity is ok and a direct `fetch()` POST to `https://api.minimax.io/anthropic/v1/messages` returns 200 quickly (using the same local key). However, OpenClaw CLI model-turn paths hang indefinitely on this Windows laptop, including:
+- `node openclaw\\openclaw.mjs --dev infer model run --local --model minimax/MiniMax-M2.7 --prompt "Reply with OK" --json`
+- `node openclaw\\openclaw.mjs --dev agent --local --session-id arka-smoke --model minimax/MiniMax-M2.7 ...`
+Why it matters: ARKA must not claim a model-backed OpenClaw agent response until at least one bounded model-backed turn completes successfully through OpenClaw (local or gateway). Today this remains unverified; ARKA only has deterministic fallback triage verified.
+Next action: Debug OpenClaw CLI hang in the local fork (likely provider runtime hooks / dynamic model prep / stream handling). Add a bounded timeout + logging around the hang point and verify a single `infer model run` completes on Windows with MiniMax.
+Owner: Agent (OpenClaw fork) + Human (verify on this machine)
+```
+
+### 2026-04-30 - Vitest Fork Pool SSR Fetch Timeout (verify:arka-openclaw)
+
+```txt
+Area: Tooling / Verification
+Status: RISK
+What happened: `vitest run test/arka-openclaw.verify.test.ts` intermittently failed before collecting tests with: `Timeout calling "fetch" ... ["...verify.test.ts","ssr"]`. Forcing Vitest to use the threads pool in a single thread avoided this on Node 24:
+- `vitest ... --pool=threads --poolOptions.threads.singleThread`
+Why it matters: `pnpm.cmd run verify:arka-openclaw` is the cross-layer regression gate. If it flakes, teams lose confidence and waste time.
+Next action: Keep the threads/singleThread setting for this verification test until the underlying Vitest/Node 24 fork-pool/SSR fetch issue is understood. Revisit once the environment is stable (or pin Node/Vitest).
+Owner: Agent
+```
+
 ### 2026-04-30 - Telegram Bot Token Handling
 
 ```txt
@@ -157,7 +182,8 @@ Area: Dashboard UI
 Status: RISK
 What happened: The dashboard shell was verified with `pnpm.cmd --filter @arka/web build`. On 2026-04-30, a package-local Next dev server was started with `pnpm.cmd --filter @arka/web exec next dev --hostname 127.0.0.1 --port 3010`, and `http://127.0.0.1:3010/dashboard` returned HTTP 200 with dashboard and proof-panel content. No browser automation exists in the repo, so State A / State C / State D were not clicked in a real browser during this session.
 Additional verification: After the dashboard was refactored to call `POST /api/demo/run-scenario`, direct HTTP POST checks for State A, State C, and State D returned the expected status, severity, deterministic fallback triage source, `LOCAL_ONLY`, `NOT_STARTED`, `NOT_REGISTERED`, and local package hashes.
-Why it matters: Static build and HTTP smoke confirm compilation, route serving, and API behavior, not actual in-browser layout, button flow, triageSource visibility after clicks, or fallback/OpenClaw copy clarity for the A/C/D demo.
+Agent simulation verification: Direct HTTP checks for `POST /api/demo/agent-action` completed the State C dashboard-only sequence from owner approval to simulated staff send, simulated staff reply, and final owner decision. State D completed the owner-reviewed final decision path.
+Why it matters: Static build and HTTP smoke confirm compilation, route serving, API behavior, and the local simulated-agent state machine, not actual in-browser layout, button flow, triageSource visibility after clicks, or fallback/OpenClaw copy clarity for the A/C/D demo.
 Next action: Open `http://127.0.0.1:3010/dashboard` in a browser and manually click State A, State C, and State D before claiming the dashboard flow is demo-ready.
 Owner: Both
 ```

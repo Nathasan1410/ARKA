@@ -367,6 +367,7 @@ Route:
 ```txt
 /dashboard
 POST /api/demo/run-scenario for local A/C/D scenario execution
+POST /api/demo/agent-action for dashboard-only simulated owner/staff/final-decision actions
 ```
 
 P0 panels:
@@ -402,6 +403,7 @@ User can run A/C/D.
 Dashboard calls the local scenario route and shows returned Order, Movement, AuditEvent data.
 AuditEvent detail explains expected vs actual.
 OpenClaw triage outcome is visible.
+Dashboard simulation can advance owner approval, staff message preview/send, simulated staff reply, and final owner decision without claiming real Telegram or OpenClaw runtime.
 Proof status is visible even if proof integration is not yet real.
 Local AuditEvent proof package hash is visible before any 0G upload or chain registration.
 Persistence mode is visible and must say in-memory demo until real Postgres write/read is verified.

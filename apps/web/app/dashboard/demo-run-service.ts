@@ -16,6 +16,12 @@ import {
   triageAuditEvent,
 } from '@arka/agent';
 import type { DashboardPersistenceStatus, DashboardRun, RunScenarioResponse } from './dashboard-data';
+import type {
+  AgentActionResponse,
+  SimulatedAgentAction,
+  SimulatedAgentInteraction,
+  SimulatedAgentTimelineEntry,
+} from './dashboard-data';
 
 const INITIAL_SCENARIO = ScenarioKey.STATE_A;
 const WINDOW_START_HOUR = 15;
@@ -27,6 +33,7 @@ const MAX_HISTORY = 12;
 type DemoRunRepository = {
   getHistory(): Promise<DashboardRun[]>;
   saveRun(run: DashboardRun): Promise<DashboardRun[]>;
+  updateRun(caseId: string, updater: (run: DashboardRun) => DashboardRun): Promise<DashboardRun[]>;
   persistenceStatus(): DashboardPersistenceStatus;
 };
 
@@ -39,6 +46,16 @@ const inMemoryDemoRunRepository: DemoRunRepository = {
   async saveRun(run) {
     memoryRuns.unshift(run);
     memoryRuns.splice(MAX_HISTORY);
+    return [...memoryRuns];
+  },
+  async updateRun(caseId, updater) {
+    const runIndex = memoryRuns.findIndex((run) => run.caseId === caseId);
+
+    if (runIndex === -1) {
+      return [...memoryRuns];
+    }
+
+    memoryRuns[runIndex] = updater(memoryRuns[runIndex]);
     return [...memoryRuns];
   },
   persistenceStatus() {
@@ -88,8 +105,52 @@ export async function runDashboardScenario(scenarioKey: ScenarioKeyType): Promis
   };
 }
 
+export async function runSimulatedAgentAction(
+  caseId: string,
+  action: SimulatedAgentAction,
+): Promise<AgentActionResponse | null> {
+  const repository = getDemoRunRepository();
+  const history = await repository.getHistory();
+  const currentRun = history.find((run) => run.caseId === caseId);
+
+  if (!currentRun || !currentRun.simulatedAgent.availableActions.includes(action)) {
+    return null;
+  }
+
+  const nextHistory = await repository.updateRun(caseId, (run) => ({
+    ...run,
+    ...applySimulatedAgentAction(run, action),
+  }));
+  const nextRun = nextHistory.find((run) => run.caseId === caseId);
+
+  if (!nextRun) {
+    return null;
+  }
+
+  return {
+    run: nextRun,
+    history: nextHistory,
+    persistence: repository.persistenceStatus(),
+  };
+}
+
 export function parseScenarioKey(value: unknown): ScenarioKeyType | null {
   if (value === ScenarioKey.STATE_A || value === ScenarioKey.STATE_C || value === ScenarioKey.STATE_D) {
+    return value;
+  }
+
+  return null;
+}
+
+export function parseSimulatedAgentAction(value: unknown): SimulatedAgentAction | null {
+  if (
+    value === 'APPROVE_EXPLANATION_REQUEST' ||
+    value === 'SEND_STAFF_MESSAGE' ||
+    value === 'SIMULATE_STAFF_REPLY' ||
+    value === 'RECORD_FINAL_DECISION' ||
+    value === 'SILENT_LOG_CASE' ||
+    value === 'MARK_OWNER_REVIEWED'
+  ) {
     return value;
   }
 
@@ -187,10 +248,229 @@ async function createDashboardRun(
       failureState: 'No failed upload or registration',
       retryState: 'No retry queued. Retry placeholders become active only after a real upload or registration failure.',
     },
+    simulatedAgent: createInitialSimulatedAgentInteraction(auditEvent, triageOutcome, evidenceWindowLabel),
     triageRuntimeSummary:
-      'Deterministic fallback is active. Real OpenClaw gateway, skill, plugin, and Telegram runtime are not connected in this dashboard path.',
+      'Dashboard simulation is active. Real OpenClaw gateway, skill, plugin, and Telegram runtime are not connected in this dashboard path.',
     persistence,
     auditEvent,
+  };
+}
+
+function applySimulatedAgentAction(
+  run: DashboardRun,
+  action: SimulatedAgentAction,
+): Pick<DashboardRun, 'actionLog' | 'caseNote' | 'ownerAlertState' | 'simulatedAgent'> {
+  const createdAtLabel = formatDateLabel(new Date().toISOString());
+  const interaction = run.simulatedAgent;
+  const baseTimeline = interaction.timeline;
+
+  if (action === 'APPROVE_EXPLANATION_REQUEST') {
+    const staffMessage = getStaffMessagePreview(
+      run.auditEvent,
+      TriageOutcome.REQUEST_EXPLANATION,
+      run.evidenceWindowLabel,
+    );
+
+    return {
+      ownerAlertState: 'Owner approved explanation request',
+      actionLog: `${run.actionLog} | owner_approved_explanation_request`,
+      caseNote: `${run.caseNote} Owner approved a simulated staff clarification request.`,
+      simulatedAgent: {
+        ...interaction,
+        status: 'STAFF_MESSAGE_READY',
+        headline: 'Staff message ready for simulated send',
+        staffMessage,
+        availableActions: ['SEND_STAFF_MESSAGE', 'SILENT_LOG_CASE'],
+        timeline: [
+          ...baseTimeline,
+          createTimelineEntry('Owner approval recorded', 'Owner approved asking Joni for clarification.', 'Owner', createdAtLabel),
+        ],
+      },
+    };
+  }
+
+  if (action === 'SEND_STAFF_MESSAGE') {
+    return {
+      ownerAlertState: 'Simulated staff message sent',
+      actionLog: `${run.actionLog} | simulated_staff_message_sent`,
+      caseNote: `${run.caseNote} Simulated staff message was sent from the dashboard preview.`,
+      simulatedAgent: {
+        ...interaction,
+        status: 'STAFF_MESSAGE_SENT',
+        headline: 'Waiting for simulated staff reply',
+        availableActions: ['SIMULATE_STAFF_REPLY'],
+        timeline: [
+          ...baseTimeline,
+          createTimelineEntry('Staff message simulated', 'Dashboard simulation marked the staff clarification as sent.', 'ARKA Agent', createdAtLabel),
+        ],
+      },
+    };
+  }
+
+  if (action === 'SIMULATE_STAFF_REPLY') {
+    const staffResponse =
+      run.auditEvent.triageOutcome === TriageOutcome.ESCALATE
+        ? 'Joni says the extra whey was used after a large spill during prep and needs owner review.'
+        : 'Joni says one shake was remade after texture complaints, causing the extra whey usage.';
+
+    return {
+      ownerAlertState: 'Staff reply simulated',
+      actionLog: `${run.actionLog} | simulated_staff_reply_received`,
+      caseNote: `${run.caseNote} Simulated staff reply received for owner review.`,
+      simulatedAgent: {
+        ...interaction,
+        status: 'STAFF_RESPONSE_RECEIVED',
+        headline: 'Staff reply ready for owner decision',
+        staffResponse,
+        availableActions: ['RECORD_FINAL_DECISION'],
+        timeline: [
+          ...baseTimeline,
+          createTimelineEntry('Staff reply simulated', staffResponse, run.auditEvent.handlerName, createdAtLabel),
+        ],
+      },
+    };
+  }
+
+  if (action === 'RECORD_FINAL_DECISION') {
+    const finalDecision =
+      run.auditEvent.triageOutcome === TriageOutcome.ESCALATE
+        ? 'Owner marked the case for manual review after receiving the simulated explanation.'
+        : 'Owner accepted the explanation for the MVP demo and kept the proof package local.';
+
+    return {
+      ownerAlertState: 'Final decision recorded',
+      actionLog: `${run.actionLog} | final_decision_recorded`,
+      caseNote: `${run.caseNote} ${finalDecision}`,
+      simulatedAgent: {
+        ...interaction,
+        status: 'FINAL_DECISION_RECORDED',
+        headline: 'Final decision recorded in dashboard simulation',
+        finalDecision,
+        availableActions: [],
+        timeline: [
+          ...baseTimeline,
+          createTimelineEntry('Final decision recorded', finalDecision, 'Owner', createdAtLabel),
+        ],
+      },
+    };
+  }
+
+  if (action === 'SILENT_LOG_CASE') {
+    return {
+      ownerAlertState: 'Silent log selected',
+      actionLog: `${run.actionLog} | owner_selected_silent_log`,
+      caseNote: `${run.caseNote} Owner selected silent log in the dashboard simulation.`,
+      simulatedAgent: {
+        ...interaction,
+        status: 'SILENT_LOGGED',
+        headline: 'Case kept as a silent log',
+        finalDecision: 'Owner kept this case in dashboard history without sending a staff message.',
+        availableActions: [],
+        timeline: [
+          ...baseTimeline,
+          createTimelineEntry('Silent log selected', 'Owner chose not to send a staff message for this demo case.', 'Owner', createdAtLabel),
+        ],
+      },
+    };
+  }
+
+  return {
+    ownerAlertState: 'Owner reviewed alert',
+    actionLog: `${run.actionLog} | owner_reviewed_alert`,
+    caseNote: `${run.caseNote} Owner reviewed the simulated critical alert.`,
+    simulatedAgent: {
+      ...interaction,
+      status: 'FINAL_DECISION_RECORDED',
+      headline: 'Owner review recorded',
+      finalDecision: 'Owner reviewed the critical case and kept it open for manual follow-up.',
+      availableActions: [],
+      timeline: [
+        ...baseTimeline,
+        createTimelineEntry('Owner reviewed alert', 'Owner acknowledged the simulated critical review alert.', 'Owner', createdAtLabel),
+      ],
+    },
+  };
+}
+
+function createInitialSimulatedAgentInteraction(
+  auditEvent: DashboardRun['auditEvent'],
+  triageOutcome: TriageOutcome,
+  evidenceWindowLabel: string,
+): SimulatedAgentInteraction {
+  const createdAtLabel = formatDateLabel(auditEvent.createdAt);
+
+  if (triageOutcome === TriageOutcome.AUTO_CLEAR) {
+    return {
+      mode: 'DASHBOARD_SIMULATION',
+      status: 'NO_ACTION_NEEDED',
+      headline: 'Auto-clear simulated by dashboard agent',
+      ownerMessage: 'Usage looks normal. No owner alert or staff message is needed.',
+      staffMessage: null,
+      staffResponse: null,
+      finalDecision: 'Case auto-cleared locally and kept in dashboard history.',
+      availableActions: [],
+      timeline: [
+        createTimelineEntry('AuditEvent triaged', 'Deterministic fallback selected AUTO_CLEAR.', 'ARKA Agent', createdAtLabel),
+        createTimelineEntry('No alert needed', 'Case was added to history without contacting owner or staff.', 'ARKA Agent', createdAtLabel),
+      ],
+    };
+  }
+
+  if (triageOutcome === TriageOutcome.REQUEST_EXPLANATION) {
+    return {
+      mode: 'DASHBOARD_SIMULATION',
+      status: 'OWNER_APPROVAL_PENDING',
+      headline: 'Owner approval needed',
+      ownerMessage: [
+        'ARKA created a review case.',
+        `Expected ${auditEvent.expectedUsageGrams}g whey for ${auditEvent.orderQuantity} ${auditEvent.productName}s.`,
+        `Movement recorded ${auditEvent.actualMovementGrams}g OUT during ${evidenceWindowLabel}.`,
+        `Recommended action: ask ${auditEvent.handlerName} for an explanation.`,
+      ].join(' '),
+      staffMessage: getStaffMessagePreview(auditEvent, TriageOutcome.REQUEST_EXPLANATION, evidenceWindowLabel),
+      staffResponse: null,
+      finalDecision: null,
+      availableActions: ['APPROVE_EXPLANATION_REQUEST', 'SILENT_LOG_CASE'],
+      timeline: [
+        createTimelineEntry('AuditEvent triaged', 'Deterministic fallback selected REQUEST_EXPLANATION.', 'ARKA Agent', createdAtLabel),
+        createTimelineEntry('Owner approval pending', 'Dashboard simulation is waiting before sending staff follow-up.', 'ARKA Agent', createdAtLabel),
+      ],
+    };
+  }
+
+  return {
+    mode: 'DASHBOARD_SIMULATION',
+    status: 'OWNER_REVIEW_PENDING',
+    headline: 'Critical review alert preview',
+    ownerMessage: [
+      'Critical review case created.',
+      `Expected ${auditEvent.expectedUsageGrams}g and recorded ${auditEvent.actualMovementGrams}g OUT.`,
+      `Evidence window: ${evidenceWindowLabel}.`,
+      'Recommended action: owner or auditor reviews immediately before any follow-up decision.',
+    ].join(' '),
+    staffMessage: getStaffMessagePreview(auditEvent, TriageOutcome.ESCALATE, evidenceWindowLabel),
+    staffResponse: null,
+    finalDecision: null,
+    availableActions: ['APPROVE_EXPLANATION_REQUEST', 'MARK_OWNER_REVIEWED'],
+    timeline: [
+      createTimelineEntry('AuditEvent triaged', 'Deterministic fallback selected ESCALATE.', 'ARKA Agent', createdAtLabel),
+      createTimelineEntry('Owner alert preview shown', 'Dashboard simulation shows the critical review alert; no Telegram message was sent.', 'ARKA Agent', createdAtLabel),
+    ],
+  };
+}
+
+function createTimelineEntry(
+  label: string,
+  detail: string,
+  actor: string,
+  createdAtLabel: string,
+): SimulatedAgentTimelineEntry {
+  return {
+    id: `${label.toLowerCase().replaceAll(' ', '-')}-${createdAtLabel.replaceAll(/[^0-9]/g, '')}`,
+    label,
+    detail,
+    actor,
+    createdAtLabel,
   };
 }
 

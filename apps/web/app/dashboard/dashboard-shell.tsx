@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from 'react';
 import { demoScenarioSeeds, demoWorldSeed, ScenarioKey, TriageOutcome, type ScenarioKey as ScenarioKeyType } from '@arka/shared';
-import { scenarioCards, type DashboardRun, type RunScenarioResponse } from './dashboard-data';
+import { scenarioCards, type DashboardRun, type RunScenarioResponse, type SimulatedAgentAction } from './dashboard-data';
 
 type DashboardShellProps = {
   initialState: RunScenarioResponse;
@@ -12,6 +12,7 @@ export function DashboardShell({ initialState }: DashboardShellProps) {
   const [runs, setRuns] = useState<DashboardRun[]>(initialState.history);
   const [selectedCaseId, setSelectedCaseId] = useState(initialState.run.caseId);
   const [isRunningScenario, setIsRunningScenario] = useState(false);
+  const [isRunningAgentAction, setIsRunningAgentAction] = useState(false);
   const [runError, setRunError] = useState<string | null>(null);
 
   const selectedRun = useMemo(() => {
@@ -42,6 +43,33 @@ export function DashboardShell({ initialState }: DashboardShellProps) {
       setRunError(error instanceof Error ? error.message : 'Scenario route failed.');
     } finally {
       setIsRunningScenario(false);
+    }
+  }
+
+  async function handleAgentAction(action: SimulatedAgentAction) {
+    setIsRunningAgentAction(true);
+    setRunError(null);
+
+    try {
+      const response = await fetch('/api/demo/agent-action', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ caseId: selectedRun.caseId, action }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`Agent simulation failed with HTTP ${response.status}`);
+      }
+
+      const result = (await response.json()) as RunScenarioResponse;
+      setRuns(result.history);
+      setSelectedCaseId(result.run.caseId);
+    } catch (error) {
+      setRunError(error instanceof Error ? error.message : 'Agent simulation failed.');
+    } finally {
+      setIsRunningAgentAction(false);
     }
   }
 
@@ -228,13 +256,14 @@ export function DashboardShell({ initialState }: DashboardShellProps) {
         </section>
 
         <section className="panel span-4">
-          <h2>OpenClaw / Telegram Panel</h2>
+          <h2>Agent / Telegram Panel</h2>
           <p className="panel-subtitle">
-            Deterministic fallback is active. Real OpenClaw runtime and Telegram delivery remain unverified.
+            Dashboard simulation is active. Real OpenClaw runtime and Telegram delivery remain unverified.
           </p>
           <div className="panel-grid">
             <Kv label="Triage outcome" value={selectedRun.auditEvent.triageOutcome} />
             <Kv label="Triage source" value={selectedRun.auditEvent.triageSource} />
+            <Kv label="Simulation state" value={selectedRun.simulatedAgent.status} />
             <Kv label="Owner state" value={selectedRun.ownerAlertState} />
             <Kv label="Owner recommendation" value={selectedRun.ownerRecommendation} />
             <Kv label="Action log" value={selectedRun.actionLog} />
@@ -245,16 +274,64 @@ export function DashboardShell({ initialState }: DashboardShellProps) {
             <p>{selectedRun.triageRuntimeSummary}</p>
           </div>
           <div className="message-box">
-            <span className="label">Owner alert preview</span>
-            <p>{selectedRun.ownerAlertCopy}</p>
+            <span className="label">{selectedRun.simulatedAgent.headline}</span>
+            <p>{selectedRun.simulatedAgent.ownerMessage}</p>
           </div>
-          {selectedRun.staffMessagePreview ? (
+          {selectedRun.simulatedAgent.staffMessage ? (
             <div className="message-box">
               <span className="label">Staff follow-up preview</span>
-              <p style={{ whiteSpace: 'pre-line' }}>{selectedRun.staffMessagePreview}</p>
+              <p style={{ whiteSpace: 'pre-line' }}>{selectedRun.simulatedAgent.staffMessage}</p>
               <small className="message-footnote">Preview only. It is not sent before owner approval.</small>
             </div>
           ) : null}
+          {selectedRun.simulatedAgent.staffResponse ? (
+            <div className="message-box">
+              <span className="label">Simulated staff reply</span>
+              <p>{selectedRun.simulatedAgent.staffResponse}</p>
+            </div>
+          ) : null}
+          {selectedRun.simulatedAgent.finalDecision ? (
+            <div className="message-box">
+              <span className="label">Final owner decision</span>
+              <p>{selectedRun.simulatedAgent.finalDecision}</p>
+            </div>
+          ) : null}
+          {selectedRun.simulatedAgent.availableActions.length > 0 ? (
+            <div className="agent-actions">
+              {selectedRun.simulatedAgent.availableActions.map((action) => (
+                <button
+                  key={action}
+                  className="action-button"
+                  disabled={isRunningAgentAction}
+                  onClick={() => void handleAgentAction(action)}
+                  type="button"
+                >
+                  {renderAgentActionLabel(action)}
+                </button>
+              ))}
+            </div>
+          ) : null}
+        </section>
+
+        <section className="panel span-12">
+          <h2>Simulated Agent Timeline</h2>
+          <p className="panel-subtitle">
+            Local dashboard-only interaction log. It does not send Telegram messages and does not prove real OpenClaw
+            gateway behavior.
+          </p>
+          <div className="timeline-list">
+            {selectedRun.simulatedAgent.timeline.map((entry) => (
+              <div key={entry.id} className="timeline-entry">
+                <div>
+                  <strong>{entry.label}</strong>
+                  <p>{entry.detail}</p>
+                </div>
+                <span>
+                  {entry.actor} · {entry.createdAtLabel}
+                </span>
+              </div>
+            ))}
+          </div>
         </section>
 
         <section className="panel span-12">
@@ -292,6 +369,30 @@ export function DashboardShell({ initialState }: DashboardShellProps) {
       </div>
     </main>
   );
+}
+
+function renderAgentActionLabel(action: SimulatedAgentAction): string {
+  if (action === 'APPROVE_EXPLANATION_REQUEST') {
+    return 'Approve explanation request';
+  }
+
+  if (action === 'SEND_STAFF_MESSAGE') {
+    return 'Simulate sending staff message';
+  }
+
+  if (action === 'SIMULATE_STAFF_REPLY') {
+    return 'Simulate staff reply';
+  }
+
+  if (action === 'RECORD_FINAL_DECISION') {
+    return 'Record final owner decision';
+  }
+
+  if (action === 'SILENT_LOG_CASE') {
+    return 'Silent log case';
+  }
+
+  return 'Mark owner reviewed';
 }
 
 function ScenarioMetric({ label, value }: { label: string; value: string }) {

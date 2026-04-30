@@ -5,6 +5,9 @@ All meaningful ARKA changes should be recorded here in human-readable language.
 ## 2026-04-30
 
 ### Changed
+- Added a dashboard-only simulated agent interaction path through `POST /api/demo/agent-action`.
+- State C can now be tested through owner approval, simulated staff message send, simulated staff reply, and final owner decision without waiting for real OpenClaw or Telegram.
+- State D can now record a simulated owner-reviewed final decision while remaining clearly labeled as dashboard simulation.
 - Refactored the Web2 dashboard path so State A/C/D clicks call `POST /api/demo/run-scenario` instead of assembling AuditEvents and proof hashes in the browser.
 - Added a server-side demo run service that creates order-shaped data, movement-shaped data, AuditEvent facts, deterministic fallback triage, and local proof-record-shaped metadata through the existing shared/core/agent boundaries.
 - Added an explicit in-memory demo repository/persistence label for the dashboard while real Postgres write/read verification remains unclaimed.
@@ -24,6 +27,7 @@ All meaningful ARKA changes should be recorded here in human-readable language.
 - `pnpm.cmd run verify:arka-openclaw`
 - Local dev-server HTTP smoke: `http://127.0.0.1:3010/dashboard` returned 200 with dashboard/proof-panel content.
 - Local API route smoke for State A, State C, and State D returned expected status, severity, deterministic triage source, `LOCAL_ONLY`, `NOT_STARTED`, `NOT_REGISTERED`, and local package hashes.
+- Local simulated-agent HTTP smoke for State C completed owner approval, simulated staff send, simulated staff reply, and final decision. State D completed owner-reviewed final decision.
 
 ### Changed
 - Updated the OpenClaw impact assessment into a current cross-layer plan for frontend, backend/API, database, `packages/agent`, proof, 0G Storage, 0G Chain, Telegram, security, and the local `openclaw/` fork.
@@ -42,7 +46,8 @@ All meaningful ARKA changes should be recorded here in human-readable language.
 - Extended `test/arka-openclaw.verify.test.ts` to cover the plugin manifest, bundled extension metadata, read-only status, and explicit non-goals.
 
 ### Fixed
-- Hardened `test/arka-openclaw.verify.test.ts` so the secret-file guard no longer recursively scans the entire local OpenClaw fork on HDD. It now skips large vendor/build directories and checks only bounded ARKA/OpenClaw env-file locations.
+- Hardened `test/arka-openclaw.verify.test.ts` so the secret-file guard no longer recursively scans the entire local OpenClaw fork on HDD. It now checks tracked `.env*` files in the repo plus a bounded set of OpenClaw workspace env locations (without storing or echoing secrets).
+- Stabilized `pnpm.cmd run test:arka-openclaw` on Node 24 by forcing Vitest to run in a single-thread threads pool (avoids a fork-pool SSR `fetch` timeout before test collection).
 
 ### Why
 - OpenClaw is central to ARKA's Layer-1 triage story, so every sector needs a clear boundary: OpenClaw reads AuditEvents and appends safe triage outputs, while backend/core own facts and the proof layer owns 0G execution.

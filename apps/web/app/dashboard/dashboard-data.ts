@@ -1,4 +1,11 @@
-import { ScenarioKey, type AuditProofStatus, type ChainStatus, type DemoScenarioSeed, type ProofType, type StorageStatus } from '@arka/shared';
+import {
+  ScenarioKey,
+  type AuditProofStatus,
+  type ChainStatus,
+  type DemoScenarioSeed,
+  type ProofType,
+  type StorageStatus,
+} from '@arka/shared';
 import type { TriageAuditEvent } from '@arka/agent';
 
 const SCENARIO_SEQUENCE = [ScenarioKey.STATE_A, ScenarioKey.STATE_C, ScenarioKey.STATE_D] as const;
@@ -35,6 +42,44 @@ export type DashboardPersistenceStatus = {
   detail: string;
 };
 
+export type SimulatedAgentAction =
+  | 'APPROVE_EXPLANATION_REQUEST'
+  | 'SEND_STAFF_MESSAGE'
+  | 'SIMULATE_STAFF_REPLY'
+  | 'RECORD_FINAL_DECISION'
+  | 'SILENT_LOG_CASE'
+  | 'MARK_OWNER_REVIEWED';
+
+export type SimulatedAgentStatus =
+  | 'NO_ACTION_NEEDED'
+  | 'OWNER_APPROVAL_PENDING'
+  | 'STAFF_MESSAGE_READY'
+  | 'STAFF_MESSAGE_SENT'
+  | 'STAFF_RESPONSE_RECEIVED'
+  | 'OWNER_REVIEW_PENDING'
+  | 'SILENT_LOGGED'
+  | 'FINAL_DECISION_RECORDED';
+
+export type SimulatedAgentTimelineEntry = {
+  id: string;
+  label: string;
+  detail: string;
+  actor: string;
+  createdAtLabel: string;
+};
+
+export type SimulatedAgentInteraction = {
+  mode: 'DASHBOARD_SIMULATION';
+  status: SimulatedAgentStatus;
+  headline: string;
+  ownerMessage: string;
+  staffMessage: string | null;
+  staffResponse: string | null;
+  finalDecision: string | null;
+  availableActions: SimulatedAgentAction[];
+  timeline: SimulatedAgentTimelineEntry[];
+};
+
 export type DashboardRun = {
   scenario: DemoScenarioSeed;
   caseId: string;
@@ -55,6 +100,7 @@ export type DashboardRun = {
   caseNote: string;
   proofSummary: string;
   proofRecord: DashboardProofRecord;
+  simulatedAgent: SimulatedAgentInteraction;
   triageRuntimeSummary: string;
   persistence: DashboardPersistenceStatus;
   auditEvent: TriageAuditEvent;
@@ -65,6 +111,8 @@ export type RunScenarioResponse = {
   history: DashboardRun[];
   persistence: DashboardPersistenceStatus;
 };
+
+export type AgentActionResponse = RunScenarioResponse;
 
 const SCENARIO_CARD_CONTENT: Record<(typeof SCENARIO_SEQUENCE)[number], Omit<ScenarioCard, 'key'>> = {
   STATE_A: {
