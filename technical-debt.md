@@ -16,6 +16,17 @@ Owner: Human / Agent / Both
 
 ## Current Open Items
 
+### 2026-04-30 - Dashboard Visual Click-Through Needs Human Browser Pass
+
+```txt
+Area: Dashboard / Manual Demo Verification
+Status: NEEDS_HUMAN
+What happened: The `/dashboard` UI was refactored into a clearer case-console flow and verified through build, typecheck, focused demo-service tests, and local HTTP/API smoke checks. This environment does not have a browser automation dependency installed, so visual click-through verification for State A/C/D layout, wrapping, and operator intuition still needs a human pass in a real browser.
+Why it matters: The MVP depends on being understandable during a live demo. HTTP/build checks prove routes and behavior, but they cannot fully prove the dashboard feels intuitive or that every viewport looks right.
+Next action: Open `http://127.0.0.1:3010/dashboard`, click State A, State C, and State D, then verify Evidence / OpenClaw-Triage / Proof views remain readable and all simulated/local/not-started labels are clear.
+Owner: Human
+```
+
 ### 2026-04-30 - OpenClaw Plugin Skeleton Broad Verification Timeout
 
 ```txt

@@ -6,7 +6,7 @@ This document tracks material AI-assisted work in ARKA.
 
 ### AI Tool Used
 - OpenAI Codex CLI (GPT-5.x)
-- GPT-5.x explorer subagents for bounded dashboard/core/DB read-only review
+- GPT-5.x explorer/worker subagents for bounded dashboard UX review and demo-service test coverage
 
 ### What AI Helped With
 - Reviewed the Web2 MVP dashboard, shared/core proof path, and DB boundary for State A/C/D demo clarity.
@@ -15,6 +15,8 @@ This document tracks material AI-assisted work in ARKA.
 - Added a dashboard-only simulated agent action route for owner approval, simulated staff message send, simulated staff reply, and final owner decision.
 - Wired the dashboard to display deterministic local AuditEvent proof package hashes returned by the backend route while preserving honest 0G/OpenClaw/Telegram status labels.
 - Improved dashboard copy and data display for expected vs actual usage, movement before/after quantities, proof failure/retry placeholders, and owner/staff simulated-message boundaries.
+- Refactored the `/dashboard` layout into a clearer audit case console with a persistent scenario rail, case history, case summary, AuditEvent loop strip, Evidence / OpenClaw-Triage / Proof drilldowns, and always-visible local proof status.
+- Added focused demo-service tests for State A, State C, State D, and invalid simulated-agent actions.
 
 ### Files / Areas Affected
 - `apps/web/app/dashboard/dashboard-data.ts`
@@ -29,11 +31,14 @@ This document tracks material AI-assisted work in ARKA.
 - `docs/implementation-plan.md`
 - `CHANGELOG.md`
 - `docs/ai-attribution.md`
+- `test/dashboard-demo-service.verify.test.ts`
+- `test/dashboard-demo.vitest.config.ts`
 
 ### Human Review
 - Pending / to be confirmed by repo owner.
 
 ### Verification
+- `pnpm.cmd exec vitest run --config test/dashboard-demo.vitest.config.ts`
 - `pnpm.cmd --filter @arka/shared test`
 - `pnpm.cmd --filter @arka/core test`
 - `pnpm.cmd --filter @arka/agent test`

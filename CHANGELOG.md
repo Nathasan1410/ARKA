@@ -5,6 +5,9 @@ All meaningful ARKA changes should be recorded here in human-readable language.
 ## 2026-04-30
 
 ### Changed
+- Refactored the `/dashboard` MVP shell into a task-focused audit case console with a persistent scenario rail, case history, case summary, AuditEvent loop strip, and Evidence / OpenClaw-Triage / Proof drilldowns.
+- Kept local proof status visible in the main case command area while preserving detailed local package hash, 0G Storage, and 0G Chain placeholders in the proof view.
+- Added root-level dashboard demo-service coverage for State A local-only proof, State C simulated explanation flow, State D owner-review flow, and invalid/unavailable simulated actions.
 - Added a dashboard-only simulated agent interaction path through `POST /api/demo/agent-action`.
 - State C can now be tested through owner approval, simulated staff message send, simulated staff reply, and final owner decision without waiting for real OpenClaw or Telegram.
 - State D can now record a simulated owner-reviewed final decision while remaining clearly labeled as dashboard simulation.
@@ -17,6 +20,7 @@ All meaningful ARKA changes should be recorded here in human-readable language.
 - Updated implementation, code-map, and truthfulness docs for the dashboard-local proof hash display.
 
 ### Verification
+- `pnpm.cmd exec vitest run --config test/dashboard-demo.vitest.config.ts`
 - `pnpm.cmd --filter @arka/shared test`
 - `pnpm.cmd --filter @arka/core test`
 - `pnpm.cmd --filter @arka/agent test`
