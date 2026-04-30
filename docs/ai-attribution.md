@@ -2,6 +2,38 @@
 
 This document tracks material AI-assisted work in ARKA.
 
+## 2026-05-01 - Dashboard Admin Movement Simulation
+
+### AI Tool Used
+- OpenAI Codex CLI (GPT-5.x)
+- External reference: `aihxp/production-ready` skill guidance for vertical slices and avoiding hollow dashboard controls
+
+### What AI Helped With
+- Added a working Admin Movement simulation panel to `/dashboard`.
+- Added a local API route that accepts order quantity and movement grams, creates an AuditEvent through core logic, records deterministic triage, creates a local proof hash, and saves the run in demo history.
+- Added focused coverage for the admin movement simulation service path.
+
+### Files / Areas Affected
+- `apps/web/app/api/demo/admin-movement/route.ts`
+- `apps/web/app/dashboard/dashboard-data.ts`
+- `apps/web/app/dashboard/dashboard-shell.tsx`
+- `apps/web/app/dashboard/demo-run-service.ts`
+- `apps/web/app/globals.css`
+- `test/dashboard-demo-service.verify.test.ts`
+- `CHANGELOG.md`
+- `docs/ai-attribution.md`
+- `docs/real-vs-simulated.md`
+- `checklist.md`
+
+### Human Review
+- Pending / to be confirmed by repo owner.
+
+### Verification
+- `pnpm.cmd --filter @arka/web exec tsc -p tsconfig.json --noEmit --incremental false --ignoreDeprecations 6.0`
+- `pnpm.cmd exec vitest run --config test/dashboard-demo.vitest.config.ts`
+- `pnpm.cmd --filter @arka/web build`
+- Local dev-server smoke: `POST /api/demo/admin-movement` with `orderQuantity: 4` and `actualMovementGrams: 132` returned `OVER_EXPECTED_USAGE`, `REQUEST_EXPLANATION`, and `LOCAL_ONLY`.
+
 ## 2026-04-30 - Web2 Dashboard Proof Panel
 
 ### AI Tool Used

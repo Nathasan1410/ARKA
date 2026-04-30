@@ -2,6 +2,18 @@
 
 All meaningful ARKA changes should be recorded here in human-readable language.
 
+## 2026-05-01
+
+### Changed
+- Added a working Admin Movement simulation slice to `/dashboard`: order quantity and Whey Protein OUT grams can be entered, posted to a local API route, reconciled through core AuditEvent logic, saved to demo history, and displayed with deterministic triage plus local proof hash.
+- Added quick admin runs for clear, explanation, and critical review cases without adding disconnected pages or hollow controls.
+
+### Verification
+- `pnpm.cmd --filter @arka/web exec tsc -p tsconfig.json --noEmit --incremental false --ignoreDeprecations 6.0`
+- `pnpm.cmd exec vitest run --config test/dashboard-demo.vitest.config.ts`
+- `pnpm.cmd --filter @arka/web build`
+- Local dev-server smoke: `POST /api/demo/admin-movement` with `orderQuantity: 4` and `actualMovementGrams: 132` returned `OVER_EXPECTED_USAGE`, `REQUEST_EXPLANATION`, and `LOCAL_ONLY`.
+
 ## 2026-04-30
 
 ### Changed

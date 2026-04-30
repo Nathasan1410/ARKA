@@ -2,20 +2,29 @@
 
 import { useMemo, useState } from 'react';
 import { demoScenarioSeeds, demoWorldSeed, ScenarioKey, TriageOutcome, type ScenarioKey as ScenarioKeyType } from '@arka/shared';
-import { scenarioCards, type DashboardRun, type RunScenarioResponse, type SimulatedAgentAction } from './dashboard-data';
+import {
+  scenarioCards,
+  type AdminSimulationInput,
+  type DashboardRun,
+  type RunScenarioResponse,
+  type SimulatedAgentAction,
+} from './dashboard-data';
 
 type DashboardShellProps = {
   initialState: RunScenarioResponse;
 };
 
-type CaseView = 'evidence' | 'agent' | 'proof';
+type CaseView = 'admin' | 'evidence' | 'agent' | 'proof';
 
 export function DashboardShell({ initialState }: DashboardShellProps) {
   const [runs, setRuns] = useState<DashboardRun[]>(initialState.history);
   const [selectedCaseId, setSelectedCaseId] = useState(initialState.run.caseId);
-  const [activeView, setActiveView] = useState<CaseView>('evidence');
+  const [activeView, setActiveView] = useState<CaseView>('admin');
+  const [adminOrderQuantity, setAdminOrderQuantity] = useState(String(initialState.run.auditEvent.orderQuantity));
+  const [adminMovementGrams, setAdminMovementGrams] = useState(String(initialState.run.auditEvent.actualMovementGrams));
   const [isRunningScenario, setIsRunningScenario] = useState(false);
   const [isRunningAgentAction, setIsRunningAgentAction] = useState(false);
+  const [isRunningAdminSimulation, setIsRunningAdminSimulation] = useState(false);
   const [runError, setRunError] = useState<string | null>(null);
 
   const selectedRun = useMemo(() => {
@@ -40,12 +49,64 @@ export function DashboardShell({ initialState }: DashboardShellProps) {
       const result = (await response.json()) as RunScenarioResponse;
       setRuns(result.history);
       setSelectedCaseId(result.run.caseId);
+      setAdminOrderQuantity(String(result.run.auditEvent.orderQuantity));
+      setAdminMovementGrams(String(result.run.auditEvent.actualMovementGrams));
       setActiveView(result.run.auditEvent.triageOutcome === TriageOutcome.AUTO_CLEAR ? 'evidence' : 'agent');
     } catch (error) {
       setRunError(error instanceof Error ? error.message : 'Scenario route failed.');
     } finally {
       setIsRunningScenario(false);
     }
+  }
+
+  async function handleAdminSimulation(input: AdminSimulationInput) {
+    setIsRunningAdminSimulation(true);
+    setRunError(null);
+
+    try {
+      const response = await fetch('/api/demo/admin-movement', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(input),
+      });
+
+      if (!response.ok) {
+        const errorBody = (await response.json().catch(() => null)) as { error?: string } | null;
+        throw new Error(errorBody?.error ?? `Admin simulation failed with HTTP ${response.status}`);
+      }
+
+      const result = (await response.json()) as RunScenarioResponse;
+      setRuns(result.history);
+      setSelectedCaseId(result.run.caseId);
+      setAdminOrderQuantity(String(result.run.auditEvent.orderQuantity));
+      setAdminMovementGrams(String(result.run.auditEvent.actualMovementGrams));
+      setActiveView(result.run.auditEvent.triageOutcome === TriageOutcome.AUTO_CLEAR ? 'evidence' : 'agent');
+    } catch (error) {
+      setRunError(error instanceof Error ? error.message : 'Admin simulation failed.');
+    } finally {
+      setIsRunningAdminSimulation(false);
+    }
+  }
+
+  function handleAdminSubmit() {
+    const orderQuantity = Number(adminOrderQuantity);
+    const actualMovementGrams = Number(adminMovementGrams);
+
+    if (!Number.isInteger(orderQuantity) || !Number.isInteger(actualMovementGrams)) {
+      setRunError('Order quantity and movement grams must be whole numbers.');
+      return;
+    }
+
+    void handleAdminSimulation({
+      orderQuantity,
+      actualMovementGrams,
+    });
+  }
+
+  function handleSelectRun(run: DashboardRun) {
+    setSelectedCaseId(run.caseId);
+    setAdminOrderQuantity(String(run.auditEvent.orderQuantity));
+    setAdminMovementGrams(String(run.auditEvent.actualMovementGrams));
   }
 
   async function handleAgentAction(action: SimulatedAgentAction) {
@@ -157,7 +218,7 @@ export function DashboardShell({ initialState }: DashboardShellProps) {
                   key={run.caseId}
                   className="history-button"
                   data-active={run.caseId === selectedRun.caseId}
-                  onClick={() => setSelectedCaseId(run.caseId)}
+                  onClick={() => handleSelectRun(run)}
                   type="button"
                 >
                   <HistoryCell
@@ -236,6 +297,9 @@ export function DashboardShell({ initialState }: DashboardShellProps) {
           </section>
 
           <nav className="view-tabs" aria-label="Case detail views">
+            <button data-active={activeView === 'admin'} onClick={() => setActiveView('admin')} type="button">
+              Admin Movement
+            </button>
             <button data-active={activeView === 'evidence'} onClick={() => setActiveView('evidence')} type="button">
               Evidence
             </button>
@@ -247,12 +311,118 @@ export function DashboardShell({ initialState }: DashboardShellProps) {
             </button>
           </nav>
 
+          {activeView === 'admin' ? (
+            <AdminSimulationView
+              adminMovementGrams={adminMovementGrams}
+              adminOrderQuantity={adminOrderQuantity}
+              isRunning={isRunningAdminSimulation}
+              onMovementChange={setAdminMovementGrams}
+              onOrderChange={setAdminOrderQuantity}
+              onPresetRun={(input) => void handleAdminSimulation(input)}
+              onSubmit={handleAdminSubmit}
+              selectedRun={selectedRun}
+            />
+          ) : null}
           {activeView === 'evidence' ? <EvidenceView selectedRun={selectedRun} movementDifference={movementDifference} /> : null}
           {activeView === 'agent' ? <AgentView selectedRun={selectedRun} /> : null}
           {activeView === 'proof' ? <ProofView selectedRun={selectedRun} /> : null}
         </section>
       </div>
     </main>
+  );
+}
+
+function AdminSimulationView({
+  adminMovementGrams,
+  adminOrderQuantity,
+  isRunning,
+  onMovementChange,
+  onOrderChange,
+  onPresetRun,
+  onSubmit,
+  selectedRun,
+}: {
+  adminMovementGrams: string;
+  adminOrderQuantity: string;
+  isRunning: boolean;
+  onMovementChange: (value: string) => void;
+  onOrderChange: (value: string) => void;
+  onPresetRun: (input: AdminSimulationInput) => void;
+  onSubmit: () => void;
+  selectedRun: DashboardRun;
+}) {
+  const orderQuantity = Number(adminOrderQuantity);
+  const actualMovementGrams = Number(adminMovementGrams);
+  const expectedUsageGrams = Number.isFinite(orderQuantity) ? orderQuantity * demoWorldSeed.usageRule.gramsPerUnit : 0;
+  const difference = Number.isFinite(actualMovementGrams) ? actualMovementGrams - expectedUsageGrams : 0;
+
+  return (
+    <section className="detail-grid">
+      <article className="panel">
+        <h2>Admin Order Entry</h2>
+        <p className="panel-subtitle">Enter the order count and the recorded inventory movement, then run reconciliation.</p>
+        <div className="admin-form">
+          <label>
+            <span className="label">Protein Shake quantity</span>
+            <input
+              min="1"
+              max="20"
+              onChange={(event) => onOrderChange(event.target.value)}
+              type="number"
+              value={adminOrderQuantity}
+            />
+          </label>
+          <label>
+            <span className="label">Whey Protein OUT grams</span>
+            <input
+              min="0"
+              max="1000"
+              onChange={(event) => onMovementChange(event.target.value)}
+              type="number"
+              value={adminMovementGrams}
+            />
+          </label>
+          <button className="action-button primary-action" disabled={isRunning} onClick={onSubmit} type="button">
+            Run movement simulation
+          </button>
+        </div>
+        <div className="admin-presets">
+          <button disabled={isRunning} onClick={() => onPresetRun({ orderQuantity: 3, actualMovementGrams: 90 })} type="button">
+            Run clear
+          </button>
+          <button disabled={isRunning} onClick={() => onPresetRun({ orderQuantity: 3, actualMovementGrams: 99 })} type="button">
+            Run explanation
+          </button>
+          <button disabled={isRunning} onClick={() => onPresetRun({ orderQuantity: 3, actualMovementGrams: 160 })} type="button">
+            Run critical review
+          </button>
+        </div>
+      </article>
+
+      <article className="panel">
+        <h2>Movement Preview</h2>
+        <div className="panel-grid">
+          <Kv label="Usage rule" value={`1 ${demoWorldSeed.productName} = ${demoWorldSeed.usageRule.gramsPerUnit}g`} />
+          <Kv label="Expected usage" value={`${expectedUsageGrams}g`} />
+          <Kv label="Movement OUT" value={`${Number.isFinite(actualMovementGrams) ? actualMovementGrams : 0}g`} />
+          <Kv label="Difference" value={`${difference > 0 ? '+' : ''}${difference}g`} />
+          <Kv label="Handler" value={demoWorldSeed.handler.name} />
+          <Kv label="Container" value={demoWorldSeed.containerId} />
+        </div>
+      </article>
+
+      <article className="panel detail-span">
+        <h2>Last Simulation Result</h2>
+        <div className="panel-grid wide">
+          <Kv label="Case ID" value={selectedRun.caseId} />
+          <Kv label="Status" value={selectedRun.auditEvent.status} />
+          <Kv label="Severity" value={selectedRun.auditEvent.severity} />
+          <Kv label="Triage" value={selectedRun.auditEvent.triageOutcome} />
+          <Kv label="Proof" value={selectedRun.proofRecord.auditProofStatus} />
+          <Kv label="Local hash" value={selectedRun.proofRecord.localPackageHash} code />
+        </div>
+      </article>
+    </section>
   );
 }
 

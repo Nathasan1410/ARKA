@@ -30,7 +30,7 @@ Must include:
 - AuditEvent list and detail views
 - Proof status views
 - Local proof package/hash display sourced from deterministic core helpers, while external 0G execution remains outside the web UI
-- Lightweight route handlers for local app needs, including the local `POST /api/demo/run-scenario` MVP scenario path
+- Lightweight route handlers for local app needs, including the local `POST /api/demo/run-scenario` MVP scenario path and `POST /api/demo/admin-movement` admin movement simulation path
 
 Must not include:
 

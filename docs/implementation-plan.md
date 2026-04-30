@@ -367,6 +367,7 @@ Route:
 ```txt
 /dashboard
 POST /api/demo/run-scenario for local A/C/D scenario execution
+POST /api/demo/admin-movement for dashboard-entered order quantity + movement grams
 POST /api/demo/agent-action for dashboard-only simulated owner/staff/final-decision actions
 ```
 
@@ -401,6 +402,7 @@ Dashboard success criteria:
 ```txt
 User can run A/C/D.
 Dashboard calls the local scenario route and shows returned Order, Movement, AuditEvent data.
+Dashboard can run a local admin movement simulation from entered order quantity and movement grams.
 AuditEvent detail explains expected vs actual.
 OpenClaw triage outcome is visible.
 Dashboard simulation can advance owner approval, staff message preview/send, simulated staff reply, and final owner decision without claiming real Telegram or OpenClaw runtime.

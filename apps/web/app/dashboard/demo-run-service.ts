@@ -1,10 +1,13 @@
 import {
+  createAuditEvent,
   createAuditEventFromScenario,
   createAuditEventProofPackageArtifact,
 } from '@arka/core';
 import {
+  CaseType,
   demoScenarioSeeds,
   demoWorldSeed,
+  MovementDirection,
   ScenarioKey,
   TriageOutcome,
   type ScenarioKey as ScenarioKeyType,
@@ -15,7 +18,7 @@ import {
   formatOwnerRecommendation,
   triageAuditEvent,
 } from '@arka/agent';
-import type { DashboardPersistenceStatus, DashboardRun, RunScenarioResponse } from './dashboard-data';
+import type { AdminSimulationInput, DashboardPersistenceStatus, DashboardRun, RunScenarioResponse } from './dashboard-data';
 import type {
   AgentActionResponse,
   SimulatedAgentAction,
@@ -105,6 +108,20 @@ export async function runDashboardScenario(scenarioKey: ScenarioKeyType): Promis
   };
 }
 
+export async function runAdminMovementSimulation(input: AdminSimulationInput): Promise<RunScenarioResponse> {
+  const repository = getDemoRunRepository();
+  const history = await repository.getHistory();
+  const runNumber = history.length + 1;
+  const run = await createAdminSimulationRun(input, runNumber, repository.persistenceStatus());
+  const nextHistory = await repository.saveRun(run);
+
+  return {
+    run,
+    history: nextHistory,
+    persistence: repository.persistenceStatus(),
+  };
+}
+
 export async function runSimulatedAgentAction(
   caseId: string,
   action: SimulatedAgentAction,
@@ -159,6 +176,141 @@ export function parseSimulatedAgentAction(value: unknown): SimulatedAgentAction 
 
 function getDemoRunRepository(): DemoRunRepository {
   return inMemoryDemoRunRepository;
+}
+
+function createScenarioSeedFromAuditEvent(auditEvent: DashboardRun['auditEvent']): DashboardRun['scenario'] {
+  const scenarioKey = getScenarioKeyForAuditEvent(auditEvent);
+
+  return {
+    scenarioKey,
+    caseType: auditEvent.caseType,
+    label: 'Admin Sim',
+    orderQuantity: auditEvent.orderQuantity,
+    actualMovementGrams: auditEvent.actualMovementGrams,
+    movementDirection: MovementDirection.OUT,
+    expectedUsageGrams: auditEvent.expectedUsageGrams,
+    variancePercent: auditEvent.variancePercent,
+    status: auditEvent.status,
+    severity: auditEvent.severity,
+    triageOutcome: auditEvent.triageOutcome ?? TriageOutcome.AUTO_CLEAR,
+    auditProofStatus: auditEvent.auditProofStatus,
+    storageStatus: auditEvent.storageStatus,
+    chainStatus: auditEvent.chainStatus,
+    proofType: auditEvent.proofType,
+  };
+}
+
+function getScenarioKeyForAuditEvent(auditEvent: DashboardRun['auditEvent']): ScenarioKeyType {
+  if (auditEvent.triageOutcome === TriageOutcome.AUTO_CLEAR) {
+    return ScenarioKey.STATE_A;
+  }
+
+  if (auditEvent.triageOutcome === TriageOutcome.REQUEST_EXPLANATION) {
+    return ScenarioKey.STATE_C;
+  }
+
+  return ScenarioKey.STATE_D;
+}
+
+async function createAdminSimulationRun(
+  input: AdminSimulationInput,
+  runNumber: number,
+  persistence: DashboardPersistenceStatus,
+): Promise<DashboardRun> {
+  const createdAt = createScenarioTimestamp(runNumber);
+  const evidenceWindowEndedAt = addMinutes(createdAt, WINDOW_DURATION_MINUTES);
+  const caseId = `CASE-${String(runNumber).padStart(3, '0')}`;
+  const auditEventId = `AE-${String(runNumber).padStart(3, '0')}`;
+  const orderId = `ORD-${String(runNumber).padStart(3, '0')}`;
+  const movementId = `MOV-${String(runNumber).padStart(3, '0')}`;
+  const auditEvent = triageAuditEvent(
+    createAuditEvent({
+      auditEventId,
+      caseId,
+      scenarioKey: ScenarioKey.STATE_C,
+      caseType: CaseType.ORDER_LINKED_AUDIT,
+      orderQuantity: input.orderQuantity,
+      usageRuleGramsPerUnit: demoWorldSeed.usageRule.gramsPerUnit,
+      actualMovementGrams: input.actualMovementGrams,
+      movementDirection: MovementDirection.OUT,
+      productName: demoWorldSeed.productName,
+      inventoryItemName: demoWorldSeed.inventoryItemName,
+      containerId: demoWorldSeed.containerId,
+      handlerName: demoWorldSeed.handler.name,
+      cashierName: demoWorldSeed.cashier.name,
+      ownerName: demoWorldSeed.owner.name,
+      createdAt,
+    }),
+  );
+  const scenario = createScenarioSeedFromAuditEvent(auditEvent);
+  const triageOutcome = auditEvent.triageOutcome ?? TriageOutcome.AUTO_CLEAR;
+  const evidenceWindowLabel = formatClockWindow(runNumber);
+  const movementBeforeGrams = 5000 - (runNumber - 1) * 250;
+  const movementAfterGrams = movementBeforeGrams - auditEvent.actualMovementGrams;
+  const backendRecommendedAction = getBackendRecommendedAction(auditEvent, triageOutcome);
+  const proofArtifact = await createAuditEventProofPackageArtifact({
+    auditEvent,
+    supportingSummaries: {
+      orderSummary: {
+        orderId,
+      },
+      movementSummary: {
+        movementId,
+      },
+      usageRuleSummary: {
+        ruleId: 'RULE-PROTEIN-SHAKE-WHEY-001',
+      },
+      evidenceWindow: {
+        startedAt: createdAt,
+        endedAt: evidenceWindowEndedAt,
+        sourceRef: 'local-dashboard-admin-simulation',
+        summary: `${auditEvent.inventoryItemName} movement was entered in the dashboard admin simulation for ${auditEvent.productName}.`,
+      },
+      evidenceCompleteness: 'Dashboard admin simulation only; no raw CCTV, no 0G upload, and no chain anchor in this route.',
+      backendRecommendedAction,
+    },
+  });
+
+  return {
+    scenario,
+    caseId,
+    orderId,
+    movementId,
+    movementBeforeGrams,
+    movementAfterGrams,
+    createdAtLabel: formatDateLabel(createdAt),
+    movementTimestampLabel: evidenceWindowLabel.split(' - ')[0],
+    evidenceWindowLabel,
+    evidenceWindowStartedAt: createdAt,
+    evidenceWindowEndedAt,
+    ownerAlertState: getOwnerAlertState(triageOutcome),
+    ownerAlertCopy: getOwnerAlertCopy(auditEvent, triageOutcome, evidenceWindowLabel),
+    staffMessagePreview: getStaffMessagePreview(auditEvent, triageOutcome, evidenceWindowLabel),
+    ownerRecommendation: formatOwnerRecommendation(auditEvent, triageOutcome),
+    actionLog: `${createActionLogForTriage(auditEvent, triageOutcome)} | admin_movement_simulation_saved`,
+    caseNote: `${createCaseNoteForTriage(auditEvent, triageOutcome)} Order and movement were entered from the dashboard admin simulation panel.`,
+    proofSummary:
+      'Backend route created a local AuditEvent proof package and SHA-256 hash from the admin movement simulation. 0G Storage upload and 0G Chain registration are not started.',
+    proofRecord: {
+      proofRecordId: `PR-${String(runNumber).padStart(3, '0')}`,
+      proofType: auditEvent.proofType,
+      auditProofStatus: auditEvent.auditProofStatus,
+      storageStatus: auditEvent.storageStatus,
+      chainStatus: auditEvent.chainStatus,
+      localPackageHash: proofArtifact.localPackageHash,
+      storageRootHash: null,
+      storageTxHash: null,
+      chainTxHash: null,
+      lastErrorMessage: null,
+      failureState: 'No failed upload or registration',
+      retryState: 'No retry queued. Retry placeholders become active only after a real upload or registration failure.',
+    },
+    simulatedAgent: createInitialSimulatedAgentInteraction(auditEvent, triageOutcome, evidenceWindowLabel),
+    triageRuntimeSummary:
+      'Dashboard simulation is active. Real OpenClaw gateway, skill, plugin, and Telegram runtime are not connected in this dashboard path.',
+    persistence,
+    auditEvent,
+  };
 }
 
 async function createDashboardRun(

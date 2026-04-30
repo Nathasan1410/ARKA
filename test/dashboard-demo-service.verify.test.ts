@@ -162,4 +162,21 @@ describe('dashboard demo service behavior', () => {
     expect(await dashboardDemoService.runSimulatedAgentAction(stateA.run.caseId, 'SEND_STAFF_MESSAGE')).toBeNull();
     expect(await dashboardDemoService.runSimulatedAgentAction('CASE-NOT-FOUND', 'MARK_OWNER_REVIEWED')).toBeNull();
   });
+
+  it('creates an AuditEvent from admin movement simulation input', async () => {
+    const response = await dashboardDemoService.runAdminMovementSimulation({
+      orderQuantity: 4,
+      actualMovementGrams: 132,
+    });
+
+    expect(response.run.scenario.label).toBe('Admin Sim');
+    expect(response.run.auditEvent.orderQuantity).toBe(4);
+    expect(response.run.auditEvent.expectedUsageGrams).toBe(120);
+    expect(response.run.auditEvent.actualMovementGrams).toBe(132);
+    expect(response.run.auditEvent.status).toBe('OVER_EXPECTED_USAGE');
+    expect(response.run.auditEvent.triageOutcome).toBe('REQUEST_EXPLANATION');
+    expect(response.run.actionLog).toContain('admin_movement_simulation_saved');
+    expect(response.run.proofRecord.auditProofStatus).toBe('LOCAL_ONLY');
+    expect(response.run.proofRecord.localPackageHash).toEqual(expect.any(String));
+  });
 });

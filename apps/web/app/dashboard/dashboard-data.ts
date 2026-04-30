@@ -114,6 +114,11 @@ export type RunScenarioResponse = {
 
 export type AgentActionResponse = RunScenarioResponse;
 
+export type AdminSimulationInput = {
+  orderQuantity: number;
+  actualMovementGrams: number;
+};
+
 const SCENARIO_CARD_CONTENT: Record<(typeof SCENARIO_SEQUENCE)[number], Omit<ScenarioCard, 'key'>> = {
   STATE_A: {
     title: 'State A - Clear',
