@@ -1,37 +1,72 @@
-# Next Development Phase: Building the Real Backend
+# Next Development Phase (DB-First Web2 MVP)
 
-Now that the UI redesign is complete, the `AuditProofRegistry.sol` contract is written and locally tested, and the "Operator Console" frontend is polished, the project must shift from a simulated frontend into a real, functional backend system.
+This document is an execution plan for the *next* ARKA development phase.
 
-Here is the concrete plan to eliminate the technical debt and fulfill the ARKA MVP vision:
+It intentionally prioritizes **Web2 MVP reliability** (scenario cards -> AuditEvent -> dashboard) before any Web3 (0G) or OpenClaw runtime integration.
 
-## Phase 1: Database Setup & Persistence (Postgres + Drizzle)
-**Goal:** Replace `memoryRuns` with a real database.
-1.  **Configure Environment:** Set up a live PostgreSQL database (e.g., Neon, Supabase) or local Docker Postgres and populate the `DATABASE_URL` in `.env`.
-2.  **Drizzle Migration:** Ensure `packages/db` contains the schemas for `Order`, `InventoryMovement`, `AuditEvent`, and `ProofRecord`. Run `drizzle-kit push` or `drizzle-kit migrate` to establish the tables.
-3.  **Refactor `demo-run-service.ts`:** Rewrite the `inMemoryDemoRunRepository` to interact with Drizzle ORM.
-    *   `saveRun` should insert rows into the database.
-    *   `getHistory` should fetch the latest 12 cases.
-4.  **Verify:** Run the UI again. The persistence pill should read `DB - POSTGRES` instead of `IN_MEMORY_DEMO`.
+## 0. Current Reality (2026-05-01)
 
-## Phase 2: 0G Storage & Proof Packaging
-**Goal:** Create verifiable sealed proof packages.
-1.  **Integrate 0G SDK:** In the backend route handler (`/api/demo/run-scenario`), when an `AuditEvent` is created, assemble a JSON Proof Package containing the event details.
-2.  **Canonical Hashing:** Compute the SHA-256 hash of this JSON package (`local_package_hash`).
-3.  **Upload to 0G:** Use the 0G Storage SDK to upload the JSON payload.
-4.  **Update Database:** Retrieve the `storageRootHash` (or URI) from 0G and update the `ProofRecord` row in Postgres. Change the dashboard status to `STORED_ON_0G`.
+- The dashboard is functional for State A/C/D and Admin Simulation, including deterministic triage fallback and local proof package hash display.
+- Postgres persistence exists as an **optional** demo mode behind `ARKA_DEMO_REPOSITORY=postgres`.
+- Postgres must not be described as REAL until migrations are applied to a real DB and the run history survives a server restart.
+- 0G Storage, 0G Chain anchoring, Telegram, and full OpenClaw gateway/plugin runtime are still not implemented/verified for ARKA.
 
-## Phase 3: 0G Chain Anchoring
-**Goal:** Register the proof package on the Galileo Testnet.
-1.  **Deploy Smart Contract:** Request faucet funds to the deployment wallet. Use Hardhat to deploy `AuditProofRegistry.sol` to the 0G Galileo Testnet. Save the contract address to `.env`.
-2.  **Backend Web3 Client:** Install `viem` in the backend.
-3.  **Submit Transaction:** Immediately after the 0G Storage upload, the backend calls `registerProof()` on the deployed contract, providing the `local_package_hash` and `storageRootHash`.
-4.  **Confirm Anchor:** Retrieve the transaction hash, update the `ProofRecord`, and switch the UI status to `REGISTERED_ON_CHAIN`.
+## 1. Phase 1 (P0): Make Postgres Persistence REAL for the Demo Loop
 
-## Phase 4: OpenClaw / Telegram AI Triage
-**Goal:** Replace the simulated state machine with real AI calls.
-1.  **OpenClaw Gateway:** Ensure the OpenClaw gateway is running locally.
-2.  **Backend Integration:** In `/api/demo/agent-action`, forward the `AuditEvent` context to the OpenClaw agent endpoint rather than returning hardcoded strings.
-3.  **Telegram Bot:** Configure a real Telegram Bot token. When a case hits `CRITICAL_REVIEW`, the backend (or OpenClaw) must send an actual Telegram message to the Owner.
-4.  **Webhooks:** Handle the Owner's reply (Approve/Reject) via a Telegram Webhook returning to the Next.js API, updating the `AuditEvent` state and resolving the case.
+Goal: the A/C/D + Admin Simulation loop survives server restarts and is clearly labeled as Postgres-backed.
 
-**Rule:** Development must proceed sequentially (Phase 1 -> 2 -> 3 -> 4) to ensure the data foundation is solid before adding the AI triage layer.
+1. Provide a real `DATABASE_URL` (local or hosted Postgres).
+2. Apply migrations: `pnpm.cmd --filter @arka/db run migrate`
+3. Enable Postgres demo repository: set `ARKA_DEMO_REPOSITORY=postgres`
+4. Restart `@arka/web` and verify in the dashboard:
+   - Run State A, State C, State D, and one Admin Simulation run.
+   - Restart the server again.
+   - Confirm the history persists and the persistence status indicates Postgres is active.
+
+Truthfulness rule:
+
+- Only after this passes should `docs/real-vs-simulated.md` be updated to reflect REAL Postgres persistence for the demo loop.
+
+## 2. Phase 2 (P0): Tighten Evidence Persistence Semantics
+
+Goal: Postgres holds operational evidence and proof metadata in a way that matches the ARKA architecture boundaries.
+
+Work items:
+
+- Decide what is *source-of-truth persisted* vs *UI-derived*:
+  - Persisted: `orders`, `inventory_movements`, `audit_events`, `proof_records` (plus append-only logs/notes later).
+  - Derived: strings/copy/timelines that are purely dashboard presentation.
+- Add minimal uniqueness / idempotency:
+  - Avoid unbounded duplicate `inventory_movements` and `proof_records` writes during simulated agent actions.
+  - Keep proof history append-only when it represents a new proof package, not every UI action.
+- Add a DB read-path for the dashboard history:
+  - Option A (fast): keep `dashboard_demo_runs` JSONB as the UI history source.
+  - Option B (more honest): reconstruct dashboard history from `audit_events` + `proof_records` as the primary data.
+
+## 3. Phase 3 (P1): Proof Execution (0G Storage + 0G Chain)
+
+Goal: one real State C or D case uploads a proof package to 0G Storage and anchors a reference on-chain.
+
+Rules:
+
+- Do not claim 0G Storage upload works until a real upload is implemented and verified.
+- Do not claim 0G Chain anchoring works until a real deploy/tx/anchor is implemented and verified.
+- Proof failures must not delete or invalidate an AuditEvent.
+
+## 4. Phase 4 (P1): OpenClaw Runtime + Telegram
+
+Goal: replace dashboard-only simulated conversation with a verified OpenClaw-backed triage interaction path.
+
+Rules:
+
+- Do not claim real OpenClaw-backed ARKA triage until the gateway/plugin/client path is verified end-to-end.
+- Do not claim Telegram works until a real bot/channel flow is verified.
+
+## 5. Definition of Done for This Phase
+
+This phase is done when:
+
+- Postgres migrations are applied to a real DB.
+- Dashboard runs persist across a server restart with `ARKA_DEMO_REPOSITORY=postgres`.
+- Docs remain honest: no “REAL” labels without verification.
+
