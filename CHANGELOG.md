@@ -4,6 +4,18 @@ All meaningful ARKA changes should be recorded here in human-readable language.
 
 Command note: examples in this changelog use Codespaces/Linux defaults (`/workspaces/ARKA`, `pnpm`, `openclaw/openclaw.mjs`). Older entries may still contain Windows-specific spellings like `pnpm.cmd` and backslashes.
 
+## 2026-05-01
+
+### Fixed
+- Made MVP demo operational evidence persistence idempotent for `proof_records`: repeated dashboard `updateRun` saves now merge into the latest proof record instead of appending unbounded duplicates. New proofs (different `proofType` or conflicting non-null proof hash/URI/chain tx) still append and link via `previous_proof_record_id`.
+- Fixed root dashboard demo-service coverage bundling by stubbing `@arka/db` for that test, avoiding `pg` dynamic-require issues in the ESM data-URL bundling harness.
+
+### Verification
+- `pnpm.cmd --filter @arka/db run typecheck`
+- `pnpm.cmd run typecheck`
+- `pnpm.cmd exec vitest run test/dashboard-demo-service.verify.test.ts --pool=threads --poolOptions.threads.singleThread`
+- Local Postgres: `docker compose --env-file .env.example up -d postgres` + `pnpm.cmd --filter @arka/db run migrate` + `pnpm.cmd run verify:postgres-demo`
+
 ## 2026-04-30 (Late)
 
 ### Changed

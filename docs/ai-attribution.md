@@ -2,6 +2,22 @@
 
 This document tracks material AI-assisted work in ARKA.
 
+## 2026-05-01 - Demo Evidence Persistence Idempotency (DB)
+
+### AI Tool Used
+- OpenAI Codex CLI (GPT-5.x)
+
+### What AI Helped With
+- Reviewed the dashboard demo persistence flow and confirmed repeated `updateRun` calls were appending duplicate `proof_records` rows.
+- Implemented code-level idempotency in `packages/db/src/mvp-demo-evidence-store.ts` so repeated saves merge into the latest proof record, while genuinely new proofs still append and link to the previous record.
+
+### Human Direction
+- Requested a research -> plan -> implement -> verify pass to prevent unbounded `proof_records` growth on repeated dashboard updates, with required local typechecks.
+
+### Verification
+- `pnpm.cmd --filter @arka/db run typecheck`
+- `pnpm.cmd run typecheck`
+
 ## 2026-05-01 - Final OpenClaw Documentation Alignment
 
 ### AI Tool Used
@@ -26,6 +42,8 @@ This document tracks material AI-assisted work in ARKA.
 - Added schema + migrations support for `dashboard_demo_runs` (JSONB payload) and a migration runner script to apply Drizzle migrations using `DATABASE_URL`.
 - Strengthened health checks to avoid over-claiming Postgres persistence when migrations are missing (fallback to in-memory remains the default behavior).
 - Added best-effort persistence of demo operational evidence into normalized tables so DB-first demos can be run without waiting for OpenClaw runtime or 0G/Telegram integrations.
+- Added a local Docker Compose Postgres option and a repeatable `verify:postgres-demo` process-restart simulation check.
+- Updated judge-facing briefs to avoid over-claiming OpenClaw/0G/Telegram as already real and added a minimal root README that links to truthfulness docs.
 
 ### Files / Areas Affected
 - `packages/db/src/schema.ts`
@@ -37,6 +55,16 @@ This document tracks material AI-assisted work in ARKA.
 - `apps/web/app/dashboard/demo-run-service.ts`
 - `CHANGELOG.md`
 - `docs/database-structure-plan.md`
+- `docs/project-brief.md`
+- `Backend-Final.md`
+- `Database.md`
+- `README.md`
+- `docker-compose.yml`
+- `docs/run-postgres-local.md`
+- `scripts/verify-postgres-demo-persistence.mjs`
+- `scripts/postgres-demo-write.ts`
+- `scripts/postgres-demo-read.ts`
+- `test/stubs/arka-db-stub.ts`
 
 ### Human Review
 - Pending / to be confirmed by repo owner.

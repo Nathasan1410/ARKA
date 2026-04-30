@@ -6,6 +6,15 @@ Backend ARKA tugasnya:
 
 > Mengubah **POS order + usage rule + inventory movement** menjadi **AuditEvent** yang bisa dibaca Dashboard, OpenClaw, Telegram, dan 0G.
 
+Status implementasi saat ini (2026-05-01):
+
+```txt
+Dashboard demo loop: PARTIAL (scenario cards + admin simulation + deterministic triage fallback + local proof hash)
+Database persistence: PARTIAL (Postgres demo mode tersedia, tapi belum boleh disebut REAL sebelum migrations + restart verification)
+OpenClaw runtime / Telegram: PARTIAL / UNVERIFIED (dashboard simulation masih jadi fallback)
+0G Storage / 0G Chain: PLANNED
+```
+
 OpenClaw research impact:
 
 ```txt

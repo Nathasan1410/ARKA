@@ -1,6 +1,15 @@
 ## 0. One-Line Summary
 
-**ARKA is an AuditEvent-first system that compares business intent with physical inventory movement, uses an OpenClaw-powered conversational triage layer to reduce manual review, and anchors important proof packages through 0G Storage and 0G Chain.**
+**ARKA is an AuditEvent-first system that compares business intent with physical inventory movement, supports a conversational triage layer (OpenClaw runtime integration is still partial), and produces proof packages designed to be sealed and anchored (0G Storage / 0G Chain are still planned).**
+
+Current truthfulness status (2026-05-01):
+
+- Dashboard scenario loop (State A/C/D + Admin Simulation): **PARTIAL** (Web2 MVP path works)
+- Postgres persistence: **PARTIAL** (optional demo mode exists; not REAL until migrations + restart verification)
+- OpenClaw runtime + Telegram: **PARTIAL/UNVERIFIED** (deterministic fallback and limited OpenClaw smokes exist; end-to-end app runtime is not verified)
+- 0G Storage + 0G Chain: **PLANNED**
+
+See `docs/real-vs-simulated.md` for the source-of-truth status list.
 
 ---
 

@@ -14,6 +14,16 @@ Backend tetap bertugas sebagai:
 
 > **AuditEvent generator.**
 
+Status implementasi saat ini (2026-05-01):
+
+```txt
+Schema + migrations: REAL (tersedia di packages/db)
+Dashboard demo persistence: PARTIAL (default in-memory; Postgres demo mode ada tapi belum boleh disebut REAL sebelum migrations diterapkan ke DB nyata + restart verification)
+0G Storage / 0G Chain: PLANNED
+Telegram: PLANNED / SIMULATED
+OpenClaw runtime (gateway/plugin/client path): PARTIAL / UNVERIFIED
+```
+
 Database harus mendukung backend untuk menjawab:
 
 ```txt

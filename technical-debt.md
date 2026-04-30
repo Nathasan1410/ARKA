@@ -16,15 +16,15 @@ Owner: Human / Agent / Both
 
 ## Current Open Items
 
-### 2026-04-30 - Postgres Demo Persistence Not Yet Verified End-to-End
+### 2026-04-30 - Postgres Demo Persistence Not Yet Verified End-to-End (Resolved 2026-05-01)
 
 ```txt
 Area: Database / Demo Persistence
-Status: NEEDS_HUMAN
-What happened: The repo now includes an optional Postgres-backed dashboard demo-run store (`dashboard_demo_runs` JSONB) and a migration runner (`pnpm --filter @arka/db run migrate`), but Postgres persistence should not be claimed as REAL until a real database has migrations applied and the dashboard demo routes write + read back successfully.
-Why it matters: Reviewers and judges will assume "Postgres is real" means the demo history and/or operational evidence survives a server restart. The current dashboard still defaults to the in-memory repository unless explicitly enabled and verified.
-Next action: Provide a real `DATABASE_URL`, run `pnpm --filter @arka/db run migrate`, set `ARKA_DEMO_REPOSITORY=postgres`, restart `@arka/web`, then confirm `/dashboard` history persists across restarts and the persistence badge reads Postgres-active.
-Owner: Human
+Status: RISK
+What happened: This was previously unverified. On 2026-05-01, Postgres demo persistence was verified locally using Docker Compose plus a process-restart simulation via `pnpm run verify:postgres-demo` (writes a run in one process, reads it back in a new process).
+Why it matters: This reduces the risk of over-claiming DB persistence, and gives a repeatable verification step that doesn't depend on the Next dev server.
+Next action: For a judge-facing claim, also do a human browser pass with `@arka/web` running and confirm `/dashboard` history persists across an app restart.
+Owner: Both
 ```
 
 ### 2026-04-30 - Dashboard Visual Click-Through Needs Human Browser Pass
@@ -142,14 +142,14 @@ Next action: Keep this closed unless package-boundary shortcuts return.
 Owner: Both
 ```
 
-### 2026-04-29 - Postgres Migration Application Verification
+### 2026-04-29 - Postgres Migration Application Verification (Resolved 2026-05-01 via Local Docker Postgres)
 
 ```txt
 Area: Database / Postgres
-Status: NEEDS_HUMAN
-What happened: The first Drizzle schema package can typecheck and generate migrations locally, but no real Postgres instance or confirmed DATABASE_URL has been provided yet for applying migrations or verifying write/read behavior against a database. The Web2 MVP demo route now has a repository boundary, but it intentionally uses an in-memory server-process repository and labels that mode in the dashboard.
-Why it matters: ARKA should not claim real database persistence beyond schema definition, SQL generation, and the in-memory demo boundary until migrations run successfully against a real Postgres target and the demo route writes/reads Order, Movement, AuditEvent, and ProofRecord rows.
-Next action: Provide a Postgres DATABASE_URL, run the generated migration against that database, implement the verified Postgres repository behind the existing demo-run repository interface, and verify the demo world can persist and read back an AuditEvent path.
+Status: RESOLVED
+What happened: A local Postgres instance was started via Docker Compose, Drizzle migrations were applied successfully, and the dashboard demo-run store was proven to persist across a process restart using `pnpm.cmd run verify:postgres-demo`.
+Why it matters: This makes the “Postgres demo persistence” claim reproducible and reduces the risk of over-claiming persistence for reviewers/judges.
+Next action: If moving to Supabase later, treat it as a separate migration effort and verify SSL/URL requirements, table creation, and write/read behavior before changing truthfulness docs.
 Owner: Both
 ```
 
@@ -169,9 +169,9 @@ Owner: Both
 ```txt
 Area: 0G Chain
 Status: PARTIAL (Contract Implemented, Deployment Pending)
-What happened: The project docs now record the intended 0G Galileo testnet direction, including RPC/chain ID/explorer/faucet guidance. The `AuditProofRegistry.sol` smart contract has been drafted and tested locally in the `/contracts` workspace using Hardhat.
-Why it matters: ARKA must not claim real chain anchoring until the contract can be deployed, called, and checked through a real transaction on the live testnet.
-Next action: Provide a test wallet with faucet funds, configure the `ZERO_G_REGISTRAR_PRIVATE_KEY` in `.env`, run the deployment script to Galileo testnet, and integrate `viem` in the backend to call `registerProof`.
+What happened: The `AuditProofRegistry.sol` smart contract exists under `contracts/` and can be compiled/tested locally, but no verified deployment / on-chain transaction / anchor lookup has been recorded in this repo.
+Why it matters: ARKA must not claim real chain anchoring until a real deploy + tx + verification is completed and documented.
+Next action: Provide a funded test wallet, deploy to the intended 0G testnet, and verify one `registerProof` transaction end-to-end before any “REAL chain anchoring” claim.
 Owner: Both
 ```
 
