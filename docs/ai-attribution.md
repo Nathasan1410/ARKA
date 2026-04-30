@@ -57,6 +57,7 @@ This document tracks material AI-assisted work in ARKA.
 - Debugged the local OpenClaw `agent --local` path through plugin loading, provider runtime hooks, auth, runtime plan, harness, and bundled tool setup.
 - Added bounded smoke controls for scoped runtime plugin loading, provider-runtime hook skipping, and tool disabling during ARKA local smoke tests.
 - Verified one local model-backed ARKA State C inference response through `openclaw infer model run --local` with MiniMax M2.7.
+- Patched the gateway-backed `openclaw agent` CLI path to use a start/wait/cache loop so long-running turns do not prematurely time out and fall back to embedded mode before the gateway stores a terminal result.
 - Updated truthfulness docs to keep the verified local inference response separate from unverified full agent session, gateway plugin load, packages/agent gateway calls, Telegram, and 0G integrations.
 
 ### Files / Areas Affected
@@ -225,6 +226,39 @@ This document tracks material AI-assisted work in ARKA.
 ### Verification
 - Documentation-only update.
 
+## 2026-04-30 - Codespaces OpenClaw Gateway Plugin Load + Verification Gate Fixes
+
+### AI Tool Used
+- OpenAI Codex CLI (GPT-5.x)
+
+### What AI Helped With
+- Fixed an OpenClaw fork TypeScript build break in `build:strict-smoke`.
+- Added missing OpenClaw workspace template files required by gateway/agent initialization (`IDENTITY.md`, `USER.md`).
+- Added a repo-root Vitest alias config so the OpenClaw verification test can import workspace package sources without requiring `dist/` builds.
+- Updated `packages/db` TypeScript config so `verify:arka-openclaw` typecheck resolves `@arka/shared`.
+- Verified OpenClaw gateway discovery/load of the bundled `arka-audit` plugin in an isolated profile (plugin must be enabled in config; it is disabled by default).
+
+### Files / Areas Affected
+- `openclaw/src/agents/pi-embedded-runner/run.ts`
+- `openclaw/docs/reference/templates/IDENTITY.md`
+- `openclaw/docs/reference/templates/USER.md`
+- `vitest.config.ts`
+- `packages/db/tsconfig.json`
+- `AGENTS.md`
+- `docs/*` (truthfulness/status updates)
+- `technical-debt.md`
+- `CHANGELOG.md`
+
+### Human Review
+- Pending / to be confirmed by repo owner.
+
+### Verification
+- `pnpm run verify:arka-openclaw`
+- `pnpm --dir openclaw install`
+- `OPENCLAW_A2UI_SKIP_MISSING=1 pnpm --dir openclaw run build:strict-smoke`
+- `pnpm --dir openclaw run test:extension arka-audit`
+- `node openclaw/openclaw.mjs --profile arka-smoke gateway run --allow-unconfigured` (observed gateway startup reporting `arka-audit` loaded)
+
 ## 2026-04-30 - OpenClaw Docs Truthfulness Patch
 
 ### AI Tool Used
@@ -234,7 +268,7 @@ This document tracks material AI-assisted work in ARKA.
 ### What AI Helped With
 - Rechecked ARKA Markdown docs after the local OpenClaw fork and `arka-audit` plugin skeleton work.
 - Patched stale wording that still implied no plugin skeleton existed or pointed workers at an older external plugin package path.
-- Preserved the important boundary that the plugin skeleton static smoke and extension-local tests are verified, but gateway discovery/load, full OpenClaw ARKA agent session response, packages/agent gateway calls, and OpenClaw Telegram are still unverified.
+- Preserved the important boundary that the plugin skeleton static smoke and extension-local tests are verified, while the full OpenClaw ARKA agent session response, packages/agent gateway calls, and OpenClaw Telegram were still unverified at the time.
 
 ### Files / Areas Affected
 - `AGENTS.md`

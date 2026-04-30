@@ -151,7 +151,7 @@ Make the OpenClaw side real enough to test without breaking ARKA boundaries.
 Primary focus:
 
 ```txt
-OpenClaw gateway discovery/load of openclaw/extensions/arka-audit
+OpenClaw gateway discovery/load of openclaw/extensions/arka-audit (VERIFIED)
 one bounded full OpenClaw ARKA agent session turn
 future packages/agent gateway client shape only after the gateway path is proven
 ```
@@ -190,9 +190,9 @@ Implementation order:
 ```txt
 1. Confirm local C path config works with C:\Dev\_openclaw-smoke.
 2. Verify openclaw/extensions/arka-audit extension-local tests.
-3. Verify OpenClaw gateway discovery/load of arka-audit.
+3. Verify OpenClaw gateway discovery/load of arka-audit. (VERIFIED)
 4. Run one bounded full OpenClaw ARKA agent session turn using the correct selector/session flags.
-5. Only after 3-4 succeed, consider a narrow packages/agent client seam.
+5. Only after 4 succeeds, consider a narrow packages/agent client seam.
 ```
 
 Allowed work:

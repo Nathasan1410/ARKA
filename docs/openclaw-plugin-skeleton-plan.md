@@ -8,7 +8,7 @@ Status:
 Docs-only plan: YES
 Plugin code: IMPLEMENTED AS READ-ONLY SKELETON
 Plugin skeleton location: openclaw/extensions/arka-audit/
-Plugin discovery/load through full OpenClaw gateway: NOT VERIFIED
+Plugin discovery/load through full OpenClaw gateway: VERIFIED
 ```
 
 ## Goal
@@ -248,30 +248,30 @@ If a real read path is not ready yet, keep the tool honest with an unavailable s
 Run these in order once the skeleton exists:
 
 ```powershell
-pnpm.cmd --dir openclaw run build:strict-smoke
-pnpm.cmd --dir openclaw run test:contracts:plugins
-pnpm.cmd --dir openclaw run test:extension arka-audit
-node openclaw\openclaw.mjs plugins inspect arka-audit --json
-node openclaw\openclaw.mjs plugins list
+pnpm --dir openclaw run build:strict-smoke
+pnpm --dir openclaw run test:contracts:plugins
+pnpm --dir openclaw run test:extension arka-audit
+node openclaw/openclaw.mjs plugins inspect arka-audit --json
+node openclaw/openclaw.mjs plugins list
 ```
 
 If the plugin is installed into a running local gateway, add:
 
 ```powershell
-node openclaw\openclaw.mjs --dev gateway status
-pnpm.cmd --dir openclaw run test:plugins:gateway-gauntlet -- --plugin arka-audit --skip-qa --skip-slash-help
+node openclaw/openclaw.mjs --dev gateway status
+pnpm --dir openclaw run test:plugins:gateway-gauntlet -- --plugin arka-audit --skip-qa --skip-slash-help
 ```
 
 Current verification note:
 
 ```txt
-pnpm.cmd --dir openclaw run test:extension arka-audit passed with 1 extension-local test file and 3 tests.
+pnpm --dir openclaw run test:extension arka-audit passed with 1 extension-local test file and 3 tests.
 Static tsx smoke checks verified the entrypoint imports, exposes id/register, registers one get_audit_event tool, and returns an unavailable read-only response.
-pnpm.cmd run test:arka-openclaw passed after adding plugin skeleton coverage.
-pnpm.cmd run verify:arka-openclaw passed after adding plugin skeleton coverage.
-pnpm.cmd --dir openclaw run build:strict-smoke timed out after 20 minutes in the HDD environment.
-pnpm.cmd --dir openclaw run test:contracts:plugins timed out after 5 minutes in the HDD environment.
-pnpm.cmd --dir openclaw install --lockfile-only --ignore-scripts --offline timed out after 5 minutes in the HDD environment.
+pnpm run test:arka-openclaw passed after adding plugin skeleton coverage.
+pnpm run verify:arka-openclaw passed after adding plugin skeleton coverage.
+pnpm --dir openclaw run build:strict-smoke timed out after 20 minutes in the HDD environment.
+pnpm --dir openclaw run test:contracts:plugins timed out after 5 minutes in the HDD environment.
+pnpm --dir openclaw install --lockfile-only --ignore-scripts --offline timed out after 5 minutes in the HDD environment.
 ```
 
 ## Non-Goals
@@ -303,5 +303,5 @@ ARKA has a verified local OpenClaw fork and ARKA workspace skill loading.
 ARKA has an implemented read-only ARKA OpenClaw plugin skeleton.
 The plugin skeleton registers get_audit_event and returns status=unavailable until a real ARKA backend/API read path exists.
 The plugin entrypoint and tool registration were statically smoke-tested with tsx and covered by extension-local tests.
-OpenClaw gateway discovery/load of the plugin is not verified yet because broad OpenClaw strict-smoke and plugin-contract checks timed out in this HDD environment.
+OpenClaw gateway discovery/load of the plugin is verified (gateway run shows `arka-audit` loaded; note bundled plugins are disabled-by-default and must be enabled in config).
 ```

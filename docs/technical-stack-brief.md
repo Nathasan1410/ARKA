@@ -370,7 +370,7 @@ Research clone lives outside the repo at D:\Projekan\Macam2Hackathon\ARKA\_resea
 OpenClaw source is also copied as a repo-local source fork under openclaw/.
 Local install, strict-smoke build, direct source CLI checks, local dev gateway connectivity, ARKA skill loading, MiniMax model discovery, and one local `infer model run` ARKA State C response are verified.
 Read-only `arka-audit` plugin skeleton static smoke and extension-local tests are verified.
-Full OpenClaw ARKA agent session response, OpenClaw gateway discovery/load of the plugin, packages/agent gateway calls, and OpenClaw Telegram are not verified or implemented yet.
+	Full OpenClaw ARKA agent session response, packages/agent gateway calls, and OpenClaw Telegram are not verified or implemented yet.
 See docs/openclaw-local-fork-plan.md and docs/openclaw-impact-assessment.md.
 ```
 
@@ -406,7 +406,7 @@ Needs verification:
 ```txt
 Successful full OpenClaw ARKA agent session turn using the ARKA workspace/skill.
 Whether full OpenClaw production build is needed beyond strict-smoke build.
-Whether ARKA plugin starts inside OpenClaw gateway and can expose safe AuditEvent tools.
+	Whether the `arka-audit` plugin tool(s) can be exercised through a full OpenClaw agent session and through packages/agent gateway calls (plugin loads, but current tool remains read-only/unavailable).
 Whether packages/agent can call the gateway/plugin reliably with deterministic fallback on timeout.
 Whether ARKA should use OpenClaw Telegram or ARKA-owned grammY for P0/P1.
 ```

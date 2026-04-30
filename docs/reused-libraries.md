@@ -30,7 +30,7 @@ License: MIT, Copyright (c) 2025 Peter Steinberger
 Copied by ARKA: source tree, docs, package manifests, lockfile, skills, scripts, packages, extensions, apps, UI, test/source fixtures
 Excluded by ARKA: .git, node_modules, dist, build, coverage, .tmp, logs, .artifacts, .cache, .env, .env.*
 ARKA changes so far: added openclaw/workspaces/arka/ workspace instructions, arka-audit skill draft, and openclaw/extensions/arka-audit/ read-only plugin skeleton
-Status: source fork present; local install, strict-smoke build, direct source CLI help/version/gateway-help, local dev gateway connectivity, ARKA skill loading, MiniMax model discovery, one local `infer model run` ARKA State C response, and read-only plugin static smoke/extension tests verified; full production build, full OpenClaw ARKA agent session, gateway discovery/load of the plugin, and packages/agent gateway calls not verified yet
+Status: source fork present; local install, strict-smoke build, direct source CLI help/version/gateway-help, local dev gateway connectivity, ARKA skill loading, MiniMax model discovery, one local `infer model run` ARKA State C response, read-only plugin static smoke/extension tests, and gateway discovery/load of the `arka-audit` plugin verified; full production build, full OpenClaw ARKA agent session, and packages/agent gateway calls not verified yet
 ```
 
 ARKA does not claim OpenClaw was written from scratch. OpenClaw remains public reused source with attribution above.

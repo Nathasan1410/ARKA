@@ -937,7 +937,8 @@ export async function runEmbeddedPiAgent(
             },
             skipProviderRuntimeHooks: params.skipProviderRuntimeHooks,
           });
-          arkaDiag(`after buildAgentRuntimePlan runtime=${runtimePlan.runtime}`);
+          // AgentRuntimePlan doesn't expose a `runtime` field; log the stable resolved ref instead.
+          arkaDiag(`after buildAgentRuntimePlan ref=${runtimePlan.observability.resolvedRef}`);
 
           arkaDiag("before runEmbeddedAttemptWithBackend");
           const rawAttempt = await runEmbeddedAttemptWithBackend({

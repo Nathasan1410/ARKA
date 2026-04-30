@@ -142,8 +142,7 @@ Still unverified / not implemented:
 
 - Full production build
 - Full OpenClaw ARKA agent session response
-- OpenClaw gateway discovery/load of the ARKA plugin skeleton
-- ARKA OpenClaw plugin/tool integration beyond the read-only skeleton
+- ARKA OpenClaw plugin/tool integration beyond the read-only skeleton (gateway loads the read-only skeleton; tool remains unavailable by design until backend wiring exists)
 - `packages/agent` calling the OpenClaw gateway/plugin
 - OpenClaw Telegram flow for ARKA
 

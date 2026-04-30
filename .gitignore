@@ -26,3 +26,4 @@ openclaw/.tmp/
 openclaw/dist-runtime/
 openclaw/workspaces/**/.env
 openclaw/workspaces/**/.env.*
+openclaw/workspaces/**/.openclaw/

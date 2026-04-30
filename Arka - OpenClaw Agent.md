@@ -9,7 +9,7 @@ packages/agent is ARKA's app-facing boundary and deterministic fallback, not the
 OpenClaw public source is now copied as a repo-local fork under openclaw/.
 Local install, strict-smoke build, direct CLI checks, local dev gateway connectivity, ARKA skill loading, and MiniMax model discovery are verified.
 Read-only `arka-audit` plugin skeleton static smoke is verified.
-One local model-backed ARKA State C inference response is verified through OpenClaw `infer model run`. Full OpenClaw ARKA agent session response, OpenClaw gateway discovery/load of the plugin, packages/agent gateway calls, and OpenClaw Telegram are not verified yet.
+One local model-backed ARKA State C inference response is verified through OpenClaw `infer model run`. OpenClaw gateway discovery/load of the read-only `arka-audit` plugin is verified. Full OpenClaw ARKA agent session response, packages/agent gateway calls, and OpenClaw Telegram are not verified yet.
 ```
 
 ## 0. Positioning

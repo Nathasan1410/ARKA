@@ -98,15 +98,16 @@ afterEach(() => {
 });
 
 describe("agentCliCommand", () => {
-  it("uses a timer-safe max gateway timeout when --timeout is 0", async () => {
+  it("does not hang on gateway connect when --timeout is 0 (no agent timeout)", async () => {
     await withTempStore(async () => {
       mockGatewaySuccessReply();
 
       await agentCliCommand({ message: "hi", to: "+1555", timeout: "0" }, runtime);
 
       expect(callGateway).toHaveBeenCalledTimes(1);
-      const request = callGateway.mock.calls[0]?.[0] as { timeoutMs?: number };
-      expect(request.timeoutMs).toBe(2_147_000_000);
+      const request = callGateway.mock.calls[0]?.[0] as { timeoutMs?: number; params?: unknown };
+      expect(request.timeoutMs).toBe(15_000);
+      expect(request.params).toMatchObject({ timeout: 0 });
     });
   });
 
@@ -282,6 +283,39 @@ describe("agentCliCommand", () => {
         cleanupBundleMcpOnRunEnd: true,
         cleanupCliLiveSessionOnRunEnd: true,
       });
+    });
+  });
+
+  it("waits for terminal result when gateway returns an accepted ack", async () => {
+    await withTempStore(async () => {
+      let agentCalls = 0;
+      callGateway.mockImplementation(async (req: { method: string }) => {
+        if (req.method === "agent") {
+          // first call returns the immediate ack, second call returns the cached final payload
+          agentCalls += 1;
+          if (agentCalls === 1) {
+            return { runId: "idem-1", status: "accepted" };
+          }
+          return {
+            runId: "idem-1",
+            status: "ok",
+            result: { payloads: [{ text: "hello" }], meta: { stub: true } },
+          };
+        }
+        if (req.method === "agent.wait") {
+          return { runId: "idem-1", status: "ok" };
+        }
+        throw new Error(`unexpected method ${req.method}`);
+      });
+
+      await agentCliCommand({ message: "hi", to: "+1555" }, runtime);
+
+      expect(callGateway).toHaveBeenCalledTimes(3);
+      expect(callGateway.mock.calls[0]?.[0]).toMatchObject({ method: "agent", expectFinal: false });
+      expect(callGateway.mock.calls[1]?.[0]).toMatchObject({ method: "agent.wait" });
+      expect(callGateway.mock.calls[2]?.[0]).toMatchObject({ method: "agent", expectFinal: false });
+      expect(runtime.log).toHaveBeenCalledWith("hello");
+      expect(agentCommand).not.toHaveBeenCalled();
     });
   });
 });

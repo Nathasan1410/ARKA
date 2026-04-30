@@ -262,18 +262,18 @@ ARKA arka-audit workspace skill loading: verified.
 MiniMax model discovery/auth: verified.
 Model-backed ARKA inference turn: verified once through local `infer model run` with MiniMax M2.7.
 Full OpenClaw ARKA agent session turn: not verified.
-ARKA OpenClaw read-only plugin skeleton: implemented / static-smoke and extension-test verified.
-OpenClaw gateway discovery/load of the plugin: not verified.
-packages/agent gateway/client call path: not implemented.
-OpenClaw Telegram for ARKA: not implemented.
+	ARKA OpenClaw read-only plugin skeleton: implemented / static-smoke and extension-test verified.
+	OpenClaw gateway discovery/load of the plugin: verified.
+	packages/agent gateway/client call path: not implemented.
+	OpenClaw Telegram for ARKA: not implemented.
 ```
 
 Before claiming ARKA is OpenClaw-integrated:
 
 ```txt
-1. Verify OpenClaw gateway discovery/load of the existing read-only `arka-audit` plugin.
+1. Verify OpenClaw gateway discovery/load of the existing read-only `arka-audit` plugin (VERIFIED).
 2. Debug a full OpenClaw ARKA agent session turn with the ARKA workspace/skill loaded.
-3. Connect packages/agent to the OpenClaw gateway/plugin only after the gateway/plugin path is proven.
+3. Connect packages/agent to the OpenClaw gateway/plugin only after the full agent session path is proven.
 4. Return OPENCLAW_RUNTIME only after a verified gateway/plugin response.
 5. Persist OpenClaw run/session/message refs only after the real path exists.
 6. Keep deterministic fallback available if OpenClaw runtime/provider fails or times out.

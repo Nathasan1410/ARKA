@@ -1,6 +1,6 @@
 # OpenClaw Research and ARKA Integration Plan
 
-Last updated: 2026-05-01
+Last updated: 2026-04-30
 
 ## Status
 
@@ -13,10 +13,11 @@ OpenClaw local CLI smoke: YES, direct source entrypoint verified
 OpenClaw gateway connectivity: YES, local dev gateway status probe verified on 127.0.0.1:19001
 ARKA workspace/skill loaded in OpenClaw: YES, arka-audit ready from openclaw-workspace
 MiniMax model discovery: YES, minimax/MiniMax-M2.7 listed with auth=yes
-Model-backed ARKA inference turn: YES, one local `infer model run` State C response verified
-Full OpenClaw ARKA agent session turn: NO / NOT VERIFIED
-OpenClaw runtime integrated with ARKA: NO
-ARKA deterministic fallback: YES, in packages/agent
+	Model-backed ARKA inference turn: YES, one local `infer model run` State C response verified
+	Full OpenClaw ARKA agent session turn: NO / NOT VERIFIED
+	OpenClaw gateway plugin discovery/load (arka-audit): YES, verified
+	OpenClaw runtime integrated with ARKA: NO
+	ARKA deterministic fallback: YES, in packages/agent
 ```
 
 Research source:
@@ -27,7 +28,7 @@ Official docs: https://docs.openclaw.ai
 Local research clone: D:\Projekan\Macam2Hackathon\ARKA\_research\openclaw
 ```
 
-The research clone remains outside `ARKA-github` as the upstream reference. ARKA now also has a repo-local copied source fork at `openclaw/` for future OpenClaw-side workspace/plugin/runtime work. The local fork can install, pass the targeted strict-smoke build, run direct CLI help/version commands, start a local dev gateway reachable by status probe, load the ARKA `arka-audit` skill, discover MiniMax M2.7, and produce one bounded local model-backed ARKA State C response through `infer model run`. Full OpenClaw ARKA agent session response and plugin gateway integration are not verified yet.
+The research clone remains outside `ARKA-github` as the upstream reference. ARKA now also has a repo-local copied source fork at `openclaw/` for future OpenClaw-side workspace/plugin/runtime work. The local fork can install, pass the targeted strict-smoke build, run direct CLI help/version commands, start a local dev gateway reachable by status probe, load the ARKA `arka-audit` skill, discover MiniMax M2.7, produce one bounded local model-backed ARKA State C response through `infer model run`, and load the read-only `arka-audit` plugin in the OpenClaw gateway. Full OpenClaw ARKA agent session response is still not verified, and ARKA app integration through `packages/agent` gateway calls remains unimplemented/unverified.
 
 ## What OpenClaw Is
 
@@ -83,11 +84,11 @@ openclaw onboard --install-daemon
 ARKA local-fork install/build shape:
 
 ```powershell
-pnpm.cmd --dir openclaw install
-pnpm.cmd --dir openclaw run build:strict-smoke
-node openclaw\openclaw.mjs --help
-node openclaw\openclaw.mjs --version
-node openclaw\openclaw.mjs --dev gateway status
+pnpm --dir openclaw install
+pnpm --dir openclaw run build:strict-smoke
+node openclaw/openclaw.mjs --help
+node openclaw/openclaw.mjs --version
+node openclaw/openclaw.mjs --dev gateway status
 ```
 
 Do not use global OpenClaw commands as the ARKA demo path unless the project explicitly switches strategy later.
@@ -121,7 +122,7 @@ test: node scripts/test-projects.mjs
 fast tests: node scripts/run-vitest.mjs run --config test/vitest/vitest.unit.config.ts
 ```
 
-ARKA has already performed a local-fork smoke path. Local install, targeted strict-smoke build, direct source CLI help/version/gateway-help, local dev gateway connectivity, ARKA `arka-audit` skill loading, MiniMax model discovery, one local `infer model run` ARKA State C response, and read-only `arka-audit` plugin skeleton static smoke are documented as verified in `docs/openclaw-local-fork-plan.md`. Full production build, full OpenClaw ARKA agent session response, gateway discovery/load of the ARKA plugin skeleton, OpenClaw Telegram, and `packages/agent` gateway calls remain unverified.
+ARKA has already performed a local-fork smoke path. Local install, targeted strict-smoke build, direct source CLI help/version/gateway-help, local dev gateway connectivity, ARKA `arka-audit` skill loading, MiniMax model discovery, one local `infer model run` ARKA State C response, read-only `arka-audit` plugin skeleton static smoke, and gateway discovery/load of the read-only plugin are documented as verified in `docs/openclaw-local-fork-plan.md`. Full production build, full OpenClaw ARKA agent session response, OpenClaw Telegram, and `packages/agent` gateway calls remain unverified.
 
 ## Relevant OpenClaw Concepts For ARKA
 
@@ -628,7 +629,7 @@ Current status:
 
 ```txt
 Static plugin smoke checks passed.
-OpenClaw gateway discovery/load of the plugin skeleton is not verified yet.
+OpenClaw gateway discovery/load of the read-only plugin skeleton is verified.
 ```
 
 ### Phase 5 - Connect ARKA packages/agent

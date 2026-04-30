@@ -1,11 +1,17 @@
 {
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
+    "baseUrl": ".",
     "declaration": true,
+    "ignoreDeprecations": "6.0",
     "noEmit": false,
     "outDir": "dist",
     "rootDir": "src",
-    "types": ["node"]
+    "types": ["node"],
+    "paths": {
+      "@arka/shared": ["../shared/src/index.ts"],
+      "@arka/shared/*": ["../shared/src/*"]
+    }
   },
   "include": ["src/**/*.ts"]
 }

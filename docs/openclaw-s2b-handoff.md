@@ -6,13 +6,13 @@ Historical status for S2B: RESEARCHED ONLY. No OpenClaw gateway, plugin, skill, 
 
 This file is archival handoff context, not the current source of truth. For current status, use `docs/openclaw-local-fork-plan.md`, `docs/openclaw-plugin-skeleton-plan.md`, and `docs/openclaw-impact-assessment.md`.
 
-Superseding status as of 2026-05-01:
+Superseding status as of 2026-04-30:
 
 ```txt
 OpenClaw source fork under openclaw/: verified.
 Local install, strict-smoke build, direct CLI checks, local dev gateway connectivity, ARKA arka-audit skill loading, and MiniMax model discovery are verified.
 Read-only `arka-audit` plugin skeleton static smoke is verified.
-One local `infer model run` ARKA State C response is verified. Full OpenClaw ARKA agent session response, OpenClaw gateway discovery/load of the plugin, packages/agent gateway calls, and OpenClaw Telegram remain unverified / not implemented.
+One local `infer model run` ARKA State C response is verified. OpenClaw gateway discovery/load of the read-only `arka-audit` plugin is verified. Full OpenClaw ARKA agent session response, packages/agent gateway calls, and OpenClaw Telegram remain unverified / not implemented.
 Use docs/openclaw-local-fork-plan.md and docs/openclaw-impact-assessment.md for current status.
 ```
 
@@ -93,7 +93,7 @@ OpenClaw researched; ARKA has an OpenClaw-facing deterministic fallback boundary
 | Requirement | Status / command |
 | --- | --- |
 | Node | OpenClaw package declares Node `>=22.14.0`; README recommends Node 24. This machine reports `node --version` as `v24.14.1`. |
-| pnpm | OpenClaw package declares `pnpm@10.33.0`; this machine reports `pnpm.cmd --version` as `10.28.1`. Upgrade may be needed if source dev commands fail. |
+| pnpm | OpenClaw package declares `pnpm@10.33.0`; this machine reports `pnpm --version` as `10.28.1`. Upgrade may be needed if source dev commands fail. |
 | OS | Native Windows is possible, but upstream README strongly recommends WSL2 for Windows. Native Windows may hit path, service, and process-management friction. |
 | Global CLI | `openclaw` is not currently on PATH in this ARKA session. |
 | Secrets | Real agent turns require a configured model provider/auth profile. Telegram requires a BotFather token. |
@@ -113,7 +113,7 @@ openclaw --help
 Alternative global pnpm install:
 
 ```powershell
-pnpm.cmd add -g openclaw@latest
+pnpm add -g openclaw@latest
 openclaw --version
 ```
 
@@ -121,9 +121,9 @@ Source research path, for local OpenClaw development only:
 
 ```powershell
 cd D:\Projekan\Macam2Hackathon\ARKA\_research\openclaw
-pnpm.cmd install
-pnpm.cmd build
-pnpm.cmd ui:build
+pnpm install
+pnpm build
+pnpm ui:build
 ```
 
 Source install was not run in this session.
@@ -426,7 +426,7 @@ Verification commands:
 
 ```powershell
 node --version
-pnpm.cmd --version
+pnpm --version
 Get-Command openclaw -ErrorAction SilentlyContinue
 openclaw --version
 openclaw setup
@@ -536,7 +536,7 @@ No mutation of AuditEvent facts.
 Verification commands:
 
 ```powershell
-pnpm.cmd --dir openclaw test:fast
+pnpm --dir openclaw test:fast
 openclaw plugins list
 openclaw agent --message "Fetch audit event <fixture-id> and recommend the allowed ARKA triage action."
 ```

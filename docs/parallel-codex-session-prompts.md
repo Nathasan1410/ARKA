@@ -110,7 +110,7 @@ packages/agent contains deterministic A/C/D triage fallback only.
 OpenClaw has been researched, copied into openclaw/ as a repo-local source fork, locally installed, strict-smoke built, CLI-smoked, gateway-smoked, and configured to load the ARKA arka-audit skill.
 MiniMax model discovery/auth is verified in the local smoke setup.
 Read-only `arka-audit` plugin skeleton static smoke is verified.
-One local `infer model run` ARKA State C response is verified. Full OpenClaw ARKA agent session response, OpenClaw gateway discovery/load of the plugin, packages/agent gateway calls, and OpenClaw Telegram are not verified.
+One local `infer model run` ARKA State C response is verified. Full OpenClaw ARKA agent session response, packages/agent gateway calls, and OpenClaw Telegram are not verified.
 packages/db schema exists, but real Postgres migration/write-read verification is not done.
 Dashboard UI shell exists for local A/C/D fixtures, but manual browser verification remains open.
 Local proof package builder/hash exists in packages/core, but 0G upload is not implemented.

@@ -1,6 +1,8 @@
 # OpenClaw Local Fork Plan
 
-Date: 2026-05-01
+Date: 2026-04-30
+
+Note (Codespaces/Linux): repo root is `/workspaces/ARKA`. Use `pnpm` (not `pnpm.cmd`) and invoke OpenClaw via `node openclaw/openclaw.mjs`. Some older sections in this doc still reference Windows-only paths from earlier machines.
 
 Status:
 
@@ -16,7 +18,7 @@ MiniMax model configured/discovered: VERIFIED
 Model-backed ARKA inference turn: VERIFIED through local `infer model run`
 Full ARKA agent session turn: NOT VERIFIED
 ARKA OpenClaw plugin skeleton: IMPLEMENTED / STATIC-SMOKE VERIFIED
-ARKA OpenClaw plugin gateway load: NOT VERIFIED
+ARKA OpenClaw plugin gateway load: VERIFIED
 ARKA packages/agent integration with OpenClaw: NOT IMPLEMENTED
 ARKA/OpenClaw cross-layer verification test: VERIFIED
 ```
@@ -134,7 +136,7 @@ An attempted local install created partial openclaw/node_modules content before 
 Attempted local-only install:
 
 ```powershell
-pnpm.cmd --dir openclaw install --reporter append-only
+pnpm --dir openclaw install --reporter append-only
 ```
 
 Original session result:
@@ -154,7 +156,7 @@ No openclaw/node_modules/.modules.yaml completion marker existed before stopping
 Manual retry command:
 
 ```powershell
-pnpm.cmd --dir openclaw install --reporter append-only
+pnpm --dir openclaw install --reporter append-only
 ```
 
 Manual result reported by repo owner:
@@ -167,7 +169,7 @@ Verification after manual install:
 
 ```powershell
 Test-Path openclaw\node_modules\.modules.yaml
-pnpm.cmd --dir openclaw --version
+pnpm --dir openclaw --version
 ```
 
 Observed:
@@ -183,7 +185,7 @@ OpenClaw local install is verified.
 Full build was attempted manually:
 
 ```powershell
-pnpm.cmd --dir openclaw run build
+pnpm --dir openclaw run build
 ```
 
 Result:
@@ -201,13 +203,13 @@ build = node scripts/build-all.mjs
 Manual build command after install succeeds:
 
 ```powershell
-pnpm.cmd --dir openclaw run build
+pnpm --dir openclaw run build
 ```
 
 Targeted strict smoke build was then run:
 
 ```powershell
-pnpm.cmd --dir openclaw run build:strict-smoke
+pnpm --dir openclaw run build:strict-smoke
 ```
 
 Result:
@@ -223,16 +225,16 @@ openclaw/dist/.buildstamp: present
 openclaw/dist/.runtime-postbuildstamp: present
 ```
 
-Do not claim full production build is verified until `pnpm.cmd --dir openclaw run build` exits successfully.
+Do not claim full production build is verified until `pnpm --dir openclaw run build` exits successfully.
 
 ## 6. CLI And Gateway Smoke Result
 
 The package-script form below is not valid for this local source checkout because it passes a literal `--` through `scripts/run-node.mjs` and falls into the interactive Crestodian path:
 
 ```powershell
-pnpm.cmd --dir openclaw run openclaw -- --help
-pnpm.cmd --dir openclaw run openclaw -- --version
-pnpm.cmd --dir openclaw run openclaw -- gateway --help
+pnpm --dir openclaw run openclaw -- --help
+pnpm --dir openclaw run openclaw -- --version
+pnpm --dir openclaw run openclaw -- gateway --help
 ```
 
 Observed error:
@@ -244,20 +246,20 @@ Crestodian needs an interactive TTY. Use `openclaw crestodian --message "status"
 Working local CLI source entrypoint:
 
 ```powershell
-node openclaw\openclaw.mjs --help
-node openclaw\openclaw.mjs --version
-node openclaw\openclaw.mjs gateway --help
+node openclaw/openclaw.mjs --help
+node openclaw/openclaw.mjs --version
+node openclaw/openclaw.mjs gateway --help
 ```
 
 Observed:
 
 ```txt
-node openclaw\openclaw.mjs --help: passed and printed CLI command list.
-node openclaw\openclaw.mjs --version: OpenClaw 2026.4.27.
-node openclaw\openclaw.mjs gateway --help: passed and printed gateway help.
+node openclaw/openclaw.mjs --help: passed and printed CLI command list.
+node openclaw/openclaw.mjs --version: OpenClaw 2026.4.27.
+node openclaw/openclaw.mjs gateway --help: passed and printed gateway help.
 ```
 
-`pnpm.cmd --dir openclaw exec openclaw --help` did not work because `openclaw` is not installed as a package bin inside this source checkout:
+`pnpm --dir openclaw exec openclaw --help` did not work because `openclaw` is not installed as a package bin inside this source checkout:
 
 ```txt
 Command "openclaw" not found.
@@ -268,7 +270,7 @@ Gateway status check with isolated state/config:
 ```powershell
 $env:OPENCLAW_STATE_DIR='C:\Dev\_openclaw-smoke\state'
 $env:OPENCLAW_CONFIG_PATH='C:\Dev\_openclaw-smoke\openclaw.json'
-node openclaw\openclaw.mjs --dev gateway status
+node openclaw/openclaw.mjs --dev gateway status
 ```
 
 Observed:
@@ -282,7 +284,7 @@ Connectivity probe failed with ECONNREFUSED on 127.0.0.1:19001.
 Controlled gateway startup attempt:
 
 ```powershell
-node openclaw\openclaw.mjs --dev gateway run --port 19001 --verbose --allow-unconfigured
+node openclaw/openclaw.mjs --dev gateway run --port 19001 --verbose --allow-unconfigured
 ```
 
 Initial controlled startup observation:
@@ -299,9 +301,9 @@ Process was stopped cleanly by the test harness.
 Manual follow-up:
 
 ```powershell
-pnpm.cmd --dir openclaw run ui:build
-node openclaw\openclaw.mjs --dev gateway run --port 19001 --verbose --allow-unconfigured
-node openclaw\openclaw.mjs --dev gateway status
+pnpm --dir openclaw run ui:build
+node openclaw/openclaw.mjs --dev gateway run --port 19001 --verbose --allow-unconfigured
+node openclaw/openclaw.mjs --dev gateway status
 ```
 
 Observed from repo owner:
@@ -368,13 +370,13 @@ To load manually after OpenClaw setup, point OpenClaw config to the workspace pa
 Then restart or start the gateway and verify:
 
 ```powershell
-node openclaw\openclaw.mjs --dev skills list
+node openclaw/openclaw.mjs --dev skills list
 ```
 
 Manual skill-list smoke result before ARKA workspace config:
 
 ```txt
-`node openclaw\openclaw.mjs --dev skills list` works and listed bundled/extra skills.
+`node openclaw/openclaw.mjs --dev skills list` works and listed bundled/extra skills.
 The active dev config still points to `C:\Users\Lenovo\.openclaw\workspace-dev`, not `openclaw/workspaces/arka`.
 At this point in the sequence, ARKA `arka-audit` skill loading was not verified yet. That was resolved by the follow-up ARKA workspace config below.
 ```
@@ -388,7 +390,7 @@ The isolated smoke config at C:\Dev\_openclaw-smoke\openclaw.json was updated ou
 Verified ARKA skill-list result:
 
 ```txt
-node openclaw\openclaw.mjs --dev skills list
+node openclaw/openclaw.mjs --dev skills list
 ```
 
 Observed:
@@ -404,7 +406,7 @@ Truthful result:
 
 ```txt
 ARKA OpenClaw workspace skill loading is verified.
-The skill is instruction-only. A read-only ARKA plugin skeleton is implemented separately under `openclaw/extensions/arka-audit/`; gateway discovery/load of that plugin is not verified yet.
+The skill is instruction-only. A read-only ARKA plugin skeleton is implemented separately under `openclaw/extensions/arka-audit/`; gateway discovery/load of that plugin is now verified.
 ```
 
 ## 7A. MiniMax Smoke Configuration
@@ -437,7 +439,7 @@ API mode: anthropic-messages
 Verified model discovery:
 
 ```powershell
-node openclaw\openclaw.mjs --dev models list --provider minimax
+node openclaw/openclaw.mjs --dev models list --provider minimax
 ```
 
 Observed:
@@ -453,7 +455,7 @@ Tags: default
 Full OpenClaw ARKA agent session attempt:
 
 ```powershell
-node openclaw\openclaw.mjs --dev agent --message "<small ARKA State C prompt>"
+node openclaw/openclaw.mjs --dev agent --message "<small ARKA State C prompt>"
 ```
 
 Result:
@@ -465,7 +467,7 @@ NOT VERIFIED. The command timed out after system-prompt/session setup and left a
 Verified bounded model-backed inference command:
 
 ```powershell
-node openclaw\openclaw.mjs --dev infer model run --local --model minimax/MiniMax-M2.7 --prompt <ARKA State C audit prompt> --json
+node openclaw/openclaw.mjs --dev infer model run --local --model minimax/MiniMax-M2.7 --prompt <ARKA State C audit prompt> --json
 ```
 
 Result:
@@ -512,7 +514,7 @@ Static smoke verification:
 ```powershell
 node --import tsx -e "<import arka-audit entrypoint and assert id/register>"
 node --import tsx -e "<register plugin against fake API and execute get_audit_event>"
-pnpm.cmd --dir openclaw run test:extension arka-audit
+pnpm --dir openclaw run test:extension arka-audit
 ```
 
 Observed:
@@ -529,7 +531,7 @@ Extension-local tests pass for manifest shape, tool registration, unavailable re
 Best-practice direction for the next implementation pass:
 
 ```txt
-Verify OpenClaw gateway discovery/load of the plugin.
+Verify OpenClaw gateway discovery/load of the plugin: VERIFIED (gateway run shows `arka-audit` loaded).
 Wire get_audit_event to a real ARKA backend/API read path.
 Keep the existing ARKA workspace skill separate from the plugin package.
 Do not write DB records until ARKA API/DB contracts exist.
@@ -563,8 +565,8 @@ ARKA arka-audit workspace skill loads as ready from openclaw-workspace.
 MiniMax provider discovery lists minimax/MiniMax-M2.7 with auth=yes.
 ARKA OpenClaw plugin skeleton exists under openclaw/extensions/arka-audit/.
 ARKA plugin entrypoint and read-only get_audit_event registration pass static smoke checks.
-ARKA plugin extension-local tests pass: pnpm.cmd --dir openclaw run test:extension arka-audit.
-Repo verification command passes: pnpm.cmd run verify:arka-openclaw.
+ARKA plugin extension-local tests pass: pnpm --dir openclaw run test:extension arka-audit.
+Repo verification command passes: pnpm run verify:arka-openclaw.
 ```
 
 The cross-layer verification command covers:
@@ -585,7 +587,7 @@ shared/core/agent/db typecheck
 Run:
 
 ```powershell
-pnpm.cmd run verify:arka-openclaw
+pnpm run verify:arka-openclaw
 ```
 
 ## 10. What Remains Unverified
@@ -594,12 +596,9 @@ Unverified:
 
 ```txt
 OpenClaw full production build
-OpenClaw strict-smoke build after adding arka-audit plugin skeleton
 OpenClaw plugin-contract suite after adding arka-audit plugin skeleton
-OpenClaw workspace lockfile refresh after adding arka-audit plugin skeleton
 Operator-scope gateway auth/control beyond status probe
 Full OpenClaw ARKA agent session turn
-OpenClaw gateway discovery/load of the arka-audit plugin
 OpenClaw Telegram channel
 ARKA packages/agent calling OpenClaw gateway/plugin
 0G Storage upload
@@ -608,8 +607,7 @@ ARKA packages/agent calling OpenClaw gateway/plugin
 
 ## 11. Next Implementation Task
 
-Recommended next task: verify OpenClaw gateway discovery/load of the existing `arka-audit` plugin skeleton and debug one full OpenClaw ARKA agent session turn.
-Updated recommendation: do not build more plugin tools until the current read-only skeleton is loaded by the gateway and can be called through the intended OpenClaw path.
+Recommended next task: debug one full OpenClaw ARKA agent session turn (not just `infer model run`), then only after that works consider a narrow `packages/agent` gateway client seam.
 
 Scope:
 
@@ -624,9 +622,9 @@ docs/real-vs-simulated.md only if status changes
 Model-turn debugging commands:
 
 ```powershell
-node openclaw\openclaw.mjs --dev gateway status
-node openclaw\openclaw.mjs --dev models list --provider minimax
-node openclaw\openclaw.mjs --dev agent --message "Reply with OK only."
+node openclaw/openclaw.mjs --dev gateway status
+node openclaw/openclaw.mjs --dev models list --provider minimax
+node openclaw/openclaw.mjs --dev agent --message "Reply with OK only."
 ```
 
 Current blocker discovered in local smoke:
@@ -640,13 +638,13 @@ The agent gateway path also uses a long default timeout, so stalled runs can loo
 If a simple agent turn works, run the ARKA prompt:
 
 ```powershell
-node openclaw\openclaw.mjs --dev agent --message "Using the ARKA audit skill, explain the safe triage rule for State C in two sentences. Do not send staff messages."
+node openclaw/openclaw.mjs --dev agent --message "Using the ARKA audit skill, explain the safe triage rule for State C in two sentences. Do not send staff messages."
 ```
 
 Preferred next retry:
 
 ```powershell
-node openclaw\openclaw.mjs --dev agent --session-id <existing-or-smoke-session> --message "Reply with OK only." --timeout 15
+node openclaw/openclaw.mjs --dev agent --session-id <existing-or-smoke-session> --message "Reply with OK only." --timeout 15
 ```
 
 Expected success signal:
@@ -660,7 +658,7 @@ Completion criteria:
 ```txt
 Install success = already verified.
 Strict-smoke build success = already verified.
-CLI success = already verified through node openclaw\openclaw.mjs.
+CLI success = already verified through node openclaw/openclaw.mjs.
 Gateway success = already verified for local dev connectivity.
 ARKA workspace success = already verified; skills list includes arka-audit.
 Model-backed ARKA inference turn success = verified once through local `infer model run`.

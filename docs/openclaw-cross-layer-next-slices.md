@@ -1,6 +1,6 @@
 # OpenClaw Cross-Layer Next Slices
 
-Last updated: 2026-05-01
+Last updated: 2026-04-30
 
 ## Purpose
 
@@ -38,8 +38,7 @@ Verified but still not app integration:
 
 Not verified or not implemented:
 - full OpenClaw ARKA agent session response
-- OpenClaw gateway discovery/load of the read-only arka-audit plugin skeleton
-- real ARKA backend/API wiring for plugin tools
+- real ARKA backend/API wiring for plugin tools (plugin loads, but tool is read-only/unavailable by design until backend wiring exists)
 - packages/agent gateway calls
 - OpenClaw Telegram
 ```

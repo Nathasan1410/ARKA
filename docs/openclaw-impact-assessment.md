@@ -1,6 +1,6 @@
 # OpenClaw Cross-Layer Impact Assessment
 
-Last updated: 2026-05-01
+Last updated: 2026-04-30
 
 ## Verdict
 
@@ -27,7 +27,7 @@ ARKA arka-audit workspace skill loaded: VERIFIED
 MiniMax model discovery/auth: VERIFIED
 Model-backed ARKA inference response: VERIFIED through local `infer model run`
 Full OpenClaw ARKA agent session response: NOT VERIFIED
-ARKA plugin/tool integration: READ-ONLY SKELETON STATIC-SMOKE VERIFIED; GATEWAY LOAD NOT VERIFIED
+ARKA plugin/tool integration: READ-ONLY SKELETON STATIC-SMOKE VERIFIED; GATEWAY LOAD VERIFIED
 packages/agent gateway/client call path: NOT IMPLEMENTED
 OpenClaw Telegram channel for ARKA: NOT IMPLEMENTED
 ```
@@ -216,7 +216,7 @@ The local fork should be used for OpenClaw-side development in this order:
 ```txt
 1. Keep `openclaw/workspaces/arka` as the instruction/skill layer.
 2. Debug a successful minimal model-backed agent turn.
-3. Verify OpenClaw gateway discovery/load of `openclaw/extensions/arka-audit`.
+3. Verify OpenClaw gateway discovery/load of `openclaw/extensions/arka-audit`. (VERIFIED)
 4. Wire read-only `get_audit_event` to a real ARKA backend/API read path.
 5. Add append-only triage tools after DB/API contracts exist.
 6. Connect `packages/agent` to the gateway/plugin with deterministic fallback.
@@ -250,7 +250,7 @@ technical-debt.md
 Goal:
 
 ```txt
-Get `node openclaw\openclaw.mjs --dev agent --message "Reply with OK only."` to return a response using MiniMax.
+Get `node openclaw/openclaw.mjs --dev agent --message "Reply with OK only."` to return a response using MiniMax.
 Then test one ARKA State C prompt with arka-audit loaded.
 ```
 
@@ -269,7 +269,7 @@ test/arka-openclaw.verify.test.ts
 Goal:
 
 ```txt
-Verify the existing read-only arka-audit plugin skeleton can be discovered/loaded by OpenClaw gateway.
+Verify the existing read-only arka-audit plugin skeleton can be discovered/loaded by OpenClaw gateway. (VERIFIED)
 Keep get_audit_event read-only and unavailable until ARKA backend/API read path exists.
 ```
 

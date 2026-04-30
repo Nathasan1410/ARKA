@@ -182,10 +182,18 @@ export async function agentViaGatewayCommand(opts: AgentCliOpts, runtime: Runtim
     }
   }
   const timeoutSeconds = parseTimeoutSeconds({ cfg, timeout: opts.timeout });
-  const gatewayTimeoutMs =
+  // Gateway "agent" is intentionally two-phase:
+  // 1) immediate ack with { status: "accepted", runId }
+  // 2) later terminal response written to gateway dedupe (and optionally emitted as a second res frame)
+  //
+  // A single long-lived expectFinal RPC is fragile because `callGateway()` itself has a wrapper timeout,
+  // and server-side abort enforcement is sweep-based (see gateway maintenance). Instead, do:
+  // start (no expectFinal) -> agent.wait -> fetch cached terminal payload (agent + same idempotencyKey).
+  const overallWaitMs =
     timeoutSeconds === 0
       ? NO_GATEWAY_TIMEOUT_MS // no timeout (timer-safe max)
-      : Math.max(10_000, (timeoutSeconds + 30) * 1000);
+      : Math.max(10_000, (timeoutSeconds + 120) * 1000);
+  const connectTimeoutMs = 15_000;
 
   const sessionKey = resolveSessionKeyForRequest({
     cfg,
@@ -203,33 +211,76 @@ export async function agentViaGatewayCommand(opts: AgentCliOpts, runtime: Runtim
       indeterminate: true,
       enabled: opts.json !== true,
     },
-    async () =>
-      await callGateway({
+    async () => {
+      const agentParams = {
+        message: body,
+        agentId,
+        model: opts.model,
+        to: opts.to,
+        replyTo: opts.replyTo,
+        sessionId: opts.sessionId,
+        sessionKey,
+        thinking: opts.thinking,
+        deliver: Boolean(opts.deliver),
+        channel,
+        replyChannel: opts.replyChannel,
+        replyAccountId: opts.replyAccount,
+        bestEffortDeliver: opts.bestEffortDeliver,
+        timeout: timeoutSeconds,
+        lane: opts.lane,
+        extraSystemPrompt: opts.extraSystemPrompt,
+        idempotencyKey,
+      };
+
+      // Phase 1: start (or read cached terminal result).
+      const started: GatewayAgentResponse = await callGateway({
         method: "agent",
-        params: {
-          message: body,
-          agentId,
-          model: opts.model,
-          to: opts.to,
-          replyTo: opts.replyTo,
-          sessionId: opts.sessionId,
-          sessionKey,
-          thinking: opts.thinking,
-          deliver: Boolean(opts.deliver),
-          channel,
-          replyChannel: opts.replyChannel,
-          replyAccountId: opts.replyAccount,
-          bestEffortDeliver: opts.bestEffortDeliver,
-          timeout: timeoutSeconds,
-          lane: opts.lane,
-          extraSystemPrompt: opts.extraSystemPrompt,
-          idempotencyKey,
-        },
-        expectFinal: true,
-        timeoutMs: gatewayTimeoutMs,
+        params: agentParams,
+        expectFinal: false,
+        timeoutMs: connectTimeoutMs,
         clientName: GATEWAY_CLIENT_NAMES.CLI,
         mode: GATEWAY_CLIENT_MODES.CLI,
-      }),
+      });
+      if (started?.status !== "accepted") {
+        return started;
+      }
+
+      const runId = normalizeOptionalString(started.runId) ?? idempotencyKey;
+      const deadlineMs = Date.now() + overallWaitMs;
+
+      // Phase 2: wait (poll). `agent.wait` returns status only; terminal payload is fetched via cached agent dedupe.
+      while (Date.now() < deadlineMs) {
+        const remainingMs = Math.max(0, deadlineMs - Date.now());
+        const waitSliceMs = Math.min(30_000, remainingMs);
+        const waitRes = (await callGateway({
+          method: "agent.wait",
+          params: {
+            runId,
+            timeoutMs: waitSliceMs,
+          },
+          expectFinal: false,
+          timeoutMs: waitSliceMs + connectTimeoutMs,
+          clientName: GATEWAY_CLIENT_NAMES.CLI,
+          mode: GATEWAY_CLIENT_MODES.CLI,
+        })) as { status?: string } | undefined;
+        if (waitRes?.status && waitRes.status !== "timeout") {
+          break;
+        }
+        if (waitSliceMs <= 0) {
+          break;
+        }
+      }
+
+      // Phase 3: fetch cached terminal payload (or a cached accepted if still in-flight).
+      return await callGateway({
+        method: "agent",
+        params: agentParams,
+        expectFinal: false,
+        timeoutMs: connectTimeoutMs,
+        clientName: GATEWAY_CLIENT_NAMES.CLI,
+        mode: GATEWAY_CLIENT_MODES.CLI,
+      });
+    },
   );
 
   if (opts.json) {
