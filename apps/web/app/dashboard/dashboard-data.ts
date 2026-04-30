@@ -34,7 +34,11 @@ export type DashboardProofRecord = {
   retryState: string;
 };
 
-export type DashboardPersistenceMode = 'IN_MEMORY_DEMO' | 'POSTGRES_CONFIGURED_UNVERIFIED';
+export type DashboardPersistenceMode =
+  | 'IN_MEMORY_DEMO'
+  | 'POSTGRES_CONFIGURED_UNVERIFIED'
+  | 'POSTGRES_ACTIVE_REAL'
+  | 'POSTGRES_ENABLED_BUT_FALLBACK_TO_MEMORY';
 
 export type DashboardPersistenceStatus = {
   mode: DashboardPersistenceMode;

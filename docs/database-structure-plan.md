@@ -1,6 +1,11 @@
 # ARKA Database Structure Plan
 
-This document is planning only. It does not define schema code yet.
+This document is primarily planning and boundary-setting. **Schema code now exists** in `packages/db/src/schema.ts` and Drizzle SQL migrations are generated into `packages/db/drizzle/`.
+
+Truthfulness note (MVP):
+
+- Postgres persistence should not be described as REAL until migrations are applied to a real database and the demo routes write + read back the A/C/D + admin simulation flow.
+- The dashboard demo currently persists via an in-memory repository by default. A Postgres-backed demo-run store exists behind an explicit env flag, but it still requires migration application and runtime verification before claims change.
 
 ## Boundary
 
@@ -42,8 +47,9 @@ Current implementation note:
 - `triageSource` is worth storing now because ARKA already distinguishes deterministic fallback vs future OpenClaw runtime output at the agent boundary, and the dashboard/docs need that truthfulness to survive persistence.
 - `triageSource` is already represented in the schema.
 - OpenClaw run/session/message/model/skill references remain deferred until a real sidecar/plugin write path exists.
-- The Web2 MVP dashboard route currently uses a server-process in-memory demo repository behind a repository boundary. It creates Order-shaped, Movement-shaped, AuditEvent, and ProofRecord-shaped response data, but it does not yet write/read these rows through Postgres.
-- Do not mark Postgres persistence as real until migrations are applied to a real database and the demo route writes and reads back the A/C/D path.
+- The Web2 MVP dashboard route uses a server-process in-memory demo repository by default. An optional Postgres-backed demo mode exists behind `ARKA_DEMO_REPOSITORY=postgres`.
+- In Postgres demo mode, the dashboard persists demo history (`dashboard_demo_runs`) and best-effort writes minimal operational evidence rows (orders, movements, audit events, proof records). This remains an MVP convenience layer, not a full DB-backed workflow yet, and it must not be described as REAL until verified.
+- Do not mark Postgres persistence as REAL until migrations are applied to a real database and the demo route writes and reads back the A/C/D + admin simulation path successfully (including surviving a server restart).
 
 ## P0 Models
 

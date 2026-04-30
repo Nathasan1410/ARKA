@@ -15,6 +15,38 @@ This document tracks material AI-assisted work in ARKA.
 ### Human Direction
 - Requested a final documentation alignment pass across affected root and `docs/` files, followed by commit and push.
 
+## 2026-05-01 - Dashboard Demo Postgres Persistence Slice (MVP-Safe)
+
+### AI Tool Used
+- OpenAI Codex CLI (GPT-5.x)
+- GPT-5.x explorer subagents for bounded dashboard and DB boundary review
+
+### What AI Helped With
+- Added a minimal Postgres-backed dashboard demo-run store behind an explicit env flag, while keeping the in-memory demo repository as the default.
+- Added schema + migrations support for `dashboard_demo_runs` (JSONB payload) and a migration runner script to apply Drizzle migrations using `DATABASE_URL`.
+- Strengthened health checks to avoid over-claiming Postgres persistence when migrations are missing (fallback to in-memory remains the default behavior).
+- Added best-effort persistence of demo operational evidence into normalized tables so DB-first demos can be run without waiting for OpenClaw runtime or 0G/Telegram integrations.
+
+### Files / Areas Affected
+- `packages/db/src/schema.ts`
+- `packages/db/src/client.ts`
+- `packages/db/src/dashboard-demo-run-store.ts`
+- `packages/db/src/migrate.ts`
+- `packages/db/src/mvp-demo-evidence-store.ts`
+- `packages/db/package.json`
+- `apps/web/app/dashboard/demo-run-service.ts`
+- `CHANGELOG.md`
+- `docs/database-structure-plan.md`
+
+### Human Review
+- Pending / to be confirmed by repo owner.
+
+### Verification
+- `pnpm.cmd --filter @arka/db run typecheck`
+- `pnpm.cmd --filter @arka/db run generate`
+- `pnpm.cmd --filter @arka/web build`
+- `pnpm.cmd run verify:arka-openclaw`
+
 ## 2026-05-01 - OpenClaw Local Inference Smoke
 
 ### AI Tool Used

@@ -13,7 +13,9 @@
       "@arka/core": ["../../packages/core/src/index.ts"],
       "@arka/core/*": ["../../packages/core/src/*"],
       "@arka/agent": ["../../packages/agent/src/index.ts"],
-      "@arka/agent/*": ["../../packages/agent/src/*"]
+      "@arka/agent/*": ["../../packages/agent/src/*"],
+      "@arka/db": ["../../packages/db/src/index.ts"],
+      "@arka/db/*": ["../../packages/db/src/*"]
     },
     "plugins": [{ "name": "next" }]
   },

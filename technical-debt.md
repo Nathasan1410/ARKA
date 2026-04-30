@@ -16,15 +16,15 @@ Owner: Human / Agent / Both
 
 ## Current Open Items
 
-### 2026-04-30 - Dashboard Focused Vitest Retry Blocked By Local EPERM
+### 2026-05-01 - Postgres Demo Persistence Not Yet Verified End-to-End
 
 ```txt
-Area: Dashboard / Verification
-Status: RISK
-What happened: After the follow-up dashboard usability patch, `git diff --check` and the focused web TypeScript command passed, but `pnpm.cmd exec vitest run --config test/dashboard-demo.vitest.config.ts` failed before test collection with `Error: spawn EPERM` while Vite/esbuild loaded the config.
-Why it matters: The State A/C/D demo-service coverage previously passed and is recorded in CHANGELOG.md, but the latest small UI-label patch did not get a fresh focused Vitest rerun because the local process-spawn environment blocked it.
-Next action: Rerun `pnpm.cmd exec vitest run --config test/dashboard-demo.vitest.config.ts` in an unrestricted local terminal. If EPERM persists, investigate Windows policy/AV/process-spawn restrictions around esbuild.
-Owner: Human / Agent
+Area: Database / Demo Persistence
+Status: NEEDS_HUMAN
+What happened: The repo now includes an optional Postgres-backed dashboard demo-run store (`dashboard_demo_runs` JSONB) and a migration runner (`pnpm.cmd --filter @arka/db run migrate`), but Postgres persistence should not be claimed as REAL until a real database has migrations applied and the dashboard demo routes write + read back successfully.
+Why it matters: Reviewers and judges will assume "Postgres is real" means the demo history and/or operational evidence survives a server restart. The current dashboard still defaults to the in-memory repository unless explicitly enabled and verified.
+Next action: Provide a real `DATABASE_URL`, run `pnpm.cmd --filter @arka/db run migrate`, set `ARKA_DEMO_REPOSITORY=postgres`, restart `@arka/web`, then confirm `/dashboard` history persists across restarts and the persistence badge reads Postgres-active.
+Owner: Human
 ```
 
 ### 2026-04-30 - Dashboard Visual Click-Through Needs Human Browser Pass
@@ -146,10 +146,10 @@ Owner: Both
 
 ```txt
 Area: 0G Chain
-Status: NEEDS_HUMAN
-What happened: The project docs now record the intended 0G Galileo testnet direction, including RPC/chain ID/explorer/faucet guidance, but ARKA has not implemented, deployed, called, or read back `AuditProofRegistry` on a real 0G network yet.
-Why it matters: ARKA must not claim real chain anchoring until the contract can be deployed, called, and checked through a real transaction.
-Next action: Implement `AuditProofRegistry`, choose the final contract stack/client from current 0G examples, deploy to the verified 0G testnet environment, register at least one State C or D proof anchor, and record tx/contract details.
+Status: PARTIAL (Contract Implemented, Deployment Pending)
+What happened: The project docs now record the intended 0G Galileo testnet direction, including RPC/chain ID/explorer/faucet guidance. The `AuditProofRegistry.sol` smart contract has been drafted and tested locally in the `/contracts` workspace using Hardhat.
+Why it matters: ARKA must not claim real chain anchoring until the contract can be deployed, called, and checked through a real transaction on the live testnet.
+Next action: Provide a test wallet with faucet funds, configure the `ZERO_G_REGISTRAR_PRIVATE_KEY` in `.env`, run the deployment script to Galileo testnet, and integrate `viem` in the backend to call `registerProof`.
 Owner: Both
 ```
 
@@ -208,4 +208,18 @@ Agent simulation verification: Direct HTTP checks for `POST /api/demo/agent-acti
 Why it matters: Static build and HTTP smoke confirm compilation, route serving, API behavior, and the local simulated-agent state machine, not actual in-browser layout, button flow, triageSource visibility after clicks, or fallback/OpenClaw copy clarity for the A/C/D demo.
 Next action: Open `http://127.0.0.1:3010/dashboard` in a browser and manually click State A, State C, and State D before claiming the dashboard flow is demo-ready.
 Owner: Both
+```
+
+## Resolved / Historical Notes
+
+### 2026-04-30 - Dashboard Focused Vitest Retry Blocked By Local EPERM (Resolved 2026-05-01)
+
+```txt
+Area: Dashboard / Verification
+Status: RISK
+What happened: A focused Vitest run previously failed before test collection with `Error: spawn EPERM` while Vite/esbuild loaded the config.
+Why it matters: It temporarily blocked rerunning the latest dashboard-focused tests.
+Update: On 2026-05-01, `pnpm.cmd run verify:arka-openclaw` and the package tests completed successfully in an unrestricted environment, so EPERM is no longer blocking verification for this slice.
+Next action: If EPERM returns on another machine, investigate Windows policy/AV/process-spawn restrictions around esbuild.
+Owner: Human / Agent
 ```

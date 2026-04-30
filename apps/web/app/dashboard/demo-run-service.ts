@@ -4,6 +4,13 @@ import {
   createAuditEventProofPackageArtifact,
 } from '@arka/core';
 import {
+  checkDashboardDemoRunStoreHealth,
+  getDashboardDemoRun,
+  listDashboardDemoRuns,
+  persistDemoOperationalEvidence,
+  upsertDashboardDemoRun,
+} from '@arka/db';
+import {
   CaseType,
   demoScenarioSeeds,
   demoWorldSeed,
@@ -32,6 +39,8 @@ const WINDOW_START_MINUTE = 54;
 const WINDOW_SPACING_MINUTES = 7;
 const WINDOW_DURATION_MINUTES = 5;
 const MAX_HISTORY = 12;
+const DEMO_REPOSITORY_ENV = 'ARKA_DEMO_REPOSITORY';
+const DEMO_REPOSITORY_POSTGRES = 'postgres';
 
 type DemoRunRepository = {
   getHistory(): Promise<DashboardRun[]>;
@@ -42,6 +51,8 @@ type DemoRunRepository = {
 
 const memoryRuns: DashboardRun[] = [];
 let totalRuns = 0;
+let postgresDemoStatus: DashboardPersistenceStatus | null = null;
+let postgresInitPromise: Promise<void> | null = null;
 
 const inMemoryDemoRunRepository: DemoRunRepository = {
   async getHistory() {
@@ -81,9 +92,120 @@ const inMemoryDemoRunRepository: DemoRunRepository = {
   },
 };
 
+const postgresDemoRunRepository: DemoRunRepository = {
+  async getHistory() {
+    const ok = await getPostgresDbOrNull();
+
+    if (!ok) {
+      return inMemoryDemoRunRepository.getHistory();
+    }
+
+    const rows = await listDashboardDemoRuns(MAX_HISTORY);
+    const history = rows.map((row) => row.runPayload as DashboardRun).filter((run) => run && typeof run === 'object');
+
+    totalRuns = Math.max(totalRuns, ...history.map((run) => parseCaseNumber(run.caseId)));
+    return history;
+  },
+  async saveRun(run) {
+    const ok = await getPostgresDbOrNull();
+
+    if (!ok) {
+      return inMemoryDemoRunRepository.saveRun(run);
+    }
+
+    await upsertDashboardDemoRun({
+      caseId: run.caseId,
+      scenarioKey: run.scenario.scenarioKey,
+      runPayload: run,
+    });
+
+    try {
+      await persistDemoOperationalEvidence({
+        auditEvent: run.auditEvent,
+        externalOrderId: run.orderId,
+        movementType: 'OUT',
+        movementBeforeQuantity: run.movementBeforeGrams,
+        movementAfterQuantity: run.movementAfterGrams,
+        evidenceWindowStartAt: run.evidenceWindowStartedAt,
+        evidenceWindowEndAt: run.evidenceWindowEndedAt,
+        proofHash: run.proofRecord.localPackageHash,
+        chainTransactionHash: run.proofRecord.chainTxHash,
+        storageUri: null,
+        lastErrorMessage: run.proofRecord.lastErrorMessage,
+      });
+    } catch (error) {
+      // The dashboard demo history is still persisted via `dashboard_demo_runs`.
+      // This is best-effort operational evidence persistence for the MVP.
+      postgresDemoStatus = {
+        mode: 'POSTGRES_ACTIVE_REAL',
+        label: 'Postgres demo persistence active (evidence partial)',
+        detail: `Dashboard demo history is persisted in Postgres (dashboard_demo_runs). Operational evidence persistence failed: ${
+          error instanceof Error ? error.message : String(error)
+        }`,
+      };
+    }
+
+    return this.getHistory();
+  },
+  async updateRun(caseId, updater) {
+    const ok = await getPostgresDbOrNull();
+
+    if (!ok) {
+      return inMemoryDemoRunRepository.updateRun(caseId, updater);
+    }
+
+    const current = (await getDashboardDemoRun(caseId)) as DashboardRun | null;
+    if (!current) {
+      return this.getHistory();
+    }
+
+    const next = updater(current);
+
+    await upsertDashboardDemoRun({
+      caseId: next.caseId,
+      scenarioKey: next.scenario.scenarioKey,
+      runPayload: next,
+    });
+
+    try {
+      await persistDemoOperationalEvidence({
+        auditEvent: next.auditEvent,
+        externalOrderId: next.orderId,
+        movementType: 'OUT',
+        movementBeforeQuantity: next.movementBeforeGrams,
+        movementAfterQuantity: next.movementAfterGrams,
+        evidenceWindowStartAt: next.evidenceWindowStartedAt,
+        evidenceWindowEndAt: next.evidenceWindowEndedAt,
+        proofHash: next.proofRecord.localPackageHash,
+        chainTransactionHash: next.proofRecord.chainTxHash,
+        storageUri: null,
+        lastErrorMessage: next.proofRecord.lastErrorMessage,
+      });
+    } catch (error) {
+      postgresDemoStatus = {
+        mode: 'POSTGRES_ACTIVE_REAL',
+        label: 'Postgres demo persistence active (evidence partial)',
+        detail: `Dashboard demo history is persisted in Postgres (dashboard_demo_runs). Operational evidence persistence failed: ${
+          error instanceof Error ? error.message : String(error)
+        }`,
+      };
+    }
+
+    return this.getHistory();
+  },
+  persistenceStatus() {
+    return postgresDemoStatus ?? {
+      mode: 'POSTGRES_ENABLED_BUT_FALLBACK_TO_MEMORY',
+      label: 'Postgres enabled, using in-memory fallback',
+      detail: `${DEMO_REPOSITORY_ENV}=${DEMO_REPOSITORY_POSTGRES} is set, but Postgres has not been reached yet.`,
+    };
+  },
+};
+
 export async function getDashboardInitialState(): Promise<RunScenarioResponse> {
   const repository = getDemoRunRepository();
   const history = await repository.getHistory();
+  totalRuns = Math.max(totalRuns, ...history.map((run) => parseCaseNumber(run.caseId)));
 
   if (history.length > 0) {
     totalRuns = Math.max(...history.map(r => parseInt(r.caseId.split('-')[1], 10)));
@@ -176,7 +298,56 @@ export function parseSimulatedAgentAction(value: unknown): SimulatedAgentAction 
 }
 
 function getDemoRunRepository(): DemoRunRepository {
+  const requested = process.env[DEMO_REPOSITORY_ENV]?.trim().toLowerCase();
+  if (requested === DEMO_REPOSITORY_POSTGRES) {
+    return postgresDemoRunRepository;
+  }
+
   return inMemoryDemoRunRepository;
+}
+
+function parseCaseNumber(caseId: string): number {
+  const parts = caseId.split('-');
+  const suffix = parts.length > 1 ? parts[1] : '';
+  const parsed = parseInt(suffix, 10);
+  return Number.isFinite(parsed) ? parsed : 0;
+}
+
+async function getPostgresDbOrNull() {
+  if (!process.env.DATABASE_URL) {
+    postgresDemoStatus = {
+      mode: 'POSTGRES_ENABLED_BUT_FALLBACK_TO_MEMORY',
+      label: 'Postgres enabled, using in-memory fallback',
+      detail: `${DEMO_REPOSITORY_ENV}=${DEMO_REPOSITORY_POSTGRES} is set, but DATABASE_URL is missing.`,
+    };
+
+    return null;
+  }
+
+  try {
+    if (!postgresInitPromise) {
+      postgresInitPromise = (async () => {
+        await checkDashboardDemoRunStoreHealth();
+      })();
+    }
+
+    await postgresInitPromise;
+    postgresDemoStatus = {
+      mode: 'POSTGRES_ACTIVE_REAL',
+      label: 'Postgres demo persistence active',
+      detail: 'Dashboard demo history is persisted in Postgres (table: dashboard_demo_runs).',
+    };
+
+    return true;
+  } catch (error) {
+    postgresInitPromise = null;
+    postgresDemoStatus = {
+      mode: 'POSTGRES_ENABLED_BUT_FALLBACK_TO_MEMORY',
+      label: 'Postgres enabled, using in-memory fallback',
+      detail: `Postgres init failed; using in-memory demo repository. ${error instanceof Error ? error.message : ''}`.trim(),
+    };
+    return false;
+  }
 }
 
 function createScenarioSeedFromAuditEvent(auditEvent: DashboardRun['auditEvent']): DashboardRun['scenario'] {

@@ -15,6 +15,13 @@
       "when": 1777435709729,
       "tag": "0001_omniscient_shard",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1777580851793,
+      "tag": "0002_futuristic_wildside",
+      "breakpoints": true
     }
   ]
 }

@@ -22,6 +22,7 @@ import {
   timestamp,
   uniqueIndex,
   uuid,
+  jsonb,
 } from 'drizzle-orm/pg-core';
 
 function enumValues<const T extends Record<string, string>>(valueMap: T): [T[keyof T], ...T[keyof T][]] {
@@ -349,5 +350,21 @@ export const ownerPolicies = pgTable(
   },
   (table) => ({
     policyKeyUnique: uniqueIndex('owner_policies_policy_key_unique').on(table.policyKey),
+  }),
+);
+
+export const dashboardDemoRuns = pgTable(
+  'dashboard_demo_runs',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    caseId: text('case_id').notNull(),
+    scenarioKey: scenarioKeyEnum('scenario_key').notNull(),
+    runPayload: jsonb('run_payload').notNull().$type<unknown>(),
+    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+    updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
+  },
+  (table) => ({
+    caseIdUnique: uniqueIndex('dashboard_demo_runs_case_id_unique').on(table.caseId),
+    scenarioIdx: index('dashboard_demo_runs_scenario_idx').on(table.scenarioKey),
   }),
 );

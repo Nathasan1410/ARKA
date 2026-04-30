@@ -14,6 +14,12 @@ All meaningful ARKA changes should be recorded here in human-readable language.
 - `node openclaw\\openclaw.mjs --dev infer model run --local --model minimax/MiniMax-M2.7 --prompt <ARKA State C audit prompt> --json`
 - Result returned `ok: true`, provider `minimax`, model `MiniMax-M2.7`, and `triageOutcome: REQUEST_EXPLANATION`.
 
+### Added
+- Added an optional Postgres-backed dashboard demo-run store (`dashboard_demo_runs` JSONB) behind `ARKA_DEMO_REPOSITORY=postgres`, with explicit health-check gating so the dashboard falls back to in-memory history when migrations are missing or DB is unreachable.
+- Added a `@arka/db` migration runner (`pnpm.cmd --filter @arka/db run migrate`) to apply generated Drizzle migrations to a real database using `DATABASE_URL`, without committing any secrets.
+- Generated a new Drizzle migration for the `dashboard_demo_runs` table.
+- Added best-effort operational evidence persistence for dashboard runs when Postgres mode is enabled (writes `orders`, `inventory_movements`, `audit_events`, and `proof_records` using demo-seeded actors/products/usage rules).
+
 ### Changed
 - Added a working Admin Movement simulation slice to `/dashboard`: order quantity and Whey Protein OUT grams can be entered, posted to a local API route, reconciled through core AuditEvent logic, saved to demo history, and displayed with deterministic triage plus local proof hash.
 - Added quick admin runs for clear, explanation, and critical review cases without adding disconnected pages or hollow controls.
@@ -23,6 +29,12 @@ All meaningful ARKA changes should be recorded here in human-readable language.
 - `pnpm.cmd exec vitest run --config test/dashboard-demo.vitest.config.ts`
 - `pnpm.cmd --filter @arka/web build`
 - Local dev-server smoke: `POST /api/demo/admin-movement` with `orderQuantity: 4` and `actualMovementGrams: 132` returned `OVER_EXPECTED_USAGE`, `REQUEST_EXPLANATION`, and `LOCAL_ONLY`.
+
+### Verification (DB / Workspace)
+- `pnpm.cmd --filter @arka/db run typecheck`
+- `pnpm.cmd --filter @arka/db run generate`
+- `pnpm.cmd --filter @arka/web build`
+- `pnpm.cmd run verify:arka-openclaw`
 
 ## 2026-04-30
 
