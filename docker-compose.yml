@@ -1,0 +1,22 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: arka-postgres
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    environment:
+      POSTGRES_DB: "${POSTGRES_DB:-arka}"
+      POSTGRES_USER: "${POSTGRES_USER:-arka}"
+      # For local dev only. Prefer setting POSTGRES_PASSWORD in a local .env (gitignored).
+      POSTGRES_PASSWORD: "${POSTGRES_PASSWORD:-local_dev_password}"
+    volumes:
+      - arka_postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 2s
+      timeout: 3s
+      retries: 20
+
+volumes:
+  arka_postgres_data:
+

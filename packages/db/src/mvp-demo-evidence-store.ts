@@ -1,5 +1,5 @@
-import type { AuditEvent, TriageOutcome } from '@arka/shared';
-import { and, eq } from 'drizzle-orm';
+import type { AuditEvent, AuditProofStatus, ChainStatus, StorageStatus, TriageOutcome } from '@arka/shared';
+import { and, desc, eq } from 'drizzle-orm';
 
 import { getDb } from './client';
 import {
@@ -40,6 +40,33 @@ export type PersistDemoOperationalEvidenceInput = {
 };
 
 type ActorRole = 'OWNER' | 'CASHIER' | 'HANDLER';
+
+const AUDIT_PROOF_STATUS_RANK: Record<AuditProofStatus, number> = {
+  LOCAL_ONLY: 0,
+  STORED_ON_0G: 1,
+  REGISTERED_ON_CHAIN: 2,
+  VERIFIED: 3,
+};
+
+const STORAGE_STATUS_RANK: Record<StorageStatus, number> = {
+  NOT_STARTED: 0,
+  PENDING_UPLOAD: 1,
+  FAILED_TO_STORE: 2,
+  RETRY_PENDING: 3,
+  STORED: 4,
+};
+
+const CHAIN_STATUS_RANK: Record<ChainStatus, number> = {
+  NOT_REGISTERED: 0,
+  PENDING_REGISTRATION: 1,
+  FAILED_TO_REGISTER: 2,
+  REGISTERED: 3,
+  ANCHOR_CONFIRMED: 4,
+};
+
+function mergeRankedStatus<T extends string>(existing: T, incoming: T, rank: Record<T, number>): T {
+  return rank[incoming] > rank[existing] ? incoming : existing;
+}
 
 async function ensureActor(args: { name: string; role: ActorRole }): Promise<string> {
   const db = getDb();
@@ -242,7 +269,24 @@ export async function persistDemoOperationalEvidence(input: PersistDemoOperation
     })
     .returning({ id: auditEvents.id });
 
-  await db.insert(proofRecords).values({
+  const [latestProofRecord] = await db
+    .select({
+      id: proofRecords.id,
+      proofType: proofRecords.proofType,
+      auditProofStatus: proofRecords.auditProofStatus,
+      storageStatus: proofRecords.storageStatus,
+      chainStatus: proofRecords.chainStatus,
+      proofHash: proofRecords.proofHash,
+      storageUri: proofRecords.storageUri,
+      chainTransactionHash: proofRecords.chainTransactionHash,
+      lastErrorMessage: proofRecords.lastErrorMessage,
+    })
+    .from(proofRecords)
+    .where(eq(proofRecords.auditEventId, auditEventRow.id))
+    .orderBy(desc(proofRecords.createdAt))
+    .limit(1);
+
+  const incomingProof = {
     auditEventId: auditEventRow.id,
     proofType: auditEvent.proofType,
     auditProofStatus: auditEvent.auditProofStatus,
@@ -252,5 +296,78 @@ export async function persistDemoOperationalEvidence(input: PersistDemoOperation
     storageUri: input.storageUri,
     chainTransactionHash: input.chainTransactionHash,
     lastErrorMessage: input.lastErrorMessage,
-  });
+  } as const;
+
+  if (!latestProofRecord) {
+    await db.insert(proofRecords).values(incomingProof);
+    return;
+  }
+
+  const proofTypeChanged = latestProofRecord.proofType !== incomingProof.proofType;
+  const proofHashChanged =
+    latestProofRecord.proofHash && incomingProof.proofHash && latestProofRecord.proofHash !== incomingProof.proofHash;
+  const storageUriChanged =
+    latestProofRecord.storageUri &&
+    incomingProof.storageUri &&
+    latestProofRecord.storageUri !== incomingProof.storageUri;
+  const chainTxChanged =
+    latestProofRecord.chainTransactionHash &&
+    incomingProof.chainTransactionHash &&
+    latestProofRecord.chainTransactionHash !== incomingProof.chainTransactionHash;
+
+  // If the incoming proof metadata disagrees with an already-known proof artifact,
+  // treat it as a new proof record and keep history append-only.
+  const shouldAppendNewProofRecord = proofTypeChanged || proofHashChanged || storageUriChanged || chainTxChanged;
+
+  if (shouldAppendNewProofRecord) {
+    await db.insert(proofRecords).values({
+      ...incomingProof,
+      previousProofRecordId: latestProofRecord.id,
+    });
+    return;
+  }
+
+  const mergedAuditProofStatus = mergeRankedStatus(
+    latestProofRecord.auditProofStatus,
+    incomingProof.auditProofStatus,
+    AUDIT_PROOF_STATUS_RANK,
+  );
+  const mergedStorageStatus = mergeRankedStatus(
+    latestProofRecord.storageStatus,
+    incomingProof.storageStatus,
+    STORAGE_STATUS_RANK,
+  );
+  const mergedChainStatus = mergeRankedStatus(latestProofRecord.chainStatus, incomingProof.chainStatus, CHAIN_STATUS_RANK);
+
+  // Never clear previously-known proof metadata on repeat dashboard saves.
+  const mergedProofHash = latestProofRecord.proofHash ?? incomingProof.proofHash;
+  const mergedStorageUri = latestProofRecord.storageUri ?? incomingProof.storageUri;
+  const mergedChainTx = latestProofRecord.chainTransactionHash ?? incomingProof.chainTransactionHash;
+  const mergedLastErrorMessage = incomingProof.lastErrorMessage ?? latestProofRecord.lastErrorMessage;
+
+  const needsUpdate =
+    mergedAuditProofStatus !== latestProofRecord.auditProofStatus ||
+    mergedStorageStatus !== latestProofRecord.storageStatus ||
+    mergedChainStatus !== latestProofRecord.chainStatus ||
+    mergedProofHash !== latestProofRecord.proofHash ||
+    mergedStorageUri !== latestProofRecord.storageUri ||
+    mergedChainTx !== latestProofRecord.chainTransactionHash ||
+    mergedLastErrorMessage !== latestProofRecord.lastErrorMessage;
+
+  if (!needsUpdate) {
+    return;
+  }
+
+  await db
+    .update(proofRecords)
+    .set({
+      auditProofStatus: mergedAuditProofStatus,
+      storageStatus: mergedStorageStatus,
+      chainStatus: mergedChainStatus,
+      proofHash: mergedProofHash,
+      storageUri: mergedStorageUri,
+      chainTransactionHash: mergedChainTx,
+      lastErrorMessage: mergedLastErrorMessage,
+    })
+    .where(eq(proofRecords.id, latestProofRecord.id));
 }

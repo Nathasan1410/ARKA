@@ -51,7 +51,7 @@ beforeAll(async () => {
             '@arka/shared': resolve(repoRoot, 'packages/shared/src/index.ts'),
             '@arka/core': resolve(repoRoot, 'packages/core/src/index.ts'),
             '@arka/agent': resolve(repoRoot, 'packages/agent/src/index.ts'),
-            '@arka/db': resolve(repoRoot, 'packages/db/src/index.ts'),
+            '@arka/db': resolve(repoRoot, 'test/stubs/arka-db-stub.ts'),
           };
 
           build.onResolve({ filter: /^@arka\/(?:shared|core|agent|db)$/ }, (args) => ({
