@@ -45,8 +45,8 @@ OpenClaw research impact:
 OpenClaw is a sidecar gateway/runtime/plugin/skills system.
 The local DB stores ARKA-owned OpenClaw outputs, not OpenClaw internal runtime/session state.
 For P0, do not mirror OpenClaw transcripts into the ARKA DB.
-Local OpenClaw source/install/strict-smoke/gateway/skill/MiniMax discovery are verified.
-Model-backed ARKA OpenClaw response, plugin writes, packages/agent gateway calls, and OpenClaw Telegram are not verified.
+Local OpenClaw source/install/strict-smoke/gateway/skill/MiniMax discovery and one local `infer model run` ARKA State C response are verified.
+Full OpenClaw ARKA agent session, plugin writes, packages/agent gateway calls, and OpenClaw Telegram are not verified.
 Store triage_source now; add openclaw_run_id, openclaw_session_id, openclaw_model_ref, openclaw_skill_name, or channel_message_ref only after a real plugin/client write path exists.
 ```
 

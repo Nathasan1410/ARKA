@@ -5,6 +5,7 @@ All meaningful ARKA changes should be recorded here in human-readable language.
 ## 2026-05-01
 
 ### Changed
+- Updated affected root and `docs/` planning/status documents after the OpenClaw inference smoke so future workers see the correct boundary: one local model-backed `infer model run` response is verified, while the full agent session, plugin gateway load, packages/agent gateway call, Telegram, and 0G integrations remain unverified.
 - Verified one model-backed ARKA OpenClaw-side inference turn through local `openclaw infer model run --local` using MiniMax M2.7 and an AuditEvent-first State C prompt.
 - Updated OpenClaw truthfulness docs to distinguish the verified local inference response from the still-unverified full OpenClaw agent session, gateway plugin load, packages/agent gateway call path, Telegram, and 0G work.
 - Added bounded local smoke controls in the OpenClaw fork for scoped runtime plugin loading, skipping provider runtime hooks, and disabling bundled tool startup during ARKA smoke debugging.
@@ -62,7 +63,7 @@ All meaningful ARKA changes should be recorded here in human-readable language.
 - Updated the OpenClaw impact assessment into a current cross-layer plan for frontend, backend/API, database, `packages/agent`, proof, 0G Storage, 0G Chain, Telegram, security, and the local `openclaw/` fork.
 - Updated implementation, stack, database, code-map, MVP interaction, local-fork, and truthfulness docs so they reflect the verified local OpenClaw fork/gateway/skill/MiniMax setup without claiming model-backed ARKA integration.
 - Updated root-level briefs and tracker docs (`AGENTS.md`, `Arka - OpenClaw Agent.md`, `0G Storage Brief.md`, `ARKA 0G Chain Brief — Concept Draft.md`, `ARKA Demo Scenario Brief — Draft.md`, `Backend-Final.md`, `Database.md`, `checklist.md`, `docs/project-brief.md`, `docs/parallel-codex-session-prompts.md`, and the historical S2B handoff) so they no longer preserve stale OpenClaw or proof claims.
-- Refined OpenClaw status wording across docs after a verification pass so the read-only `arka-audit` plugin skeleton is credited as static-smoke and extension-test verified while gateway plugin load, model-backed ARKA response, packages/agent gateway calls, and Telegram remain unverified.
+- Refined OpenClaw status wording across docs after a verification pass so the read-only `arka-audit` plugin skeleton is credited as static-smoke and extension-test verified while gateway plugin load, full OpenClaw ARKA agent session response, packages/agent gateway calls, and Telegram remain unverified.
 - Recorded Telegram token handling as human-needed security debt without storing the token.
 
 ### Added
@@ -114,9 +115,9 @@ All meaningful ARKA changes should be recorded here in human-readable language.
 - `node openclaw\openclaw.mjs --dev gateway status` reported `Connectivity probe: ok`, `Capability: connected-no-operator-scope`, and `Listening: 127.0.0.1:19001`.
 - `node openclaw\openclaw.mjs --dev skills list` reports `arka-audit` ready from `openclaw-workspace`.
 - `node openclaw\openclaw.mjs --dev models list --provider minimax` reports `minimax/MiniMax-M2.7` with `auth=yes`.
-- A small model-backed ARKA prompt timed out after 4 minutes and was stopped, so model-backed OpenClaw triage remains unverified.
+- A small full-agent ARKA prompt timed out after 4 minutes and was stopped, so full OpenClaw ARKA agent-session triage remained unverified. Later 2026-05-01 work verified a bounded `infer model run` ARKA response outside the full agent path.
 - `pnpm.cmd run verify:arka-openclaw` passed, including OpenClaw fork/workspace verification, shared tests, core/backend tests, agent tests, and root typecheck.
-- Full `pnpm.cmd --dir openclaw run build`, model-backed OpenClaw triage, and ARKA packages/agent gateway integration remain unverified.
+- Full `pnpm.cmd --dir openclaw run build`, full OpenClaw ARKA agent-session triage, and ARKA packages/agent gateway integration remain unverified.
 
 ### Added
 - Added `docs/openclaw-s2b-handoff.md` with an implementation-ready OpenClaw integration handoff covering gateway/runtime concepts, ARKA sidecar recommendation, smoke setup commands, workspace skill plan, plugin tool contracts, Telegram decision, and next worker slices.

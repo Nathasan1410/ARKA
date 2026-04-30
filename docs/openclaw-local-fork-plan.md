@@ -1,6 +1,6 @@
 # OpenClaw Local Fork Plan
 
-Date: 2026-04-29
+Date: 2026-05-01
 
 Status:
 
@@ -266,8 +266,8 @@ Command "openclaw" not found.
 Gateway status check with isolated state/config:
 
 ```powershell
-$env:OPENCLAW_STATE_DIR='D:\Projekan\Macam2Hackathon\ARKA\_openclaw-smoke\state'
-$env:OPENCLAW_CONFIG_PATH='D:\Projekan\Macam2Hackathon\ARKA\_openclaw-smoke\openclaw.json'
+$env:OPENCLAW_STATE_DIR='C:\Dev\_openclaw-smoke\state'
+$env:OPENCLAW_CONFIG_PATH='C:\Dev\_openclaw-smoke\openclaw.json'
 node openclaw\openclaw.mjs --dev gateway status
 ```
 
@@ -289,7 +289,7 @@ Initial controlled startup observation:
 
 ```txt
 Process started and wrote dev config.
-Dev config ready: D:\Projekan\Macam2Hackathon\ARKA\_openclaw-smoke\openclaw.json.
+Dev config ready: C:\Dev\_openclaw-smoke\openclaw.json.
 Startup log reported Control UI assets are missing and recommended `pnpm build && pnpm ui:build`.
 Gateway did not bind within the short smoke window.
 Status still reported ECONNREFUSED.
@@ -349,7 +349,7 @@ Important status:
 ```txt
 These files are source/workspace instructions.
 They have been loaded by the local OpenClaw dev setup; `arka-audit` appears ready from `openclaw-workspace`.
-They have not been exercised by a successful OpenClaw model-backed ARKA turn.
+They have not been exercised by a successful full OpenClaw ARKA agent session turn.
 They do not create a real ARKA app integration by themselves.
 ```
 
@@ -382,7 +382,7 @@ At this point in the sequence, ARKA `arka-audit` skill loading was not verified 
 Follow-up ARKA workspace config:
 
 ```txt
-The isolated smoke config at D:\Projekan\Macam2Hackathon\ARKA\_openclaw-smoke\openclaw.json was updated outside the repo to point both agents.defaults.workspace and agents.list[0].workspace at openclaw/workspaces/arka.
+The isolated smoke config at C:\Dev\_openclaw-smoke\openclaw.json was updated outside the repo to point both agents.defaults.workspace and agents.list[0].workspace at openclaw/workspaces/arka.
 ```
 
 Verified ARKA skill-list result:
@@ -412,9 +412,9 @@ The skill is instruction-only. A read-only ARKA plugin skeleton is implemented s
 MiniMax configuration was applied only to the isolated smoke environment outside the repo:
 
 ```txt
-D:\Projekan\Macam2Hackathon\ARKA\_openclaw-smoke\.env.local
-D:\Projekan\Macam2Hackathon\ARKA\_openclaw-smoke\openclaw.json
-D:\Projekan\Macam2Hackathon\ARKA\_openclaw-smoke\run-arka-openclaw-gateway.ps1
+C:\Dev\_openclaw-smoke\.env.local
+C:\Dev\_openclaw-smoke\openclaw.json
+C:\Dev\_openclaw-smoke\run-arka-openclaw-gateway.ps1
 ```
 
 Repo policy:
@@ -450,7 +450,7 @@ Auth: yes
 Tags: default
 ```
 
-Model-backed agent turn attempt:
+Full OpenClaw ARKA agent session attempt:
 
 ```powershell
 node openclaw\openclaw.mjs --dev agent --message "<small ARKA State C prompt>"
@@ -459,7 +459,19 @@ node openclaw\openclaw.mjs --dev agent --message "<small ARKA State C prompt>"
 Result:
 
 ```txt
-NOT VERIFIED. The command timed out after 4 minutes and left an agent CLI process running. The process was stopped. No successful assistant response was captured.
+NOT VERIFIED. The command timed out after system-prompt/session setup and left an agent CLI process running. The process was stopped. No successful full agent-session assistant response was captured.
+```
+
+Verified bounded model-backed inference command:
+
+```powershell
+node openclaw\openclaw.mjs --dev infer model run --local --model minimax/MiniMax-M2.7 --prompt <ARKA State C audit prompt> --json
+```
+
+Result:
+
+```txt
+VERIFIED. The command returned ok=true from provider minimax / model MiniMax-M2.7 and produced an owner-safe ARKA State C JSON response with triageOutcome REQUEST_EXPLANATION.
 ```
 
 ## 8. Plugin Skeleton Decision
@@ -586,7 +598,7 @@ OpenClaw strict-smoke build after adding arka-audit plugin skeleton
 OpenClaw plugin-contract suite after adding arka-audit plugin skeleton
 OpenClaw workspace lockfile refresh after adding arka-audit plugin skeleton
 Operator-scope gateway auth/control beyond status probe
-OpenClaw model-backed ARKA triage turn
+Full OpenClaw ARKA agent session turn
 OpenClaw gateway discovery/load of the arka-audit plugin
 OpenClaw Telegram channel
 ARKA packages/agent calling OpenClaw gateway/plugin
@@ -596,7 +608,7 @@ ARKA packages/agent calling OpenClaw gateway/plugin
 
 ## 11. Next Implementation Task
 
-Recommended next task: verify OpenClaw gateway discovery/load of the existing `arka-audit` plugin skeleton and debug one model-backed ARKA agent turn.
+Recommended next task: verify OpenClaw gateway discovery/load of the existing `arka-audit` plugin skeleton and debug one full OpenClaw ARKA agent session turn.
 Updated recommendation: do not build more plugin tools until the current read-only skeleton is loaded by the gateway and can be called through the intended OpenClaw path.
 
 Scope:

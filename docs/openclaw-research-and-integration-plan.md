@@ -1,6 +1,6 @@
 # OpenClaw Research and ARKA Integration Plan
 
-Last updated: 2026-04-30
+Last updated: 2026-05-01
 
 ## Status
 
@@ -13,7 +13,8 @@ OpenClaw local CLI smoke: YES, direct source entrypoint verified
 OpenClaw gateway connectivity: YES, local dev gateway status probe verified on 127.0.0.1:19001
 ARKA workspace/skill loaded in OpenClaw: YES, arka-audit ready from openclaw-workspace
 MiniMax model discovery: YES, minimax/MiniMax-M2.7 listed with auth=yes
-Model-backed ARKA agent turn: NO / NOT VERIFIED
+Model-backed ARKA inference turn: YES, one local `infer model run` State C response verified
+Full OpenClaw ARKA agent session turn: NO / NOT VERIFIED
 OpenClaw runtime integrated with ARKA: NO
 ARKA deterministic fallback: YES, in packages/agent
 ```
@@ -26,7 +27,7 @@ Official docs: https://docs.openclaw.ai
 Local research clone: D:\Projekan\Macam2Hackathon\ARKA\_research\openclaw
 ```
 
-The research clone remains outside `ARKA-github` as the upstream reference. ARKA now also has a repo-local copied source fork at `openclaw/` for future OpenClaw-side workspace/plugin/runtime work. The local fork can install, pass the targeted strict-smoke build, run direct CLI help/version commands, start a local dev gateway reachable by status probe, load the ARKA `arka-audit` skill, and discover MiniMax M2.7. Model-backed ARKA agent response and plugin integration are not verified yet.
+The research clone remains outside `ARKA-github` as the upstream reference. ARKA now also has a repo-local copied source fork at `openclaw/` for future OpenClaw-side workspace/plugin/runtime work. The local fork can install, pass the targeted strict-smoke build, run direct CLI help/version commands, start a local dev gateway reachable by status probe, load the ARKA `arka-audit` skill, discover MiniMax M2.7, and produce one bounded local model-backed ARKA State C response through `infer model run`. Full OpenClaw ARKA agent session response and plugin gateway integration are not verified yet.
 
 ## What OpenClaw Is
 
@@ -120,7 +121,7 @@ test: node scripts/test-projects.mjs
 fast tests: node scripts/run-vitest.mjs run --config test/vitest/vitest.unit.config.ts
 ```
 
-ARKA has already performed a local-fork smoke path. Local install, targeted strict-smoke build, direct source CLI help/version/gateway-help, local dev gateway connectivity, ARKA `arka-audit` skill loading, MiniMax model discovery, and read-only `arka-audit` plugin skeleton static smoke are documented as verified in `docs/openclaw-local-fork-plan.md`. Full production build, model-backed ARKA agent response, gateway discovery/load of the ARKA plugin skeleton, OpenClaw Telegram, and `packages/agent` gateway calls remain unverified.
+ARKA has already performed a local-fork smoke path. Local install, targeted strict-smoke build, direct source CLI help/version/gateway-help, local dev gateway connectivity, ARKA `arka-audit` skill loading, MiniMax model discovery, one local `infer model run` ARKA State C response, and read-only `arka-audit` plugin skeleton static smoke are documented as verified in `docs/openclaw-local-fork-plan.md`. Full production build, full OpenClaw ARKA agent session response, gateway discovery/load of the ARKA plugin skeleton, OpenClaw Telegram, and `packages/agent` gateway calls remain unverified.
 
 ## Relevant OpenClaw Concepts For ARKA
 
@@ -536,7 +537,8 @@ Strict-smoke build: verified.
 Direct local CLI help/version/gateway-help: verified.
 Local dev gateway connectivity: verified.
 Full production build: not verified.
-Model-backed ARKA agent response: not verified.
+Model-backed ARKA inference response: verified once through local `infer model run`.
+Full OpenClaw ARKA agent session response: not verified.
 ```
 
 Risks:
@@ -715,7 +717,7 @@ No secrets should be committed.
 Should ARKA ever need a global OpenClaw install, or is the local source fork enough for the demo?
 Should ARKA keep the plugin under openclaw/extensions/arka-audit, or later extract it into a separate package for publishing?
 Should Telegram P0 be OpenClaw-owned or ARKA-owned grammY?
-Can a model-backed ARKA OpenClaw turn be made reliable on this Windows machine without WSL2?
+Can a full OpenClaw ARKA agent session turn be made reliable on Windows without WSL2?
 Which model provider will OpenClaw use during demo?
 Will judges see OpenClaw dashboard/gateway or only ARKA dashboard?
 ```

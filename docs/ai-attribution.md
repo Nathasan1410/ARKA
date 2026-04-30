@@ -2,6 +2,19 @@
 
 This document tracks material AI-assisted work in ARKA.
 
+## 2026-05-01 - Final OpenClaw Documentation Alignment
+
+### AI Tool Used
+- OpenAI Codex CLI (GPT-5.x)
+
+### What AI Helped With
+- Audited root and `docs/` status wording after the local OpenClaw inference smoke.
+- Updated affected planning, truthfulness, database, stack, handoff, and attribution docs so they no longer imply model-backed ARKA output is entirely unverified.
+- Preserved the boundary that a full OpenClaw ARKA agent session, gateway plugin load, packages/agent gateway call, Telegram, 0G Storage upload, and 0G Chain anchor remain unverified.
+
+### Human Direction
+- Requested a final documentation alignment pass across affected root and `docs/` files, followed by commit and push.
+
 ## 2026-05-01 - OpenClaw Local Inference Smoke
 
 ### AI Tool Used
@@ -189,7 +202,7 @@ This document tracks material AI-assisted work in ARKA.
 ### What AI Helped With
 - Rechecked ARKA Markdown docs after the local OpenClaw fork and `arka-audit` plugin skeleton work.
 - Patched stale wording that still implied no plugin skeleton existed or pointed workers at an older external plugin package path.
-- Preserved the important boundary that the plugin skeleton static smoke and extension-local tests are verified, but gateway discovery/load, model-backed ARKA response, packages/agent gateway calls, and OpenClaw Telegram are still unverified.
+- Preserved the important boundary that the plugin skeleton static smoke and extension-local tests are verified, but gateway discovery/load, full OpenClaw ARKA agent session response, packages/agent gateway calls, and OpenClaw Telegram are still unverified.
 
 ### Files / Areas Affected
 - `AGENTS.md`
@@ -361,9 +374,9 @@ This document tracks material AI-assisted work in ARKA.
 - `pnpm.cmd --dir openclaw run ui:build` completed manually, and local dev gateway connectivity was verified on `127.0.0.1:19001`.
 - `node openclaw\openclaw.mjs --dev skills list` reports `arka-audit` ready from `openclaw-workspace`.
 - `node openclaw\openclaw.mjs --dev models list --provider minimax` reports `minimax/MiniMax-M2.7` with `auth=yes`.
-- A small model-backed ARKA prompt timed out after 4 minutes and was stopped, so model-backed OpenClaw triage remains unverified.
+- A small full-agent ARKA prompt timed out after 4 minutes and was stopped, so full OpenClaw ARKA agent-session triage remains unverified. Later `infer model run` verification proved a bounded model-backed ARKA response outside the full agent session path.
 - `pnpm.cmd run verify:arka-openclaw` passed, including OpenClaw fork/workspace verification, shared tests, core/backend tests, agent tests, and root typecheck.
-- Full OpenClaw production build, model-backed ARKA triage, and packages/agent gateway integration remain unverified.
+- Full OpenClaw production build, full OpenClaw ARKA agent-session triage, and packages/agent gateway integration remain unverified.
 
 ## 2026-04-29 - OpenClaw S2B Integration Handoff
 
@@ -495,7 +508,7 @@ This document tracks material AI-assisted work in ARKA.
 ### Verification
 - Cloned `https://github.com/openclaw/openclaw` into `D:\Projekan\Macam2Hackathon\ARKA\_research\openclaw`.
 - Inspected upstream README, package metadata, architecture docs, agent runtime docs, agent loop docs, plugin docs, skills docs, workspace docs, configuration docs, and Telegram docs.
-- This older research-only note has been superseded by later local-fork work: OpenClaw source now exists under `openclaw/`; local install, strict-smoke, direct CLI, gateway status, and skill loading are documented as verified, while model-backed ARKA response and ARKA app integration remain unverified.
+- This older research-only note has been superseded by later local-fork work: OpenClaw source now exists under `openclaw/`; local install, strict-smoke, direct CLI, gateway status, skill loading, MiniMax model discovery, and one local `infer model run` ARKA response are documented as verified, while full OpenClaw ARKA agent session and ARKA app integration remain unverified.
 
 ## 2026-04-29 - OpenClaw Adapter Boundary Refactor
 

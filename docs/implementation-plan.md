@@ -1,6 +1,6 @@
 # ARKA P0 Implementation Plan
 
-Last updated: 2026-04-30
+Last updated: 2026-05-01
 
 This is the implementation plan for turning the current ARKA planning docs into a working hackathon MVP.
 
@@ -260,7 +260,8 @@ Direct source CLI help/version/gateway-help: verified.
 Local dev gateway connectivity: verified.
 ARKA arka-audit workspace skill loading: verified.
 MiniMax model discovery/auth: verified.
-Model-backed ARKA agent turn: not verified.
+Model-backed ARKA inference turn: verified once through local `infer model run` with MiniMax M2.7.
+Full OpenClaw ARKA agent session turn: not verified.
 ARKA OpenClaw read-only plugin skeleton: implemented / static-smoke and extension-test verified.
 OpenClaw gateway discovery/load of the plugin: not verified.
 packages/agent gateway/client call path: not implemented.
@@ -270,9 +271,9 @@ OpenClaw Telegram for ARKA: not implemented.
 Before claiming ARKA is OpenClaw-integrated:
 
 ```txt
-1. Verify a model-backed OpenClaw agent turn with the ARKA workspace/skill loaded.
-2. Create and verify an ARKA OpenClaw plugin/tool path, starting read-only.
-3. Connect packages/agent to the OpenClaw gateway/plugin and keep deterministic fallback on failure.
+1. Verify OpenClaw gateway discovery/load of the existing read-only `arka-audit` plugin.
+2. Debug a full OpenClaw ARKA agent session turn with the ARKA workspace/skill loaded.
+3. Connect packages/agent to the OpenClaw gateway/plugin only after the gateway/plugin path is proven.
 4. Return OPENCLAW_RUNTIME only after a verified gateway/plugin response.
 5. Persist OpenClaw run/session/message refs only after the real path exists.
 6. Keep deterministic fallback available if OpenClaw runtime/provider fails or times out.
@@ -306,7 +307,7 @@ Truthfulness:
 
 ```txt
 If deterministic fallback is used, label it as deterministic fallback even though local OpenClaw setup is partially verified.
-Gateway connectivity, skill loading, and model discovery are not the same as ARKA app integration.
+Gateway connectivity, skill loading, model discovery, and one local `infer model run` response are not the same as ARKA app integration.
 Do not claim OpenClaw-backed triage unless ARKA actually sends/receives through OpenClaw gateway/plugin.
 ```
 

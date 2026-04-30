@@ -1,6 +1,6 @@
 # ARKA Checklist (Planning -> Implementation Tracker)
 
-Last updated: 2026-04-30
+Last updated: 2026-05-01
 
 This file tracks the current implementation status. `docs/real-vs-simulated.md` remains the source of truth for feature-claim wording.
 

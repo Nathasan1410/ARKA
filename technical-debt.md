@@ -181,7 +181,7 @@ Owner: Both
 Area: OpenClaw / Gateway Setup
 Status: RISK
 What happened: S2B inspected the local OpenClaw research clone and produced docs/openclaw-s2b-handoff.md. S2C copied OpenClaw source into openclaw/ as a local fork and intentionally avoided global install. Manual local install completed with pnpm 10.33.0, and `pnpm.cmd --dir openclaw run build:strict-smoke` passed. Direct local source CLI help/version/gateway-help passed through `node openclaw\openclaw.mjs`. After `ui:build`, the dev gateway started on 127.0.0.1:19001 and `node openclaw\openclaw.mjs --dev gateway status` reported `Connectivity probe: ok`, `Capability: connected-no-operator-scope`, and `Listening: 127.0.0.1:19001`.
-Why it matters: ARKA can now claim local OpenClaw gateway connectivity smoke and ARKA skill loading, but still cannot claim a model-backed ARKA agent response, Telegram, plugin integration, or packages/agent OpenClaw integration until those paths are verified.
+Why it matters: ARKA can now claim local OpenClaw gateway connectivity smoke, ARKA skill loading, MiniMax model discovery, and one local `infer model run` response, but still cannot claim a full OpenClaw ARKA agent session, Telegram, plugin gateway integration, or packages/agent OpenClaw integration until those paths are verified.
 Next action: Debug the `node openclaw\openclaw.mjs --dev agent --message ...` path. The MiniMax provider is discovered with auth, but the first small ARKA prompt timed out after 4 minutes and was stopped.
 Owner: Both
 ```

@@ -2,7 +2,7 @@
 
 This file tracks which ARKA features are real, simulated, mocked, partial, or planned.
 
-## Current Status (2026-04-30)
+## Current Status (2026-05-01)
 
 ```txt
 AuditEvent generation: PARTIAL (local Next.js demo API routes create A/C/D fixture AuditEvents and admin-entered movement simulation AuditEvents through packages/core and display them in dashboard; no real Postgres persistence yet)

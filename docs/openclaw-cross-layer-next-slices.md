@@ -1,6 +1,6 @@
 # OpenClaw Cross-Layer Next Slices
 
-Last updated: 2026-04-30
+Last updated: 2026-05-01
 
 ## Purpose
 
@@ -33,8 +33,11 @@ Verified:
 - ARKA skill loading
 - MiniMax model discovery/auth
 
+Verified but still not app integration:
+- one local model-backed ARKA State C response through `infer model run`
+
 Not verified or not implemented:
-- model-backed ARKA agent response
+- full OpenClaw ARKA agent session response
 - OpenClaw gateway discovery/load of the read-only arka-audit plugin skeleton
 - real ARKA backend/API wiring for plugin tools
 - packages/agent gateway calls

@@ -210,8 +210,8 @@ Implementation note:
 
 ```txt
 OpenClaw is a gateway/runtime/plugin/skills system.
-ARKA now has a repo-local OpenClaw source fork, verified local install, strict-smoke build, direct CLI checks, local dev gateway connectivity, ARKA skill loading, and MiniMax model discovery.
-ARKA should integrate it as a sidecar gateway with an ARKA-specific skill/plugin after model-backed ARKA turns and plugin/client calls are verified.
+ARKA now has a repo-local OpenClaw source fork, verified local install, strict-smoke build, direct CLI checks, local dev gateway connectivity, ARKA skill loading, MiniMax model discovery, and one local `infer model run` ARKA State C response.
+ARKA should integrate it as a sidecar gateway with an ARKA-specific skill/plugin after full OpenClaw agent sessions and plugin/client calls are verified.
 packages/agent is ARKA's app-facing client boundary and deterministic fallback, not the full OpenClaw runtime.
 ```
 
@@ -1097,7 +1097,7 @@ Contracts: Solidity AuditProofRegistry
 0G Storage: 0G TypeScript SDK, CLI fallback
 0G Chain: Hardhat deploy/test, viem or ethers for backend calls
 Telegram: grammY
-OpenClaw / LLM: OpenClaw sidecar gateway + ARKA skill/plugin as the target path; packages/agent fallback/client boundary until model-backed response and plugin/client calls are verified
+OpenClaw / LLM: OpenClaw sidecar gateway + ARKA skill/plugin as the target path; packages/agent fallback/client boundary until full agent session, plugin/client calls, and app call are verified
 Testing: Vitest + Hardhat tests + manual demo verification
 Deployment: Vercel + hosted Postgres + 0G testnet + Telegram webhook
 ```

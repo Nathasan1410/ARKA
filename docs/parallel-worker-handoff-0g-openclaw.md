@@ -15,7 +15,7 @@ D:\Projekan\Macam2Hackathon\ARKA\ARKA-github
 Current baseline:
 
 ```txt
-a61bb033 docs: add parallel worker handoff
+0528ce50 feat: advance arka openclaw demo verification
 ```
 
 Local OpenClaw smoke config and MiniMax keys were moved outside the repo to:
@@ -152,7 +152,7 @@ Primary focus:
 
 ```txt
 OpenClaw gateway discovery/load of openclaw/extensions/arka-audit
-one bounded model-backed ARKA skill turn
+one bounded full OpenClaw ARKA agent session turn
 future packages/agent gateway client shape only after the gateway path is proven
 ```
 
@@ -191,7 +191,7 @@ Implementation order:
 1. Confirm local C path config works with C:\Dev\_openclaw-smoke.
 2. Verify openclaw/extensions/arka-audit extension-local tests.
 3. Verify OpenClaw gateway discovery/load of arka-audit.
-4. Run one bounded model-backed ARKA turn using the correct selector/session flags.
+4. Run one bounded full OpenClaw ARKA agent session turn using the correct selector/session flags.
 5. Only after 3-4 succeed, consider a narrow packages/agent client seam.
 ```
 
@@ -230,7 +230,7 @@ Completion report:
 ```txt
 Files changed
 Gateway plugin load: yes/no
-Model-backed ARKA turn: yes/no
+Full OpenClaw ARKA agent session: yes/no
 packages/agent gateway call: yes/no
 Verification performed
 technical-debt.md updated yes/no and why

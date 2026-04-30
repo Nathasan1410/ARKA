@@ -136,12 +136,14 @@ Current verified status:
 - Local dev gateway connectivity is verified
 - ARKA `arka-audit` workspace skill loading is verified
 - MiniMax model discovery/auth is verified
+- One local `infer model run` ARKA State C response is verified
 
 Still unverified / not implemented:
 
 - Full production build
-- Model-backed ARKA agent response
-- ARKA OpenClaw plugin/tool integration
+- Full OpenClaw ARKA agent session response
+- OpenClaw gateway discovery/load of the ARKA plugin skeleton
+- ARKA OpenClaw plugin/tool integration beyond the read-only skeleton
 - `packages/agent` calling the OpenClaw gateway/plugin
 - OpenClaw Telegram flow for ARKA
 

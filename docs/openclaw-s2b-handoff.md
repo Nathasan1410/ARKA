@@ -6,13 +6,13 @@ Historical status for S2B: RESEARCHED ONLY. No OpenClaw gateway, plugin, skill, 
 
 This file is archival handoff context, not the current source of truth. For current status, use `docs/openclaw-local-fork-plan.md`, `docs/openclaw-plugin-skeleton-plan.md`, and `docs/openclaw-impact-assessment.md`.
 
-Superseding status as of 2026-04-30:
+Superseding status as of 2026-05-01:
 
 ```txt
 OpenClaw source fork under openclaw/: verified.
 Local install, strict-smoke build, direct CLI checks, local dev gateway connectivity, ARKA arka-audit skill loading, and MiniMax model discovery are verified.
 Read-only `arka-audit` plugin skeleton static smoke is verified.
-Model-backed ARKA OpenClaw response, OpenClaw gateway discovery/load of the plugin, packages/agent gateway calls, and OpenClaw Telegram remain unverified / not implemented.
+One local `infer model run` ARKA State C response is verified. Full OpenClaw ARKA agent session response, OpenClaw gateway discovery/load of the plugin, packages/agent gateway calls, and OpenClaw Telegram remain unverified / not implemented.
 Use docs/openclaw-local-fork-plan.md and docs/openclaw-impact-assessment.md for current status.
 ```
 
@@ -557,5 +557,5 @@ Completion report:
 Use this wording until smoke setup changes the status:
 
 ```txt
-ARKA has researched OpenClaw, keeps a deterministic OpenClaw-facing fallback in packages/agent, and has a repo-local OpenClaw fork with skill loading plus a read-only plugin skeleton static-smoke and extension-test verified. Model-backed ARKA response, gateway plugin load, packages/agent gateway calls, and Telegram integration remain unverified.
+ARKA has researched OpenClaw, keeps a deterministic OpenClaw-facing fallback in packages/agent, and has a repo-local OpenClaw fork with skill loading plus a read-only plugin skeleton static-smoke and extension-test verified. One local `infer model run` ARKA State C response is verified; full OpenClaw ARKA agent session, gateway plugin load, packages/agent gateway calls, and Telegram integration remain unverified.
 ```
