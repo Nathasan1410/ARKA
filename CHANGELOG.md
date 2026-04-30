@@ -12,6 +12,7 @@ All meaningful ARKA changes should be recorded here in human-readable language.
 - Recorded Telegram token handling as human-needed security debt without storing the token.
 
 ### Added
+- Added `docs/parallel-worker-handoff-0g-openclaw.md` with S2-S6 worker prompts for 0G Storage, 0G Chain, proof pipeline, dashboard proof UX, and OpenClaw gateway-load work.
 - Added `docs/openclaw-plugin-skeleton-plan.md` with an implementation-ready docs-only plan for the first ARKA OpenClaw plugin skeleton under `openclaw/extensions/arka-audit/`.
 - Updated `docs/openclaw-local-fork-plan.md` to point at the new skeleton plan and keep the first pass focused on a single read-only `get_audit_event` tool.
 - Added `docs/openclaw-cross-layer-next-slices.md` to define the ordered frontend, backend, DB, proof, storage, and chain slices after OpenClaw became the central triage track.

@@ -2,6 +2,26 @@
 
 This document tracks material AI-assisted work in ARKA.
 
+## 2026-04-30 - Parallel Worker Handoff
+
+### AI Tool Used
+- OpenAI Codex CLI (GPT-5.x)
+
+### What AI Helped With
+- Consolidated the next S2-S6 parallel worker prompts into one repo-local handoff document.
+- Preserved ARKA's AuditEvent-first, proof-layer, and OpenClaw boundary constraints for the next implementation phase.
+
+### Files / Areas Affected
+- `docs/parallel-worker-handoff-0g-openclaw.md`
+- `CHANGELOG.md`
+- `docs/ai-attribution.md`
+
+### Human Review
+- Pending / to be confirmed by repo owner.
+
+### Verification
+- Documentation-only update.
+
 ## 2026-04-30 - OpenClaw Docs Truthfulness Patch
 
 ### AI Tool Used
