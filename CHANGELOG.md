@@ -5,6 +5,15 @@ All meaningful ARKA changes should be recorded here in human-readable language.
 ## 2026-05-01
 
 ### Changed
+- Verified one model-backed ARKA OpenClaw-side inference turn through local `openclaw infer model run --local` using MiniMax M2.7 and an AuditEvent-first State C prompt.
+- Updated OpenClaw truthfulness docs to distinguish the verified local inference response from the still-unverified full OpenClaw agent session, gateway plugin load, packages/agent gateway call path, Telegram, and 0G work.
+- Added bounded local smoke controls in the OpenClaw fork for scoped runtime plugin loading, skipping provider runtime hooks, and disabling bundled tool startup during ARKA smoke debugging.
+
+### Verification
+- `node openclaw\\openclaw.mjs --dev infer model run --local --model minimax/MiniMax-M2.7 --prompt <ARKA State C audit prompt> --json`
+- Result returned `ok: true`, provider `minimax`, model `MiniMax-M2.7`, and `triageOutcome: REQUEST_EXPLANATION`.
+
+### Changed
 - Added a working Admin Movement simulation slice to `/dashboard`: order quantity and Whey Protein OUT grams can be entered, posted to a local API route, reconciled through core AuditEvent logic, saved to demo history, and displayed with deterministic triage plus local proof hash.
 - Added quick admin runs for clear, explanation, and critical review cases without adding disconnected pages or hollow controls.
 

@@ -52,6 +52,7 @@ export function createEmbeddedRunAuthController(params: {
   attemptedThinking: Set<ThinkLevel>;
   fallbackConfigured: boolean;
   allowTransientCooldownProbe: boolean;
+  skipProviderRuntimeAuth?: boolean;
   getProvider(): string;
   getModelId(): string;
   getRuntimeModel(): Model<Api>;
@@ -120,8 +121,11 @@ export function createEmbeddedRunAuthController(params: {
     apiKey: string;
     authMode: string;
     profileId?: string;
-  }) =>
-    prepareProviderRuntimeAuth({
+  }) => {
+    if (params.skipProviderRuntimeAuth === true) {
+      return undefined;
+    }
+    return prepareProviderRuntimeAuth({
       provider: prepareParams.runtimeModel.provider,
       config: params.config,
       workspaceDir: params.workspaceDir,
@@ -139,6 +143,7 @@ export function createEmbeddedRunAuthController(params: {
         profileId: prepareParams.profileId,
       },
     });
+  };
 
   const clearRuntimeAuthRefreshTimer = () => {
     const runtimeAuthState = params.getRuntimeAuthState();

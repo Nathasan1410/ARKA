@@ -60,16 +60,16 @@ Next action: Retry with a concrete selector and a short timeout, for example `no
 Owner: Human / Agent
 ```
 
-### 2026-04-30 - OpenClaw Model-Backed Turn Blocked (CLI Hangs)
+### 2026-04-30 - OpenClaw Model-Backed Infer Turn Verified; Full Agent Session Still Blocked
 
 ```txt
 Area: OpenClaw / Model turn / MiniMax
-Status: BLOCKED
-What happened: MiniMax network connectivity is ok and a direct `fetch()` POST to `https://api.minimax.io/anthropic/v1/messages` returns 200 quickly (using the same local key). However, OpenClaw CLI model-turn paths hang indefinitely on this Windows laptop, including:
-- `node openclaw\\openclaw.mjs --dev infer model run --local --model minimax/MiniMax-M2.7 --prompt "Reply with OK" --json`
-- `node openclaw\\openclaw.mjs --dev agent --local --session-id arka-smoke --model minimax/MiniMax-M2.7 ...`
-Why it matters: ARKA must not claim a model-backed OpenClaw agent response until at least one bounded model-backed turn completes successfully through OpenClaw (local or gateway). Today this remains unverified; ARKA only has deterministic fallback triage verified.
-Next action: Debug OpenClaw CLI hang in the local fork (likely provider runtime hooks / dynamic model prep / stream handling). Add a bounded timeout + logging around the hang point and verify a single `infer model run` completes on Windows with MiniMax.
+Status: RISK
+What happened: A bounded OpenClaw local inference command completed successfully with MiniMax M2.7:
+`node openclaw\\openclaw.mjs --dev infer model run --local --model minimax/MiniMax-M2.7 --prompt <ARKA State C audit prompt> --json`
+The response returned `ok: true`, provider `minimax`, model `MiniMax-M2.7`, and JSON text with `triageOutcome: REQUEST_EXPLANATION`. Full `agent --local` ARKA session turns still time out after system-prompt construction/session setup in this Windows laptop environment.
+Why it matters: ARKA may now claim one model-backed OpenClaw-side inference response, but must not claim full OpenClaw agent session integration, gateway/plugin load, or packages/agent integration.
+Next action: Continue debugging the full `agent --local` session lock/session runtime path, then verify gateway plugin discovery/load and packages/agent gateway calls separately.
 Owner: Agent (OpenClaw fork) + Human (verify on this machine)
 ```
 
@@ -169,9 +169,9 @@ Owner: Human
 ```txt
 Area: OpenClaw
 Status: RISK
-What happened: packages/agent currently contains deterministic A/C/D triage fallback only. The upstream OpenClaw repo was cloned for research outside ARKA-github at D:\Projekan\Macam2Hackathon\ARKA\_research\openclaw and copied as a repo-local source fork under openclaw/. ARKA added workspace/skill draft files under openclaw/workspaces/arka/. Local install, targeted strict-smoke build, direct source CLI help/version/gateway-help, local dev gateway connectivity, ARKA skill loading, and MiniMax model discovery are verified, but plugin registration, model-backed ARKA triage response, and ARKA gateway calls are not verified yet.
+What happened: packages/agent currently contains deterministic A/C/D triage fallback only. The upstream OpenClaw repo was cloned for research outside ARKA-github at D:\Projekan\Macam2Hackathon\ARKA\_research\openclaw and copied as a repo-local source fork under openclaw/. ARKA added workspace/skill draft files under openclaw/workspaces/arka/. Local install, targeted strict-smoke build, direct source CLI help/version/gateway-help, local dev gateway connectivity, ARKA skill loading, MiniMax model discovery, and one local model-backed ARKA State C inference response are verified, but plugin gateway load, full agent session response, and ARKA gateway calls are not verified yet.
 Why it matters: ARKA's product story says the agent is built on top of OpenClaw. OpenClaw is a full gateway/runtime/plugin system, not just a local adapter function. The deterministic fallback is useful for MVP resilience, but it must not be mistaken for a real OpenClaw-backed agent.
-Next action: Debug a successful model-backed OpenClaw agent turn, then implement and verify the ARKA plugin/tool path. Keep `pnpm.cmd run verify:arka-openclaw` passing as the cross-layer regression gate. Do not claim packages/agent integration until ARKA actually calls the OpenClaw gateway/plugin.
+Next action: Debug a successful full OpenClaw agent session turn, then implement and verify the ARKA plugin/tool path. Keep `pnpm.cmd run verify:arka-openclaw` passing as the cross-layer regression gate. Do not claim packages/agent integration until ARKA actually calls the OpenClaw gateway/plugin.
 Owner: Both
 ```
 

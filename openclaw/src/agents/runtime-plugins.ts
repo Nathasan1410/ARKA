@@ -7,6 +7,8 @@ export function ensureRuntimePluginsLoaded(params: {
   config?: OpenClawConfig;
   workspaceDir?: string | null;
   allowGatewaySubagentBinding?: boolean;
+  onlyPluginIds?: string[];
+  installBundledRuntimeDeps?: boolean;
 }): void {
   const workspaceDir =
     typeof params.workspaceDir === "string" && params.workspaceDir.trim()
@@ -18,6 +20,8 @@ export function ensureRuntimePluginsLoaded(params: {
   const loadOptions = {
     config: params.config,
     workspaceDir,
+    onlyPluginIds: params.onlyPluginIds,
+    installBundledRuntimeDeps: params.installBundledRuntimeDeps,
     runtimeOptions: allowGatewaySubagentBinding
       ? {
           allowGatewaySubagentBinding: true,

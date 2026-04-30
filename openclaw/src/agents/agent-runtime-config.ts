@@ -5,6 +5,30 @@ import type { OpenClawConfig } from "../config/types.openclaw.js";
 import { isSecretRef } from "../config/types.secrets.js";
 import type { RuntimeEnv } from "../runtime.js";
 
+const arkaDiag = (message: string) => {
+  if (process.env.OPENCLAW_ARKA_DIAG === "1") {
+    console.error(`[arka-diag] ${new Date().toISOString()} ${message}`);
+  }
+};
+
+const SOURCE_CONFIG_SNAPSHOT_TIMEOUT_MS = 5_000;
+
+async function readConfigFileSnapshotForWriteBestEffort() {
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  try {
+    return await Promise.race([
+      readConfigFileSnapshotForWrite(),
+      new Promise<null>((resolve) => {
+        timer = setTimeout(() => resolve(null), SOURCE_CONFIG_SNAPSHOT_TIMEOUT_MS);
+      }),
+    ]);
+  } finally {
+    if (timer) {
+      clearTimeout(timer);
+    }
+  }
+}
+
 export async function resolveAgentRuntimeConfig(
   runtime: RuntimeEnv,
   params?: { runtimeTargetsChannelSecrets?: boolean },
@@ -13,10 +37,18 @@ export async function resolveAgentRuntimeConfig(
   sourceConfig: OpenClawConfig;
   cfg: OpenClawConfig;
 }> {
+  arkaDiag("runtime-config before getRuntimeConfig");
   const loadedRaw = getRuntimeConfig();
+  arkaDiag("runtime-config after getRuntimeConfig");
   const sourceConfig = await (async () => {
     try {
-      const { snapshot } = await readConfigFileSnapshotForWrite();
+      arkaDiag("runtime-config before readConfigFileSnapshotForWrite");
+      const result = await readConfigFileSnapshotForWriteBestEffort();
+      arkaDiag("runtime-config after readConfigFileSnapshotForWrite");
+      if (!result) {
+        return loadedRaw;
+      }
+      const { snapshot } = result;
       if (snapshot.valid) {
         return snapshot.resolved;
       }
@@ -26,24 +58,35 @@ export async function resolveAgentRuntimeConfig(
     return loadedRaw;
   })();
   const includeChannelTargets = params?.runtimeTargetsChannelSecrets === true;
-  const cfg = hasAgentRuntimeSecretRefs({
+  arkaDiag("runtime-config before hasAgentRuntimeSecretRefs");
+  const needsSecretResolution = hasAgentRuntimeSecretRefs({
     config: loadedRaw,
     includeChannelTargets,
-  })
+  });
+  arkaDiag(`runtime-config after hasAgentRuntimeSecretRefs needs=${needsSecretResolution}`);
+  const cfg = needsSecretResolution
     ? (
-        await (
-          await import("../cli/command-config-resolution.runtime.js")
-        ).resolveCommandConfigWithSecrets({
-          config: loadedRaw,
-          commandName: "agent",
-          targetIds: getAgentRuntimeCommandSecretTargetIds({
-            includeChannelTargets,
-          }),
-          runtime,
-        })
+        await (async () => {
+          arkaDiag("runtime-config before import command-config-resolution");
+          const runtimeModule = await import("../cli/command-config-resolution.runtime.js");
+          arkaDiag("runtime-config after import command-config-resolution");
+          arkaDiag("runtime-config before resolveCommandConfigWithSecrets");
+          const resolved = await runtimeModule.resolveCommandConfigWithSecrets({
+            config: loadedRaw,
+            commandName: "agent",
+            targetIds: getAgentRuntimeCommandSecretTargetIds({
+              includeChannelTargets,
+            }),
+            runtime,
+          });
+          arkaDiag("runtime-config after resolveCommandConfigWithSecrets");
+          return resolved;
+        })()
       ).resolvedConfig
     : loadedRaw;
+  arkaDiag("runtime-config before setRuntimeConfigSnapshot");
   setRuntimeConfigSnapshot(cfg, sourceConfig);
+  arkaDiag("runtime-config after setRuntimeConfigSnapshot");
   return { loadedRaw, sourceConfig, cfg };
 }
 

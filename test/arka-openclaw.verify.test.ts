@@ -1,4 +1,5 @@
-import { existsSync, readFileSync, readdirSync, statSync } from 'node:fs';
+import { execFileSync } from 'node:child_process';
+import { existsSync, readFileSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 
@@ -39,40 +40,24 @@ function createDemoAuditEvent(scenarioKey: keyof typeof demoScenarioSeeds) {
   });
 }
 
-function listLocalEnvFiles(dir: string): string[] {
-  const skippedDirs = new Set([
-    '.git',
-    '.next',
-    '.turbo',
-    'coverage',
-    'dist',
-    'node_modules',
-    'openclaw',
-  ]);
-  const entries = readdirSync(dir, { withFileTypes: true });
-  const matches: string[] = [];
+function listTrackedEnvFiles(repoDir: string): string[] {
+  // This test intentionally checks *tracked* files only.
+  // We keep secrets outside the repo (e.g. in C:\\Dev\\_openclaw-smoke),
+  // but we don't want local ignored/untracked files to make verification slow/flaky.
+  const stdout = execFileSync('git', ['ls-files', '-z'], {
+    cwd: repoDir,
+    stdio: ['ignore', 'pipe', 'ignore'],
+  });
+  const paths = stdout
+    .toString('utf8')
+    .split('\0')
+    .map((p) => p.trim())
+    .filter(Boolean);
 
-  for (const entry of entries) {
-    const fullPath = join(dir, entry.name);
-
-    if (
-      entry.isFile() &&
-      (entry.name === '.env' || entry.name.startsWith('.env.')) &&
-      entry.name !== '.env.example'
-    ) {
-      matches.push(fullPath);
-    }
-
-    if (entry.isDirectory()) {
-      if (skippedDirs.has(entry.name)) {
-        continue;
-      }
-
-      matches.push(...listLocalEnvFiles(fullPath));
-    }
-  }
-
-  return matches;
+  return paths.filter((p) => {
+    if (p.endsWith('.env.example')) return false;
+    return p === '.env' || p.startsWith('.env.') || p.includes('/.env') || p.includes('\\.env');
+  });
 }
 
 function listOpenClawEnvFiles(): string[] {
@@ -109,10 +94,10 @@ describe('OpenClaw local fork coverage', () => {
   });
 
   it('keeps local OpenClaw secrets out of the repo tree', () => {
-    const envFiles = [...listLocalEnvFiles(repoRoot), ...listOpenClawEnvFiles()];
+    const envFiles = [...listTrackedEnvFiles(repoRoot), ...listOpenClawEnvFiles()];
 
     expect(envFiles).toEqual([]);
-  });
+  }, 30_000);
 });
 
 describe('ARKA OpenClaw workspace coverage', () => {

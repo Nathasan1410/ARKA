@@ -199,6 +199,27 @@ describe("agentCommand runtime config", () => {
     });
   });
 
+  it("falls back to runtime config when the source snapshot read stalls", async () => {
+    vi.useFakeTimers();
+    try {
+      await withTempHome(async (home) => {
+        const store = path.join(home, "sessions.json");
+        const loadedConfig = mockConfig(home, store);
+        readConfigFileSnapshotForWriteMock.mockReturnValue(new Promise(() => undefined));
+
+        const preparedPromise = resolveAgentRuntimeConfig(runtime);
+        await vi.advanceTimersByTimeAsync(5_000);
+        const prepared = await preparedPromise;
+
+        expect(prepared.sourceConfig).toBe(loadedConfig);
+        expect(prepared.cfg).toBe(loadedConfig);
+        expect(setRuntimeConfigSnapshotMock).toHaveBeenCalledWith(loadedConfig, loadedConfig);
+      });
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
   it("derives a fresh session from --to", async () => {
     await withTempHome(async (home) => {
       const store = path.join(home, "sessions.json");

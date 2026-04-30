@@ -22,6 +22,12 @@ import type {
 const log = createSubsystemLogger("agents/harness/v2");
 type AgentHarnessV2LifecyclePhase = DiagnosticHarnessRunErrorEvent["phase"];
 
+const arkaDiag = (message: string) => {
+  if (process.env.OPENCLAW_ARKA_DIAG === "1") {
+    console.error(`[arka-diag] ${new Date().toISOString()} ${message}`);
+  }
+};
+
 type AgentHarnessV2RunBase = {
   harnessId: string;
   label: string;
@@ -195,16 +201,26 @@ export async function runAgentHarnessV2LifecycleAttempt(
   let phase: AgentHarnessV2LifecyclePhase = "prepare";
   const startedAt = Date.now();
 
+  arkaDiag("harness-v2 before emitAgentHarnessRunStarted");
   emitAgentHarnessRunStarted(harness, params);
+  arkaDiag("harness-v2 after emitAgentHarnessRunStarted");
   try {
     phase = "prepare";
+    arkaDiag("harness-v2 before prepare");
     prepared = await harness.prepare(params);
+    arkaDiag("harness-v2 after prepare");
     phase = "start";
+    arkaDiag("harness-v2 before start");
     session = await harness.start(prepared);
+    arkaDiag("harness-v2 after start");
     phase = "send";
+    arkaDiag("harness-v2 before send");
     rawResult = await harness.send(session);
+    arkaDiag("harness-v2 after send");
     phase = "resolve";
+    arkaDiag("harness-v2 before resolve");
     result = await harness.resolveOutcome(session, rawResult);
+    arkaDiag("harness-v2 after resolve");
   } catch (error) {
     let cleanupFailed = false;
     try {

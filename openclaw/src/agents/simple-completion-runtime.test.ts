@@ -464,8 +464,10 @@ describe("prepareSimpleCompletionModel", () => {
       undefined,
       {
         skipPiDiscovery: true,
+        skipProviderRuntimeHooks: true,
       },
     );
+    expect(hoisted.prepareProviderRuntimeAuthMock).not.toHaveBeenCalled();
   });
 });
 

@@ -698,6 +698,12 @@ describe("provider-runtime", () => {
         provider: DEMO_PROVIDER_ID,
       }),
     );
+    expect(resolvePluginProvidersMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        providerRefs: [DEMO_PROVIDER_ID],
+        installBundledRuntimeDeps: false,
+      }),
+    );
   });
 
   it("returns no runtime plugin when the provider has no owning plugin", () => {

@@ -87,6 +87,12 @@ export type RunEmbeddedPiAgentParams = {
   forceMessageTool?: boolean;
   /** Allow runtime plugins for this run to late-bind the gateway subagent. */
   allowGatewaySubagentBinding?: boolean;
+  /** Optional runtime plugin scope for bounded local smoke runs. */
+  runtimePluginIds?: string[];
+  /** Allow callers to skip bundled runtime dependency staging during scoped smoke runs. */
+  installBundledRuntimeDeps?: boolean;
+  /** Resolve configured models without provider-runtime dynamic hooks for bounded smoke runs. */
+  skipProviderRuntimeHooks?: boolean;
   sessionFile: string;
   workspaceDir: string;
   agentDir?: string;

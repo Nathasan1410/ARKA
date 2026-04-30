@@ -297,6 +297,7 @@ export type AgentRuntimeTransportPlan = {
 };
 
 export type AgentRuntimePlan = {
+  skipProviderRuntimeHooks?: boolean;
   resolvedRef: AgentRuntimeResolvedRef;
   auth: AgentRuntimeAuthPlan;
   prompt: AgentRuntimePromptPlan;
@@ -329,6 +330,7 @@ export type BuildAgentRuntimeDeliveryPlanParams = {
   agentDir?: string;
   provider: string;
   modelId: string;
+  skipProviderRuntimeHooks?: boolean;
 };
 
 export type BuildAgentRuntimePlanParams = {
@@ -348,4 +350,5 @@ export type BuildAgentRuntimePlanParams = {
   thinkingLevel?: AgentRuntimeThinkLevel;
   extraParamsOverride?: Record<string, unknown>;
   resolvedTransport?: AgentRuntimeTransport;
+  skipProviderRuntimeHooks?: boolean;
 };

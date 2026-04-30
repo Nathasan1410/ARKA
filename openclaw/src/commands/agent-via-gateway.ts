@@ -37,6 +37,12 @@ const EMBEDDED_FALLBACK_META = {
   fallbackFrom: "gateway",
 } as const;
 
+const arkaDiag = (message: string) => {
+  if (process.env.OPENCLAW_ARKA_DIAG === "1") {
+    console.error(`[arka-diag] ${new Date().toISOString()} ${message}`);
+  }
+};
+
 export type AgentCliOpts = {
   message: string;
   agent?: string;
@@ -57,6 +63,10 @@ export type AgentCliOpts = {
   runId?: string;
   extraSystemPrompt?: string;
   local?: boolean;
+  runtimePluginIds?: string[];
+  installBundledRuntimeDeps?: boolean;
+  skipProviderRuntimeHooks?: boolean;
+  disableTools?: boolean;
 };
 
 function protectJsonStdout(opts: Pick<AgentCliOpts, "json">): void {
@@ -94,6 +104,60 @@ function formatPayloadForLog(payload: {
     lines.push(`MEDIA:${url}`);
   }
   return lines.join("\n").trimEnd();
+}
+
+function parseRuntimePluginIdsFromEnv(): string[] | undefined {
+  const raw = process.env.OPENCLAW_AGENT_RUNTIME_PLUGIN_IDS?.trim();
+  if (!raw) {
+    return undefined;
+  }
+  const pluginIds = raw
+    .split(",")
+    .map((entry) => entry.trim())
+    .filter(Boolean);
+  return pluginIds.length > 0 ? [...new Set(pluginIds)] : undefined;
+}
+
+function parseInstallBundledRuntimeDepsFromEnv(): boolean | undefined {
+  const raw = process.env.OPENCLAW_AGENT_INSTALL_BUNDLED_RUNTIME_DEPS?.trim().toLowerCase();
+  if (!raw) {
+    return undefined;
+  }
+  if (["0", "false", "no", "off"].includes(raw)) {
+    return false;
+  }
+  if (["1", "true", "yes", "on"].includes(raw)) {
+    return true;
+  }
+  return undefined;
+}
+
+function parseSkipProviderRuntimeHooksFromEnv(): boolean | undefined {
+  const raw = process.env.OPENCLAW_AGENT_SKIP_PROVIDER_RUNTIME_HOOKS?.trim().toLowerCase();
+  if (!raw) {
+    return undefined;
+  }
+  if (["0", "false", "no", "off"].includes(raw)) {
+    return false;
+  }
+  if (["1", "true", "yes", "on"].includes(raw)) {
+    return true;
+  }
+  return undefined;
+}
+
+function parseDisableToolsFromEnv(): boolean | undefined {
+  const raw = process.env.OPENCLAW_AGENT_DISABLE_TOOLS?.trim().toLowerCase();
+  if (!raw) {
+    return undefined;
+  }
+  if (["0", "false", "no", "off"].includes(raw)) {
+    return false;
+  }
+  if (["1", "true", "yes", "on"].includes(raw)) {
+    return true;
+  }
+  return undefined;
 }
 
 export async function agentViaGatewayCommand(opts: AgentCliOpts, runtime: RuntimeEnv) {
@@ -192,15 +256,25 @@ export async function agentViaGatewayCommand(opts: AgentCliOpts, runtime: Runtim
 }
 
 export async function agentCliCommand(opts: AgentCliOpts, runtime: RuntimeEnv, deps?: CliDeps) {
+  arkaDiag(`agentCliCommand local=${opts.local === true}`);
   protectJsonStdout(opts);
   const localOpts = {
     ...opts,
     agentId: opts.agent,
     replyAccountId: opts.replyAccount,
+    runtimePluginIds: opts.runtimePluginIds ?? parseRuntimePluginIdsFromEnv(),
+    installBundledRuntimeDeps:
+      opts.installBundledRuntimeDeps ?? parseInstallBundledRuntimeDepsFromEnv(),
+    skipProviderRuntimeHooks: opts.skipProviderRuntimeHooks ?? parseSkipProviderRuntimeHooksFromEnv(),
+    disableTools: opts.disableTools ?? parseDisableToolsFromEnv(),
     cleanupBundleMcpOnRunEnd: true,
     cleanupCliLiveSessionOnRunEnd: true,
   };
+  arkaDiag(
+    `agentCliCommand runtimePluginIds=${localOpts.runtimePluginIds?.join(",") ?? "none"} installBundledRuntimeDeps=${String(localOpts.installBundledRuntimeDeps)} skipProviderRuntimeHooks=${String(localOpts.skipProviderRuntimeHooks)} disableTools=${String(localOpts.disableTools)}`,
+  );
   if (opts.local === true) {
+    arkaDiag("agentCliCommand before local agentCommand");
     return await agentCommand(localOpts, runtime, deps);
   }
 

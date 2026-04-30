@@ -557,7 +557,11 @@ async function* parseAnthropicSseBody(
           .filter((line) => line.startsWith("data:"))
           .map((line) => line.slice(5).trimStart())
           .join("\n");
-        if (data && data !== "[DONE]") {
+        if (data === "[DONE]") {
+          await reader.cancel().catch(() => undefined);
+          return;
+        }
+        if (data) {
           yield JSON.parse(data) as Record<string, unknown>;
         }
         frameEnd = buffer.indexOf("\n\n");
@@ -570,7 +574,11 @@ async function* parseAnthropicSseBody(
         .filter((line) => line.startsWith("data:"))
         .map((line) => line.slice(5).trimStart())
         .join("\n");
-      if (data && data !== "[DONE]") {
+      if (data === "[DONE]") {
+        await reader.cancel().catch(() => undefined);
+        return;
+      }
+      if (data) {
         yield JSON.parse(data) as Record<string, unknown>;
       }
     }
@@ -882,6 +890,9 @@ export function createAnthropicMessagesTransportStreamFn(): StreamFn {
         stream.push({ type: "start", partial: output as never });
         const blocks = output.content;
         for await (const event of anthropicStream) {
+          if (event.type === "message_stop") {
+            break;
+          }
           if (event.type === "error") {
             const error = event.error as { message?: string } | undefined;
             throw new Error(error?.message || "Anthropic Messages stream failed");

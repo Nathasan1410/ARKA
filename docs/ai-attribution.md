@@ -2,6 +2,79 @@
 
 This document tracks material AI-assisted work in ARKA.
 
+## 2026-05-01 - OpenClaw Local Inference Smoke
+
+### AI Tool Used
+- OpenAI Codex CLI (GPT-5.x)
+- GPT-5.x explorer subagents for bounded OpenClaw runtime-plan, skill-boundary, and verification-risk review
+
+### What AI Helped With
+- Debugged the local OpenClaw `agent --local` path through plugin loading, provider runtime hooks, auth, runtime plan, harness, and bundled tool setup.
+- Added bounded smoke controls for scoped runtime plugin loading, provider-runtime hook skipping, and tool disabling during ARKA local smoke tests.
+- Verified one local model-backed ARKA State C inference response through `openclaw infer model run --local` with MiniMax M2.7.
+- Updated truthfulness docs to keep the verified local inference response separate from unverified full agent session, gateway plugin load, packages/agent gateway calls, Telegram, and 0G integrations.
+
+### Files / Areas Affected
+- `openclaw/src/agents/**`
+- `openclaw/src/commands/agent-via-gateway.ts`
+- `docs/real-vs-simulated.md`
+- `docs/openclaw-impact-assessment.md`
+- `docs/openclaw-local-fork-plan.md`
+- `technical-debt.md`
+- `CHANGELOG.md`
+
+### Human Review
+- Pending / to be confirmed by repo owner.
+
+### Verification
+- `node openclaw\\openclaw.mjs --dev infer model run --local --model minimax/MiniMax-M2.7 --prompt <ARKA State C audit prompt> --json`
+
+## 2026-05-01 - Light Theme Redesign & Brand Guidelines
+
+### AI Tool Used
+- Gemini CLI
+
+### What AI Helped With
+- Rewrote `apps/web/app/globals.css` to transition from a dark theme to a clean, modern light theme inspired by provided reference dashboards.
+- Updated color palettes (Indigo accent, Slate neutrals, clear semantic soft-pills), card shadows, and visual hierarchy.
+- Authored `docs/ui-guidelines.md` documenting the visual hierarchy, typography, colors, and specific components.
+- Authored `docs/brand-guidelines.md` detailing the brand identity, "operator-first" principles, and audit-safe voice & tone.
+
+### Files / Areas Affected
+- `apps/web/app/globals.css`
+- `docs/ui-guidelines.md` (new)
+- `docs/brand-guidelines.md` (new)
+
+### Human Review
+- Pending / to be confirmed by repo owner.
+
+### Verification
+- `pnpm.cmd --filter @arka/web exec tsc -p tsconfig.json --noEmit --incremental false --ignoreDeprecations 6.0`
+- `pnpm.cmd --filter @arka/web build`
+
+## 2026-05-01 - Dashboard UI Redesign
+
+### AI Tool Used
+- Gemini CLI
+
+### What AI Helped With
+- Redesigned the `DashboardShell` layout to feel more like an operator console based on MVP demo interaction brief.
+- Restructured main area with top summary, middle comparison, and bottom tab views (Run Movement, Order & Evidence, Simulation, Proof Status).
+- Replaced non-audit-safe terminology.
+- Integrated `AdminSimulationView` correctly with the new layout and copy.
+- Confirmed that the core AuditEvent loop (`stage-strip`) and local proof status (`proof-snapshot`) are always visible.
+
+### Files / Areas Affected
+- `apps/web/app/dashboard/dashboard-shell.tsx`
+
+### Human Review
+- Pending / to be confirmed by repo owner.
+
+### Verification
+- `pnpm.cmd --filter @arka/web exec tsc -p tsconfig.json --noEmit --incremental false --ignoreDeprecations 6.0`
+- `pnpm.cmd exec vitest run --config test/dashboard-demo.vitest.config.ts`
+- `pnpm.cmd --filter @arka/web build`
+
 ## 2026-05-01 - Dashboard Admin Movement Simulation
 
 ### AI Tool Used

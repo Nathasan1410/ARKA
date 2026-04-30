@@ -334,12 +334,21 @@ export function defaultGatewayBindMode(tailscaleMode?: string): GatewayBindMode 
  * @returns True if we can successfully bind to this address
  */
 export async function canBindToHost(host: string): Promise<boolean> {
-  return new Promise((resolve) => {
+  return await new Promise((resolve) => {
     const testServer = net.createServer();
+    const timeout = setTimeout(() => {
+      // On some Windows setups, binding probes (notably ::1) can hang without
+      // emitting either "error" or "listening". Never let gateway startup
+      // block on this; treat as "cannot bind".
+      testServer.close();
+      resolve(false);
+    }, 2_000);
     testServer.once("error", () => {
+      clearTimeout(timeout);
       resolve(false);
     });
     testServer.once("listening", () => {
+      clearTimeout(timeout);
       testServer.close();
       resolve(true);
     });

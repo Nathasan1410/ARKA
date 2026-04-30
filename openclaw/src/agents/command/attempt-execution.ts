@@ -41,6 +41,11 @@ export {
 } from "./attempt-execution.helpers.js";
 
 const log = createSubsystemLogger("agents/agent-command");
+const arkaDiag = (message: string) => {
+  if (process.env.OPENCLAW_ARKA_DIAG === "1") {
+    console.error(`[arka-diag] ${new Date().toISOString()} ${message}`);
+  }
+};
 
 const ACP_TRANSCRIPT_USAGE = {
   input: 0,
@@ -266,6 +271,7 @@ export function runAgentAttempt(params: {
   allowTransientCooldownProbe?: boolean;
   sessionHasHistory?: boolean;
 }) {
+  arkaDiag("attempt-execution runAgentAttempt start");
   const isRawModelRun = params.opts.modelRun === true || params.opts.promptMode === "none";
   const claudeCliFallbackPrelude =
     !isRawModelRun &&
@@ -330,8 +336,12 @@ export function runAgentAttempt(params: {
     harnessRuntime: agentHarnessPolicy.runtime,
     allowHarnessAuthProfileForwarding: !isCliProvider(cliExecutionProvider, params.cfg),
   });
+  arkaDiag(
+    `attempt-execution runtime plan cliProvider=${isCliProvider(cliExecutionProvider, params.cfg)} harness=${sessionPinnedAgentHarnessId ?? "none"}`,
+  );
   const authProfileId = runtimeAuthPlan.forwardedAuthProfileId;
   if (!isRawModelRun && isCliProvider(cliExecutionProvider, params.cfg)) {
+    arkaDiag("attempt-execution entering cli provider branch");
     const cliSessionBinding = getCliSessionBinding(params.sessionEntry, cliExecutionProvider);
     const resolveReusableCliSessionBinding = async () => {
       if (
@@ -454,6 +464,7 @@ export function runAgentAttempt(params: {
     });
   }
 
+  arkaDiag("attempt-execution before runEmbeddedPiAgent");
   return runEmbeddedPiAgent({
     sessionId: params.sessionId,
     sessionKey: params.sessionKey,
@@ -499,10 +510,13 @@ export function runAgentAttempt(params: {
     streamParams: params.opts.streamParams,
     agentDir: params.agentDir,
     allowTransientCooldownProbe: params.allowTransientCooldownProbe,
+    runtimePluginIds: params.opts.runtimePluginIds,
+    installBundledRuntimeDeps: params.opts.installBundledRuntimeDeps,
+    skipProviderRuntimeHooks: params.opts.skipProviderRuntimeHooks,
     cleanupBundleMcpOnRunEnd: params.opts.cleanupBundleMcpOnRunEnd,
     modelRun: params.opts.modelRun,
     promptMode: params.opts.promptMode,
-    disableTools: params.opts.modelRun === true,
+    disableTools: params.opts.modelRun === true || params.opts.disableTools === true,
     onAgentEvent: params.onAgentEvent,
     bootstrapPromptWarningSignaturesSeen,
     bootstrapPromptWarningSignature,

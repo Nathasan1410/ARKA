@@ -27,7 +27,7 @@ OpenClaw implementation rule:
 OpenClaw is a gateway/runtime/plugin/skills system.
 Do not claim real OpenClaw integration from packages/agent deterministic fallback alone.
 Use docs/openclaw-local-fork-plan.md, docs/openclaw-impact-assessment.md, and docs/openclaw-research-and-integration-plan.md before changing OpenClaw-related code.
-Current honest status: local OpenClaw source fork, local install, strict-smoke build, direct CLI checks, local dev gateway connectivity, ARKA skill loading, MiniMax model discovery, and the read-only `arka-audit` plugin skeleton static smoke are verified; model-backed ARKA agent response, OpenClaw gateway discovery/load of the plugin, packages/agent gateway calls, and OpenClaw Telegram are not verified.
+Current honest status: local OpenClaw source fork, local install, strict-smoke build, direct CLI checks, local dev gateway connectivity, ARKA skill loading, MiniMax model discovery, one local model-backed ARKA State C inference response, and the read-only `arka-audit` plugin skeleton static smoke are verified; full OpenClaw ARKA agent session response, OpenClaw gateway discovery/load of the plugin, packages/agent gateway calls, and OpenClaw Telegram are not verified.
 ```
 
 Product anchor:

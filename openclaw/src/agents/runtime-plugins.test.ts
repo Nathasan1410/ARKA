@@ -52,6 +52,25 @@ describe("ensureRuntimePluginsLoaded", () => {
       runtimeOptions: {
         allowGatewaySubagentBinding: true,
       },
+      onlyPluginIds: undefined,
+      installBundledRuntimeDeps: undefined,
+    });
+  });
+
+  it("forwards scoped plugin load options for bounded local smoke runs", async () => {
+    ensureRuntimePluginsLoaded({
+      config: {} as never,
+      workspaceDir: "/tmp/workspace",
+      onlyPluginIds: ["arka-audit"],
+      installBundledRuntimeDeps: false,
+    });
+
+    expect(hoisted.resolveRuntimePluginRegistry).toHaveBeenCalledWith({
+      config: {} as never,
+      workspaceDir: "/tmp/workspace",
+      runtimeOptions: undefined,
+      onlyPluginIds: ["arka-audit"],
+      installBundledRuntimeDeps: false,
     });
   });
 
@@ -65,6 +84,8 @@ describe("ensureRuntimePluginsLoaded", () => {
       config: {} as never,
       workspaceDir: "/tmp/workspace",
       runtimeOptions: undefined,
+      onlyPluginIds: undefined,
+      installBundledRuntimeDeps: undefined,
     });
   });
 
@@ -82,6 +103,8 @@ describe("ensureRuntimePluginsLoaded", () => {
       runtimeOptions: {
         allowGatewaySubagentBinding: true,
       },
+      onlyPluginIds: undefined,
+      installBundledRuntimeDeps: undefined,
     });
   });
 });

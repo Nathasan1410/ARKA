@@ -25,13 +25,14 @@ Direct local CLI help/version/gateway-help: VERIFIED
 Local dev gateway connectivity: VERIFIED
 ARKA arka-audit workspace skill loaded: VERIFIED
 MiniMax model discovery/auth: VERIFIED
-Model-backed ARKA agent response: NOT VERIFIED
+Model-backed ARKA inference response: VERIFIED through local `infer model run`
+Full OpenClaw ARKA agent session response: NOT VERIFIED
 ARKA plugin/tool integration: READ-ONLY SKELETON STATIC-SMOKE VERIFIED; GATEWAY LOAD NOT VERIFIED
 packages/agent gateway/client call path: NOT IMPLEMENTED
 OpenClaw Telegram channel for ARKA: NOT IMPLEMENTED
 ```
 
-This means ARKA may honestly say it has a repo-local OpenClaw fork, a locally smoke-tested gateway, and an ARKA skill loaded by OpenClaw. It must not yet say the ARKA app is integrated with OpenClaw until ARKA sends AuditEvents through a verified gateway/plugin/client path and receives an OpenClaw-backed result.
+This means ARKA may honestly say it has a repo-local OpenClaw fork, a locally smoke-tested gateway, an ARKA skill loaded by OpenClaw, and one model-backed local OpenClaw inference response for ARKA State C. It must not yet say the ARKA app is integrated with OpenClaw until ARKA sends AuditEvents through a verified gateway/plugin/client path and receives an OpenClaw-backed result.
 
 ## Cross-Layer Fit
 

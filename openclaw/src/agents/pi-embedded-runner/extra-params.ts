@@ -142,6 +142,7 @@ export function resolvePreparedExtraParams(params: {
   resolvedExtraParams?: Record<string, unknown>;
   model?: ProviderRuntimeModel;
   resolvedTransport?: SupportedTransport;
+  skipProviderRuntimeHooks?: boolean;
 }): Record<string, unknown> {
   const resolvedExtraParams =
     params.resolvedExtraParams ??
@@ -172,6 +173,10 @@ export function resolvePreparedExtraParams(params: {
     merged.cachedContent = resolvedCachedContent;
     delete merged.cached_content;
   }
+  if (params.skipProviderRuntimeHooks) {
+    return merged;
+  }
+
   const prepared =
     providerRuntimeDeps.prepareProviderExtraParams({
       provider: params.provider,
@@ -633,7 +638,7 @@ export function applyExtraParamsToAgent(
   model?: ProviderRuntimeModel,
   agentDir?: string,
   resolvedTransport?: SupportedTransport,
-  options?: { preparedExtraParams?: Record<string, unknown> },
+  options?: { preparedExtraParams?: Record<string, unknown>; skipProviderRuntimeHooks?: boolean },
 ): { effectiveExtraParams: Record<string, unknown> } {
   const resolvedExtraParams = resolveExtraParams({
     cfg,
@@ -661,6 +666,7 @@ export function applyExtraParamsToAgent(
       resolvedExtraParams,
       model,
       resolvedTransport,
+      skipProviderRuntimeHooks: options?.skipProviderRuntimeHooks,
     });
   const wrapperContext: ApplyExtraParamsContext = {
     agent,
@@ -677,21 +683,23 @@ export function applyExtraParamsToAgent(
   };
 
   const providerStreamBase = agent.streamFn;
-  const pluginWrappedStreamFn = providerRuntimeDeps.wrapProviderStreamFn({
-    provider,
-    config: cfg,
-    context: {
-      config: cfg,
-      agentDir,
-      workspaceDir,
-      provider,
-      modelId,
-      extraParams: effectiveExtraParams,
-      thinkingLevel,
-      model,
-      streamFn: providerStreamBase,
-    },
-  });
+  const pluginWrappedStreamFn = options?.skipProviderRuntimeHooks
+    ? undefined
+    : providerRuntimeDeps.wrapProviderStreamFn({
+        provider,
+        config: cfg,
+        context: {
+          config: cfg,
+          agentDir,
+          workspaceDir,
+          provider,
+          modelId,
+          extraParams: effectiveExtraParams,
+          thinkingLevel,
+          model,
+          streamFn: providerStreamBase,
+        },
+      });
   agent.streamFn = pluginWrappedStreamFn ?? providerStreamBase;
   // Apply caller/config extra params outside provider defaults so explicit values
   // like `openaiWsWarmup=false` can override provider-added defaults.

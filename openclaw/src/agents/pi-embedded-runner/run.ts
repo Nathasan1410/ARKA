@@ -150,6 +150,12 @@ import type {
 } from "./types.js";
 import { createUsageAccumulator, mergeUsageIntoAccumulator } from "./usage-accumulator.js";
 
+const arkaDiag = (message: string) => {
+  if (process.env.OPENCLAW_ARKA_DIAG === "1") {
+    console.error(`[arka-diag] ${new Date().toISOString()} ${message}`);
+  }
+};
+
 type ApiKeyInfo = ResolvedProviderAuth;
 
 const MAX_SAME_MODEL_IDLE_TIMEOUT_RETRIES = 1;
@@ -273,6 +279,7 @@ function buildHandledReplyPayloads(reply?: ReplyPayload) {
 export async function runEmbeddedPiAgent(
   params: RunEmbeddedPiAgentParams,
 ): Promise<EmbeddedPiRunResult> {
+  arkaDiag("runEmbeddedPiAgent start");
   // Resolve sessionKey early so all downstream consumers (hooks, LCM, compaction)
   // receive a non-null key even when callers omit it. See #60552.
   const effectiveSessionKey = backfillSessionKey({
@@ -318,12 +325,16 @@ export async function runEmbeddedPiAgent(
 
   throwIfAborted();
 
+  arkaDiag("runEmbeddedPiAgent before enqueueSession");
   return enqueueSession(() => {
+    arkaDiag("runEmbeddedPiAgent inside session lane");
     throwIfAborted();
     return enqueueGlobal(async () => {
+      arkaDiag("runEmbeddedPiAgent inside global lane");
       throwIfAborted();
       const started = Date.now();
       params.onExecutionStarted?.();
+      arkaDiag("run before resolveRunWorkspaceDir");
       const workspaceResolution = resolveRunWorkspaceDir({
         workspaceDir: params.workspaceDir,
         sessionKey: params.sessionKey,
@@ -343,11 +354,17 @@ export async function runEmbeddedPiAgent(
           `[workspace-fallback] caller=runEmbeddedPiAgent reason=${workspaceResolution.fallbackReason} run=${params.runId} session=${redactedSessionId} sessionKey=${redactedSessionKey} agent=${workspaceResolution.agentId} workspace=${redactedWorkspace}`,
         );
       }
+      arkaDiag(
+        `run before ensureRuntimePluginsLoaded runtimePluginIds=${params.runtimePluginIds?.join(",") ?? "none"} installBundledRuntimeDeps=${String(params.installBundledRuntimeDeps)}`,
+      );
       ensureRuntimePluginsLoaded({
         config: params.config,
         workspaceDir: resolvedWorkspace,
         allowGatewaySubagentBinding: params.allowGatewaySubagentBinding,
+        onlyPluginIds: params.runtimePluginIds,
+        installBundledRuntimeDeps: params.installBundledRuntimeDeps,
       });
+      arkaDiag("run after ensureRuntimePluginsLoaded");
 
       let provider = (params.provider ?? DEFAULT_PROVIDER).trim() || DEFAULT_PROVIDER;
       let modelId = (params.model ?? DEFAULT_MODEL).trim() || DEFAULT_MODEL;
@@ -395,6 +412,7 @@ export async function runEmbeddedPiAgent(
         }
       }
 
+      arkaDiag("run before resolveHookModelSelection");
       const hookSelection = await resolveHookModelSelection({
         prompt: params.prompt,
         attachments: buildBeforeModelResolveAttachments(params.images),
@@ -403,9 +421,11 @@ export async function runEmbeddedPiAgent(
         hookRunner,
         hookContext: hookCtx,
       });
+      arkaDiag("run after resolveHookModelSelection");
       provider = hookSelection.provider;
       modelId = hookSelection.modelId;
       const legacyBeforeAgentStartResult = hookSelection.legacyBeforeAgentStartResult;
+      arkaDiag("run before selectAgentHarness");
       const agentHarness = selectAgentHarness({
         provider,
         modelId,
@@ -414,7 +434,11 @@ export async function runEmbeddedPiAgent(
         sessionKey: params.sessionKey,
         agentHarnessId: params.agentHarnessId,
       });
+      arkaDiag(`run after selectAgentHarness id=${agentHarness.id}`);
       const pluginHarnessOwnsTransport = agentHarness.id !== "pi";
+      arkaDiag(
+        `run before resolveModelAsync dynamic skipProviderRuntimeHooks=${params.skipProviderRuntimeHooks === true}`,
+      );
       const dynamicModelResolution = await resolveModelAsync(
         provider,
         modelId,
@@ -425,15 +449,23 @@ export async function runEmbeddedPiAgent(
           // first generating PI models.json. This keeps one-shot model runs from
           // blocking on unrelated provider discovery.
           skipPiDiscovery: true,
+          skipProviderRuntimeHooks: params.skipProviderRuntimeHooks,
         },
       );
+      arkaDiag("run after resolveModelAsync dynamic");
       const modelResolution =
         dynamicModelResolution.model || pluginHarnessOwnsTransport
           ? dynamicModelResolution
           : await (async () => {
+              arkaDiag("run before ensureOpenClawModelsJson");
               await ensureOpenClawModelsJson(params.config, agentDir);
-              return await resolveModelAsync(provider, modelId, agentDir, params.config);
+              arkaDiag("run after ensureOpenClawModelsJson");
+              arkaDiag("run before resolveModelAsync full");
+              return await resolveModelAsync(provider, modelId, agentDir, params.config, {
+                skipProviderRuntimeHooks: params.skipProviderRuntimeHooks,
+              });
             })();
+      arkaDiag("run after modelResolution");
       const { model, error, authStorage, modelRegistry } = modelResolution;
       if (!model) {
         throw new FailoverError(error ?? `Unknown model: ${provider}/${modelId}`, {
@@ -509,24 +541,26 @@ export async function runEmbeddedPiAgent(
             provider,
             preferredProfile: preferredProfileId,
           });
-      const providerPreferredProfileId = lockedProfileId
+      const providerPreferredProfileId = params.skipProviderRuntimeHooks
         ? undefined
-        : resolveProviderAuthProfileId({
-            provider,
-            config: params.config,
-            workspaceDir: resolvedWorkspace,
-            context: {
-              config: params.config,
-              agentDir,
-              workspaceDir: resolvedWorkspace,
+        : lockedProfileId
+          ? undefined
+          : resolveProviderAuthProfileId({
               provider,
-              modelId,
-              preferredProfileId,
-              lockedProfileId,
-              profileOrder,
-              authStore,
-            },
-          });
+              config: params.config,
+              workspaceDir: resolvedWorkspace,
+              context: {
+                config: params.config,
+                agentDir,
+                workspaceDir: resolvedWorkspace,
+                provider,
+                modelId,
+                preferredProfileId,
+                lockedProfileId,
+                profileOrder,
+                authStore,
+              },
+            });
       const providerOrderedProfiles =
         providerPreferredProfileId && profileOrder.includes(providerPreferredProfileId)
           ? [
@@ -566,6 +600,7 @@ export async function runEmbeddedPiAgent(
         attemptedThinking,
         fallbackConfigured,
         allowTransientCooldownProbe: params.allowTransientCooldownProbe === true,
+        skipProviderRuntimeAuth: params.skipProviderRuntimeHooks === true,
         getProvider: () => provider,
         getModelId: () => modelId,
         getRuntimeModel: () => runtimeModel,
@@ -606,7 +641,9 @@ export async function runEmbeddedPiAgent(
       // auth bootstrap here can turn synthetic provider markers into real
       // vendor-token refresh attempts before the plugin gets control.
       if (!pluginHarnessOwnsTransport) {
+        arkaDiag("before initializeAuthProfile");
         await initializeAuthProfile();
+        arkaDiag("after initializeAuthProfile");
       } else if (lockedProfileId) {
         lastProfileId = lockedProfileId;
       }
@@ -739,11 +776,15 @@ export async function runEmbeddedPiAgent(
       };
       // Resolve the context engine once and reuse across retries to avoid
       // repeated initialization/connection overhead per attempt.
+      arkaDiag("before ensureContextEnginesInitialized");
       ensureContextEnginesInitialized();
+      arkaDiag("after ensureContextEnginesInitialized");
+      arkaDiag("before resolveContextEngine");
       const contextEngine = await resolveContextEngine(params.config, {
         agentDir,
         workspaceDir: resolvedWorkspace,
       });
+      arkaDiag(`after resolveContextEngine engine=${contextEngine.info.id}`);
       try {
         let activeSessionId = params.sessionId;
         let activeSessionFile = params.sessionFile;
@@ -813,6 +854,7 @@ export async function runEmbeddedPiAgent(
         // Hoisted so the retry-limit error path can use the most recent API total.
         let lastTurnTotal: number | undefined;
         while (true) {
+          arkaDiag(`run loop start iteration=${runLoopIterations + 1}`);
           if (runLoopIterations >= MAX_RUN_LOOP_ITERATIONS) {
             const message =
               `Exceeded retry limit after ${runLoopIterations} attempts ` +
@@ -851,7 +893,9 @@ export async function runEmbeddedPiAgent(
           const runtimeAuthRetry = authRetryPending;
           authRetryPending = false;
           attemptedThinking.add(thinkLevel);
+          arkaDiag("before workspace mkdir");
           await fs.mkdir(resolvedWorkspace, { recursive: true });
+          arkaDiag("after workspace mkdir");
 
           const basePrompt =
             provider === "anthropic" ? scrubAnthropicRefusalMagic(params.prompt) : params.prompt;
@@ -871,6 +915,7 @@ export async function runEmbeddedPiAgent(
           if (!runtimeAuthState && apiKeyInfo) {
             resolvedStreamApiKey = (apiKeyInfo as ApiKeyInfo).apiKey;
           }
+          arkaDiag("before buildAgentRuntimePlan");
           const runtimePlan = buildAgentRuntimePlan({
             provider,
             modelId,
@@ -890,8 +935,11 @@ export async function runEmbeddedPiAgent(
               ...params.streamParams,
               fastMode: params.fastMode,
             },
+            skipProviderRuntimeHooks: params.skipProviderRuntimeHooks,
           });
+          arkaDiag(`after buildAgentRuntimePlan runtime=${runtimePlan.runtime}`);
 
+          arkaDiag("before runEmbeddedAttemptWithBackend");
           const rawAttempt = await runEmbeddedAttemptWithBackend({
             sessionId: activeSessionId,
             sessionKey: resolvedSessionKey,
@@ -1002,6 +1050,7 @@ export async function runEmbeddedPiAgent(
             bootstrapPromptWarningSignature:
               bootstrapPromptWarningSignaturesSeen[bootstrapPromptWarningSignaturesSeen.length - 1],
           });
+          arkaDiag("after runEmbeddedAttemptWithBackend");
           const attempt = normalizeEmbeddedRunAttemptResult(rawAttempt);
 
           const {

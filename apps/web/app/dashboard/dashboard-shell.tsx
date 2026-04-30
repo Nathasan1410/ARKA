@@ -14,12 +14,12 @@ type DashboardShellProps = {
   initialState: RunScenarioResponse;
 };
 
-type CaseView = 'admin' | 'evidence' | 'agent' | 'proof';
+type CaseView = 'run-movement' | 'order-evidence' | 'simulation' | 'proof';
 
 export function DashboardShell({ initialState }: DashboardShellProps) {
   const [runs, setRuns] = useState<DashboardRun[]>(initialState.history);
   const [selectedCaseId, setSelectedCaseId] = useState(initialState.run.caseId);
-  const [activeView, setActiveView] = useState<CaseView>('admin');
+  const [activeView, setActiveView] = useState<CaseView>('run-movement');
   const [adminOrderQuantity, setAdminOrderQuantity] = useState(String(initialState.run.auditEvent.orderQuantity));
   const [adminMovementGrams, setAdminMovementGrams] = useState(String(initialState.run.auditEvent.actualMovementGrams));
   const [isRunningScenario, setIsRunningScenario] = useState(false);
@@ -51,7 +51,7 @@ export function DashboardShell({ initialState }: DashboardShellProps) {
       setSelectedCaseId(result.run.caseId);
       setAdminOrderQuantity(String(result.run.auditEvent.orderQuantity));
       setAdminMovementGrams(String(result.run.auditEvent.actualMovementGrams));
-      setActiveView(result.run.auditEvent.triageOutcome === TriageOutcome.AUTO_CLEAR ? 'evidence' : 'agent');
+      setActiveView(result.run.auditEvent.triageOutcome === TriageOutcome.AUTO_CLEAR ? 'order-evidence' : 'simulation');
     } catch (error) {
       setRunError(error instanceof Error ? error.message : 'Scenario route failed.');
     } finally {
@@ -72,7 +72,7 @@ export function DashboardShell({ initialState }: DashboardShellProps) {
 
       if (!response.ok) {
         const errorBody = (await response.json().catch(() => null)) as { error?: string } | null;
-        throw new Error(errorBody?.error ?? `Admin simulation failed with HTTP ${response.status}`);
+        throw new Error(errorBody?.error ?? `Movement simulation failed with HTTP ${response.status}`);
       }
 
       const result = (await response.json()) as RunScenarioResponse;
@@ -80,9 +80,9 @@ export function DashboardShell({ initialState }: DashboardShellProps) {
       setSelectedCaseId(result.run.caseId);
       setAdminOrderQuantity(String(result.run.auditEvent.orderQuantity));
       setAdminMovementGrams(String(result.run.auditEvent.actualMovementGrams));
-      setActiveView(result.run.auditEvent.triageOutcome === TriageOutcome.AUTO_CLEAR ? 'evidence' : 'agent');
+      setActiveView(result.run.auditEvent.triageOutcome === TriageOutcome.AUTO_CLEAR ? 'order-evidence' : 'simulation');
     } catch (error) {
-      setRunError(error instanceof Error ? error.message : 'Admin simulation failed.');
+      setRunError(error instanceof Error ? error.message : 'Movement simulation failed.');
     } finally {
       setIsRunningAdminSimulation(false);
     }
@@ -127,7 +127,7 @@ export function DashboardShell({ initialState }: DashboardShellProps) {
       const result = (await response.json()) as RunScenarioResponse;
       setRuns(result.history);
       setSelectedCaseId(result.run.caseId);
-      setActiveView('agent');
+      setActiveView('simulation');
     } catch (error) {
       setRunError(error instanceof Error ? error.message : 'Agent simulation failed.');
     } finally {
@@ -153,80 +153,81 @@ export function DashboardShell({ initialState }: DashboardShellProps) {
     <main className="app-shell">
       <header className="topbar">
         <div>
-          <p className="eyebrow">ARKA Audit Case Console</p>
-          <h1>Run a case, inspect the mismatch, decide the next action.</h1>
+          <p className="eyebrow">ARKA Operator Console</p>
+          <h1>Reconcile intent vs reality.</h1>
           <p>
-            Protein Shake demo: 3 orders should use 90g Whey Protein. The dashboard shows what happened, why ARKA
-            triaged it, and which proof state exists locally.
+            Protein Shake demo: 3 orders = 90g expected Whey Protein usage. Run movements to see how ARKA reconciles differences, assigns triage outcomes, and tracks local proofs.
           </p>
         </div>
         <div className="status-stack">
           <span className="chip" data-tone="info">API route - LOCAL</span>
           <span className="chip" data-tone="warning">DB - {selectedRun.persistence.mode}</span>
           <span className="chip" data-tone="warning">Agent - SIMULATED</span>
-          <span className="chip" data-tone="warning">
-            Proof - {selectedRun.proofRecord.storageStatus} / {selectedRun.proofRecord.chainStatus}
-          </span>
         </div>
       </header>
 
       <div className="audit-workspace">
         <aside className="scenario-rail">
           <section className="panel">
-            <h2>Scenario Cards</h2>
+            <h2>Scenario Control</h2>
             <p className="panel-subtitle">
-              {demoWorldSeed.productName} uses {demoWorldSeed.usageRule.gramsPerUnit}g {demoWorldSeed.inventoryItemName}
-              . Handler: {demoWorldSeed.handler.name}.
+              {demoWorldSeed.productName} uses {demoWorldSeed.usageRule.gramsPerUnit}g {demoWorldSeed.inventoryItemName}.
             </p>
-            <div className="scenario-stack">
-              {scenarioCards.map((card) => {
-                const scenario = demoScenarioSeeds[card.key];
-                const difference = scenario.actualMovementGrams - scenario.expectedUsageGrams;
-
-                return (
-                  <button
-                    key={card.key}
-                    className="scenario-button compact"
-                    data-active={selectedRun.scenario.scenarioKey === card.key}
-                    disabled={isRunningScenario}
-                    onClick={() => void handleRunScenario(card.key)}
-                    type="button"
-                  >
-                    <span className="scenario-title">{card.title}</span>
-                    <span className="scenario-line">
-                      {scenario.expectedUsageGrams}g expected / {scenario.actualMovementGrams}g actual
-                    </span>
-                    <span className="scenario-line">
-                      {difference > 0 ? '+' : ''}
-                      {difference}g / {scenario.triageOutcome}
-                    </span>
-                    <span className="scenario-line">{card.expectedOutcome}</span>
-                    <span className="scenario-line">{card.triagePath}</span>
-                    <span className="scenario-line">{card.proofPath}</span>
-                  </button>
-                );
-              })}
+            <div className="scenario-dropdown-box">
+              <label className="label">Select Scenario</label>
+              <div className="scenario-select-row">
+                <select 
+                  className="scenario-select"
+                  disabled={isRunningScenario}
+                  onChange={(e) => {
+                    const key = e.target.value as ScenarioKeyType;
+                    void handleRunScenario(key);
+                  }}
+                  value={selectedRun.scenario.scenarioKey}
+                >
+                  {scenarioCards.map((card) => (
+                    <option key={card.key} value={card.key}>
+                      {card.title}
+                    </option>
+                  ))}
+                </select>
+                <button 
+                  className="action-button primary-action compact"
+                  disabled={isRunningScenario}
+                  onClick={() => void handleRunScenario(selectedRun.scenario.scenarioKey as ScenarioKeyType)}
+                  type="button"
+                >
+                  Run
+                </button>
+              </div>
+              <div className="scenario-preview-box">
+                <span className="scenario-title">{scenarioCards.find(c => c.key === selectedRun.scenario.scenarioKey)?.title}</span>
+                <p className="scenario-line">Expected result: {scenarioCards.find(c => c.key === selectedRun.scenario.scenarioKey)?.expectedOutcome}</p>
+                <p className="scenario-line">Triage: {scenarioCards.find(c => c.key === selectedRun.scenario.scenarioKey)?.triagePath}</p>
+              </div>
             </div>
             {runError ? <p className="error-text">{runError}</p> : null}
           </section>
 
           <section className="panel">
             <h2>Case History</h2>
-            <div className="history-list compact">
-              {runs.map((run) => (
-                <button
-                  key={run.caseId}
-                  className="history-button"
-                  data-active={run.caseId === selectedRun.caseId}
-                  onClick={() => handleSelectRun(run)}
-                  type="button"
-                >
-                  <HistoryCell
-                    title={run.caseId}
-                    detail={`${run.scenario.scenarioKey} / ${run.auditEvent.severity} / ${run.proofRecord.auditProofStatus}`}
-                  />
-                </button>
-              ))}
+            <div className="history-scroll-box">
+              <div className="history-list compact">
+                {runs.map((run) => (
+                  <button
+                    key={run.caseId}
+                    className="history-button"
+                    data-active={run.caseId === selectedRun.caseId}
+                    onClick={() => handleSelectRun(run)}
+                    type="button"
+                  >
+                    <HistoryCell
+                      title={run.caseId}
+                      detail={`${run.scenario.scenarioKey} / ${run.auditEvent.severity} / ${run.proofRecord.auditProofStatus}`}
+                    />
+                  </button>
+                ))}
+              </div>
             </div>
           </section>
         </aside>
@@ -249,7 +250,7 @@ export function DashboardShell({ initialState }: DashboardShellProps) {
             </div>
 
             <div className="comparison-strip">
-              <MetricBlock label="Expected" value={`${selectedRun.auditEvent.expectedUsageGrams}g`} detail="3 shakes x 30g" />
+              <MetricBlock label="Expected" value={`${selectedRun.auditEvent.expectedUsageGrams}g`} detail={`${selectedRun.auditEvent.orderQuantity} shakes x ${demoWorldSeed.usageRule.gramsPerUnit}g`} />
               <MetricBlock label="Actual movement" value={`${selectedRun.auditEvent.actualMovementGrams}g`} detail="Whey Protein OUT" />
               <MetricBlock
                 label="Difference"
@@ -269,14 +270,15 @@ export function DashboardShell({ initialState }: DashboardShellProps) {
 
             <div className="next-action">
               <div>
-                <span className="label">Current action</span>
+                <span className="label">Next Action / Review</span>
                 <h3>{selectedRun.simulatedAgent.headline}</h3>
                 <p>{selectedRun.simulatedAgent.ownerMessage}</p>
               </div>
               <div className="proof-snapshot">
-                <span className="status-pill" data-tone="info">{selectedRun.proofRecord.auditProofStatus}</span>
-                <span className="status-pill" data-tone="warning">Storage {selectedRun.proofRecord.storageStatus}</span>
-                <span className="status-pill" data-tone="warning">Chain {selectedRun.proofRecord.chainStatus}</span>
+                <span className="status-pill" data-tone="info">Proof: {selectedRun.proofRecord.auditProofStatus}</span>
+                <span className="status-pill" data-tone="warning">Storage: {selectedRun.proofRecord.storageStatus}</span>
+                <span className="status-pill" data-tone="warning">Chain: {selectedRun.proofRecord.chainStatus}</span>
+                <span className="status-pill" data-tone="info">Hash: {selectedRun.proofRecord.localPackageHash ? `${selectedRun.proofRecord.localPackageHash.substring(0, 10)}...` : 'N/A'}</span>
               </div>
               {actionAvailable ? (
                 <div className="agent-actions">
@@ -297,21 +299,21 @@ export function DashboardShell({ initialState }: DashboardShellProps) {
           </section>
 
           <nav className="view-tabs" aria-label="Case detail views">
-            <button data-active={activeView === 'admin'} onClick={() => setActiveView('admin')} type="button">
-              Admin Movement
+            <button data-active={activeView === 'run-movement'} onClick={() => setActiveView('run-movement')} type="button">
+              Run Movement
             </button>
-            <button data-active={activeView === 'evidence'} onClick={() => setActiveView('evidence')} type="button">
-              Evidence
+            <button data-active={activeView === 'order-evidence'} onClick={() => setActiveView('order-evidence')} type="button">
+              Order & Evidence
             </button>
-            <button data-active={activeView === 'agent'} onClick={() => setActiveView('agent')} type="button">
-              Triage Simulation
+            <button data-active={activeView === 'simulation'} onClick={() => setActiveView('simulation')} type="button">
+              Simulation
             </button>
             <button data-active={activeView === 'proof'} onClick={() => setActiveView('proof')} type="button">
               Proof Status
             </button>
           </nav>
 
-          {activeView === 'admin' ? (
+          {activeView === 'run-movement' ? (
             <AdminSimulationView
               adminMovementGrams={adminMovementGrams}
               adminOrderQuantity={adminOrderQuantity}
@@ -320,11 +322,10 @@ export function DashboardShell({ initialState }: DashboardShellProps) {
               onOrderChange={setAdminOrderQuantity}
               onPresetRun={(input) => void handleAdminSimulation(input)}
               onSubmit={handleAdminSubmit}
-              selectedRun={selectedRun}
             />
           ) : null}
-          {activeView === 'evidence' ? <EvidenceView selectedRun={selectedRun} movementDifference={movementDifference} /> : null}
-          {activeView === 'agent' ? <AgentView selectedRun={selectedRun} /> : null}
+          {activeView === 'order-evidence' ? <EvidenceView selectedRun={selectedRun} movementDifference={movementDifference} /> : null}
+          {activeView === 'simulation' ? <AgentView selectedRun={selectedRun} /> : null}
           {activeView === 'proof' ? <ProofView selectedRun={selectedRun} /> : null}
         </section>
       </div>
@@ -340,7 +341,6 @@ function AdminSimulationView({
   onOrderChange,
   onPresetRun,
   onSubmit,
-  selectedRun,
 }: {
   adminMovementGrams: string;
   adminOrderQuantity: string;
@@ -349,7 +349,6 @@ function AdminSimulationView({
   onOrderChange: (value: string) => void;
   onPresetRun: (input: AdminSimulationInput) => void;
   onSubmit: () => void;
-  selectedRun: DashboardRun;
 }) {
   const orderQuantity = Number(adminOrderQuantity);
   const actualMovementGrams = Number(adminMovementGrams);
@@ -359,8 +358,8 @@ function AdminSimulationView({
   return (
     <section className="detail-grid">
       <article className="panel">
-        <h2>Admin Order Entry</h2>
-        <p className="panel-subtitle">Enter the order count and the recorded inventory movement, then run reconciliation.</p>
+        <h2>Manual Override</h2>
+        <p className="panel-subtitle">Input custom quantity and movement, then run reconciliation to see triage outcome.</p>
         <div className="admin-form">
           <label>
             <span className="label">Protein Shake quantity</span>
@@ -401,6 +400,7 @@ function AdminSimulationView({
 
       <article className="panel">
         <h2>Movement Preview</h2>
+        <p className="panel-subtitle">Review before running simulation.</p>
         <div className="panel-grid">
           <Kv label="Usage rule" value={`1 ${demoWorldSeed.productName} = ${demoWorldSeed.usageRule.gramsPerUnit}g`} />
           <Kv label="Expected usage" value={`${expectedUsageGrams}g`} />
@@ -408,18 +408,6 @@ function AdminSimulationView({
           <Kv label="Difference" value={`${difference > 0 ? '+' : ''}${difference}g`} />
           <Kv label="Handler" value={demoWorldSeed.handler.name} />
           <Kv label="Container" value={demoWorldSeed.containerId} />
-        </div>
-      </article>
-
-      <article className="panel detail-span">
-        <h2>Last Simulation Result</h2>
-        <div className="panel-grid wide">
-          <Kv label="Case ID" value={selectedRun.caseId} />
-          <Kv label="Status" value={selectedRun.auditEvent.status} />
-          <Kv label="Severity" value={selectedRun.auditEvent.severity} />
-          <Kv label="Triage" value={selectedRun.auditEvent.triageOutcome} />
-          <Kv label="Proof" value={selectedRun.proofRecord.auditProofStatus} />
-          <Kv label="Local hash" value={selectedRun.proofRecord.localPackageHash} code />
         </div>
       </article>
     </section>
@@ -478,7 +466,7 @@ function AgentView({ selectedRun }: { selectedRun: DashboardRun }) {
   return (
     <section className="detail-grid">
       <article className="panel">
-        <h2>Agent State</h2>
+        <h2>Simulation State</h2>
         <div className="panel-grid">
           <Kv label="Mode" value={selectedRun.simulatedAgent.mode} />
           <Kv label="State" value={selectedRun.simulatedAgent.status} />
@@ -540,7 +528,7 @@ function ProofView({ selectedRun }: { selectedRun: DashboardRun }) {
   return (
     <section className="detail-grid">
       <article className="panel detail-span">
-        <h2>Proof Status</h2>
+        <h2>Local Proof Package</h2>
         <p className="panel-subtitle">{selectedRun.proofSummary}</p>
         <div className="panel-grid wide">
           <Kv label="Proof record ID" value={selectedRun.proofRecord.proofRecordId} />
@@ -612,7 +600,7 @@ function HistoryCell({ title, detail }: { title: string | null; detail: string }
 }
 
 function renderRecommendedAction(triageOutcome: TriageOutcome): string {
-  if (triageOutcome === TriageOutcome.AUTO_CLEAR) return 'Auto-clear locally and keep the case in dashboard history.';
+  if (triageOutcome === TriageOutcome.AUTO_CLEAR) return 'Auto-clear locally and keep the case in history.';
   if (triageOutcome === TriageOutcome.REQUEST_EXPLANATION) return 'Explanation requested after owner approval.';
   return 'Needs immediate owner or auditor review.';
 }

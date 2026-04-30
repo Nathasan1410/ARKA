@@ -111,6 +111,14 @@ export type AgentCommandOpts = {
   promptMode?: PromptMode;
   /** Internal ACP-ready session turn source. Manual spawn turns bypass only the dispatch gate. */
   acpTurnSource?: AcpTurnSource;
+  /** Internal runtime plugin scope for bounded local smoke runs. */
+  runtimePluginIds?: string[];
+  /** Internal option to avoid bundled dependency staging during scoped local smoke runs. */
+  installBundledRuntimeDeps?: boolean;
+  /** Internal option to use configured model definitions without provider runtime hooks. */
+  skipProviderRuntimeHooks?: boolean;
+  /** Internal option to skip bundled tool construction for bounded local smoke runs. */
+  disableTools?: boolean;
 };
 
 export type AgentCommandIngressOpts = Omit<

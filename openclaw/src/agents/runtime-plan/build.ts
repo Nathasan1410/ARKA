@@ -58,6 +58,9 @@ export function buildAgentRuntimeDeliveryPlan(
       return isSilentReplyPayloadText(payload.text, SILENT_REPLY_TOKEN) && !hasMedia(payload);
     },
     resolveFollowupRoute(routeParams) {
+      if (params.skipProviderRuntimeHooks) {
+        return undefined;
+      }
       return resolveProviderFollowupFallbackRoute({
         provider: params.provider,
         config,
@@ -139,6 +142,7 @@ export function buildAgentRuntimePlan(params: BuildAgentRuntimePlanParams): Agen
       env: process.env,
       modelApi: overrides?.modelApi ?? modelApi,
       model: asProviderRuntimeModel(overrides?.model) ?? model,
+      skipProviderRuntimeHooks: params.skipProviderRuntimeHooks,
     });
   const resolveTransportExtraParams = (
     overrides: Parameters<AgentRuntimePlan["transport"]["resolveExtraParams"]>[0] = {},
@@ -154,15 +158,20 @@ export function buildAgentRuntimePlan(params: BuildAgentRuntimePlanParams): Agen
       agentId: overrides.agentId ?? params.agentId,
       model: asProviderRuntimeModel(overrides.model) ?? model,
       resolvedTransport: overrides.resolvedTransport ?? transport,
+      skipProviderRuntimeHooks: params.skipProviderRuntimeHooks,
     });
 
   return {
+    ...(params.skipProviderRuntimeHooks ? { skipProviderRuntimeHooks: true } : {}),
     resolvedRef,
     auth,
     prompt: {
       provider: params.provider,
       modelId: params.modelId,
       resolveSystemPromptContribution(context) {
+        if (params.skipProviderRuntimeHooks) {
+          return {};
+        }
         return resolveProviderSystemPromptContribution({
           provider: params.provider,
           config,
@@ -183,6 +192,9 @@ export function buildAgentRuntimePlan(params: BuildAgentRuntimePlanParams): Agen
           model?: BuildAgentRuntimePlanParams["model"];
         },
       ): AgentTool<TSchemaType, TResult>[] {
+        if (params.skipProviderRuntimeHooks) {
+          return tools;
+        }
         return normalizeProviderToolSchemas({
           ...resolveToolContext(overrides),
           tools,
@@ -196,6 +208,9 @@ export function buildAgentRuntimePlan(params: BuildAgentRuntimePlanParams): Agen
           model?: BuildAgentRuntimePlanParams["model"];
         },
       ): void {
+        if (params.skipProviderRuntimeHooks) {
+          return;
+        }
         logProviderToolSchemaDiagnostics({
           ...resolveToolContext(overrides),
           tools,

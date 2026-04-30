@@ -13,7 +13,8 @@ OpenClaw gateway smoke: VERIFIED for local dev gateway connectivity
 ARKA OpenClaw workspace draft: CREATED
 ARKA OpenClaw skill loaded by runtime: VERIFIED
 MiniMax model configured/discovered: VERIFIED
-Model-backed ARKA agent turn: NOT VERIFIED
+Model-backed ARKA inference turn: VERIFIED through local `infer model run`
+Full ARKA agent session turn: NOT VERIFIED
 ARKA OpenClaw plugin skeleton: IMPLEMENTED / STATIC-SMOKE VERIFIED
 ARKA OpenClaw plugin gateway load: NOT VERIFIED
 ARKA packages/agent integration with OpenClaw: NOT IMPLEMENTED
@@ -319,7 +320,7 @@ Truthful gateway result:
 ```txt
 Local dev gateway connectivity is verified.
 Operator-scope authenticated control is not verified.
-Model-backed agent turns are not verified.
+One bounded local model-backed inference turn is verified; full agent session turns are not verified.
 ```
 
 ## 7. ARKA Workspace And Skill Files Created
@@ -650,5 +651,6 @@ Strict-smoke build success = already verified.
 CLI success = already verified through node openclaw\openclaw.mjs.
 Gateway success = already verified for local dev connectivity.
 ARKA workspace success = already verified; skills list includes arka-audit.
-Model-backed ARKA turn success = not verified yet.
+Model-backed ARKA inference turn success = verified once through local `infer model run`.
+Full OpenClaw ARKA agent session success = not verified yet.
 ```

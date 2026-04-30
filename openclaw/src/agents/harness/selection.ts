@@ -26,6 +26,12 @@ import { adaptAgentHarnessToV2, runAgentHarnessV2LifecycleAttempt } from "./v2.j
 
 const log = createSubsystemLogger("agents/harness");
 
+const arkaDiag = (message: string) => {
+  if (process.env.OPENCLAW_ARKA_DIAG === "1") {
+    console.error(`[arka-diag] ${new Date().toISOString()} ${message}`);
+  }
+};
+
 type AgentHarnessPolicy = {
   runtime: EmbeddedAgentRuntime;
   fallback: EmbeddedAgentHarnessFallback;
@@ -175,6 +181,7 @@ function selectAgentHarnessDecision(params: {
 export async function runAgentHarnessAttemptWithFallback(
   params: EmbeddedRunAttemptParams,
 ): Promise<EmbeddedRunAttemptResult> {
+  arkaDiag("harness before selectAgentHarnessDecision");
   const selection = selectAgentHarnessDecision({
     provider: params.provider,
     modelId: params.modelId,
@@ -183,15 +190,21 @@ export async function runAgentHarnessAttemptWithFallback(
     sessionKey: params.sessionKey,
     agentHarnessId: params.agentHarnessId,
   });
+  arkaDiag(`harness after selectAgentHarnessDecision selected=${selection.selectedHarnessId}`);
   const harness = selection.harness;
+  arkaDiag("harness before logAgentHarnessSelection");
   logAgentHarnessSelection(selection, {
     provider: params.provider,
     modelId: params.modelId,
     sessionKey: params.sessionKey,
     agentId: params.agentId,
   });
+  arkaDiag("harness after logAgentHarnessSelection");
+  arkaDiag("harness before adaptAgentHarnessToV2");
   const v2Harness = adaptAgentHarnessToV2(harness);
+  arkaDiag("harness after adaptAgentHarnessToV2");
   if (harness.id === "pi") {
+    arkaDiag("harness before runAgentHarnessV2LifecycleAttempt pi");
     return await runAgentHarnessV2LifecycleAttempt(v2Harness, params);
   }
 

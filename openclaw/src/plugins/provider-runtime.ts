@@ -630,7 +630,10 @@ export async function prepareProviderRuntimeAuth(params: {
   env?: NodeJS.ProcessEnv;
   context: ProviderPrepareRuntimeAuthContext;
 }) {
-  return await resolveProviderRuntimePlugin(params)?.prepareRuntimeAuth?.(params.context);
+  return await resolveProviderRuntimePlugin({
+    ...params,
+    installBundledRuntimeDeps: false,
+  })?.prepareRuntimeAuth?.(params.context);
 }
 
 export async function resolveProviderUsageAuthWithPlugin(params: {

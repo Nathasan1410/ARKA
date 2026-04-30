@@ -185,9 +185,10 @@ export function resolveTranscriptPolicy(params: {
   workspaceDir?: string;
   env?: NodeJS.ProcessEnv;
   model?: ProviderRuntimeModel;
+  skipProviderRuntimeHooks?: boolean;
 }): TranscriptPolicy {
   const provider = normalizeProviderId(params.provider ?? "");
-  const runtimePlugin = provider
+  const runtimePlugin = provider && !params.skipProviderRuntimeHooks
     ? resolveProviderRuntimePlugin({
         provider,
         config: params.config,

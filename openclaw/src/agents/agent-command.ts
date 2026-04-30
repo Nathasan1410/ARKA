@@ -68,6 +68,11 @@ import { resolveAgentTimeoutMs } from "./timeout.js";
 import { ensureAgentWorkspace } from "./workspace.js";
 
 const log = createSubsystemLogger("agents/agent-command");
+const arkaDiag = (message: string) => {
+  if (process.env.OPENCLAW_ARKA_DIAG === "1") {
+    console.error(`[arka-diag] ${new Date().toISOString()} ${message}`);
+  }
+};
 type AttemptExecutionRuntime = typeof import("./command/attempt-execution.runtime.js");
 type AgentAttemptResult = Awaited<ReturnType<AttemptExecutionRuntime["runAgentAttempt"]>>;
 type AcpManagerRuntime = typeof import("../acp/control-plane/manager.js");
@@ -215,6 +220,26 @@ const OVERRIDE_FIELDS_CLEARED_BY_DELETE: OverrideFieldClearedByDelete[] = [
 ];
 
 const OVERRIDE_VALUE_MAX_LENGTH = 256;
+const SESSION_FILE_HAS_CONTENT_TIMEOUT_MS = 2_000;
+
+async function sessionFileHasContentBestEffort(params: {
+  runtime: AttemptExecutionRuntime;
+  sessionFile: string;
+}): Promise<boolean> {
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  try {
+    return await Promise.race([
+      params.runtime.sessionFileHasContent(params.sessionFile),
+      new Promise<boolean>((resolve) => {
+        timer = setTimeout(() => resolve(false), SESSION_FILE_HAS_CONTENT_TIMEOUT_MS);
+      }),
+    ]);
+  } finally {
+    if (timer) {
+      clearTimeout(timer);
+    }
+  }
+}
 
 async function persistSessionEntry(params: PersistSessionEntryParams): Promise<void> {
   await persistSessionEntryBase({
@@ -255,6 +280,7 @@ async function prepareAgentCommandExecution(
   opts: AgentCommandOpts & { senderIsOwner: boolean },
   runtime: RuntimeEnv,
 ) {
+  arkaDiag("before prepareAgentCommandExecution");
   const isRawModelRun = opts.modelRun === true || opts.promptMode === "none";
   const message = opts.message ?? "";
   if (!message.trim()) {
@@ -264,9 +290,11 @@ async function prepareAgentCommandExecution(
     throw new Error("Pass --to <E.164>, --session-id, or --agent to choose a session");
   }
 
+  arkaDiag("prepare before resolveAgentRuntimeConfig");
   const { cfg } = await resolveAgentRuntimeConfig(runtime, {
     runtimeTargetsChannelSecrets: opts.deliver === true,
   });
+  arkaDiag("prepare after resolveAgentRuntimeConfig");
   const normalizedSpawned = normalizeSpawnedRunMetadata({
     spawnedBy: opts.spawnedBy,
     groupId: opts.groupId,
@@ -330,6 +358,7 @@ async function prepareAgentCommandExecution(
     overrideSeconds: timeoutSecondsRaw,
   });
 
+  arkaDiag("prepare before resolveSession");
   const sessionResolution = resolveSession({
     cfg,
     to: opts.to,
@@ -337,6 +366,7 @@ async function prepareAgentCommandExecution(
     sessionKey: opts.sessionKey,
     agentId: agentIdOverride,
   });
+  arkaDiag("prepare after resolveSession");
 
   const {
     sessionId,
@@ -363,20 +393,26 @@ async function prepareAgentCommandExecution(
   const workspaceDirRaw =
     normalizedSpawned.workspaceDir ?? resolveAgentWorkspaceDir(cfg, sessionAgentId);
   const agentDir = resolveAgentDir(cfg, sessionAgentId);
+  arkaDiag("prepare before ensureAgentWorkspace");
   const workspace = await ensureAgentWorkspace({
     dir: workspaceDirRaw,
     ensureBootstrapFiles: !agentCfg?.skipBootstrap,
   });
+  arkaDiag("prepare after ensureAgentWorkspace");
   const workspaceDir = workspace.dir;
   const runId = opts.runId?.trim() || sessionId;
+  arkaDiag("prepare before loadAcpManagerRuntime");
   const { getAcpSessionManager } = await loadAcpManagerRuntime();
+  arkaDiag("prepare after loadAcpManagerRuntime");
   const acpManager = getAcpSessionManager();
+  arkaDiag("prepare before acp resolveSession");
   const acpResolution = sessionKey
     ? acpManager.resolveSession({
         cfg,
         sessionKey,
       })
     : null;
+  arkaDiag("prepare after acp resolveSession");
   const body =
     !isRawModelRun && acpResolution?.kind === "ready"
       ? resolveAcpPromptBody(message, opts.internalEvents)
@@ -384,6 +420,7 @@ async function prepareAgentCommandExecution(
   const transcriptBody =
     opts.transcriptMessage ?? resolveInternalEventTranscriptBody(message, opts.internalEvents);
 
+  arkaDiag("prepare returning");
   return {
     body,
     transcriptBody,
@@ -417,9 +454,12 @@ async function agentCommandInternal(
   runtime: RuntimeEnv = defaultRuntime,
   deps?: CliDeps,
 ) {
+  arkaDiag("before resolveAgentCommandDeps");
   const resolvedDeps = await resolveAgentCommandDeps(deps);
+  arkaDiag("after resolveAgentCommandDeps");
   const isRawModelRun = opts.modelRun === true || opts.promptMode === "none";
   const prepared = await prepareAgentCommandExecution(opts, runtime);
+  arkaDiag("after prepareAgentCommandExecution");
   const {
     body,
     transcriptBody,
@@ -900,7 +940,9 @@ async function agentCommandInternal(
 
     const startedAt = Date.now();
     let lifecycleEnded = false;
+    arkaDiag("before loadAttemptExecutionRuntime");
     const attemptExecutionRuntime = await loadAttemptExecutionRuntime();
+    arkaDiag("after loadAttemptExecutionRuntime");
     const runContext = resolveAgentRunContext(opts);
     const messageChannel = resolveMessageChannel(
       runContext.messageChannel,
@@ -951,8 +993,17 @@ async function agentCommandInternal(
               result,
             }),
           run: async (providerOverride, modelOverride, runOptions) => {
+            arkaDiag("before attemptExecutionRuntime.runAgentAttempt");
             const isFallbackRetry = fallbackAttemptIndex > 0;
             fallbackAttemptIndex += 1;
+            arkaDiag("before sessionHasHistory resolution");
+            const sessionHasHistory = !isNewSession
+              ? true
+              : await sessionFileHasContentBestEffort({
+                  runtime: attemptExecutionRuntime,
+                  sessionFile,
+                });
+            arkaDiag(`after sessionHasHistory resolution value=${sessionHasHistory}`);
             return attemptExecutionRuntime.runAgentAttempt({
               providerOverride,
               modelOverride,
@@ -980,8 +1031,7 @@ async function agentCommandInternal(
               sessionStore,
               storePath,
               allowTransientCooldownProbe: runOptions?.allowTransientCooldownProbe,
-              sessionHasHistory:
-                !isNewSession || (await attemptExecutionRuntime.sessionFileHasContent(sessionFile)),
+              sessionHasHistory,
               onAgentEvent: (evt) => {
                 if (evt.stream.startsWith("codex_app_server.")) {
                   emitAgentEvent({

@@ -364,6 +364,12 @@ export {
 
 const MAX_BTW_SNAPSHOT_MESSAGES = 100;
 
+const arkaDiag = (message: string) => {
+  if (process.env.OPENCLAW_ARKA_DIAG === "1") {
+    console.error(`[arka-diag] ${new Date().toISOString()} ${message}`);
+  }
+};
+
 export function resolveUnknownToolGuardThreshold(loopDetection?: {
   enabled?: boolean;
   unknownToolThreshold?: number;
@@ -582,29 +588,40 @@ function collectAttemptExplicitToolAllowlistSources(params: {
 export async function runEmbeddedAttempt(
   params: EmbeddedRunAttemptParams,
 ): Promise<EmbeddedRunAttemptResult> {
+  arkaDiag(
+    `attempt start disableTools=${params.disableTools === true} modelRun=${params.modelRun === true} promptMode=${params.promptMode ?? "unset"}`,
+  );
   const resolvedWorkspace = resolveUserPath(params.workspaceDir);
+  arkaDiag("attempt after resolveUserPath");
   const runAbortController = new AbortController();
   configureEmbeddedAttemptHttpRuntime({ timeoutMs: params.timeoutMs });
+  arkaDiag("attempt after configureEmbeddedAttemptHttpRuntime");
 
   log.debug(
     `embedded run start: runId=${params.runId} sessionId=${params.sessionId} provider=${params.provider} model=${params.modelId} thinking=${params.thinkLevel} messageChannel=${params.messageChannel ?? params.messageProvider ?? "unknown"}`,
   );
 
+  arkaDiag("attempt before resolvedWorkspace mkdir");
   await fs.mkdir(resolvedWorkspace, { recursive: true });
+  arkaDiag("attempt after resolvedWorkspace mkdir");
 
   const sandboxSessionKey =
     params.sandboxSessionKey?.trim() || params.sessionKey?.trim() || params.sessionId;
+  arkaDiag("attempt before resolveSandboxContext");
   const sandbox = await resolveSandboxContext({
     config: params.config,
     sessionKey: sandboxSessionKey,
     workspaceDir: resolvedWorkspace,
   });
+  arkaDiag("attempt after resolveSandboxContext");
   const effectiveWorkspace = sandbox?.enabled
     ? sandbox.workspaceAccess === "rw"
       ? resolvedWorkspace
       : sandbox.workspaceDir
     : resolvedWorkspace;
+  arkaDiag("attempt before effectiveWorkspace mkdir");
   await fs.mkdir(effectiveWorkspace, { recursive: true });
+  arkaDiag("attempt after effectiveWorkspace mkdir");
   const { sessionAgentId } = resolveSessionAgentIds({
     sessionKey: params.sessionKey,
     config: params.config,
@@ -622,12 +639,14 @@ export async function runEmbeddedAttempt(
     | ((outcome: "completed" | "aborted" | "error", err?: unknown) => void)
     | undefined;
   try {
+    arkaDiag("attempt before resolveEmbeddedRunSkillEntries");
     const { shouldLoadSkillEntries, skillEntries } = resolveEmbeddedRunSkillEntries({
       workspaceDir: effectiveWorkspace,
       config: params.config,
       agentId: sessionAgentId,
       skillsSnapshot: params.skillsSnapshot,
     });
+    arkaDiag("attempt after resolveEmbeddedRunSkillEntries");
     restoreSkillEnv = params.skillsSnapshot
       ? applySkillEnvOverridesFromSnapshot({
           snapshot: params.skillsSnapshot,
@@ -693,6 +712,7 @@ export async function runEmbeddedAttempt(
         ...(err ? { errorCategory: diagnosticErrorCategory(err) } : {}),
       });
     };
+    arkaDiag("attempt before create toolsRaw");
     const toolsRaw =
       params.disableTools || isRawModelRun
         ? []
@@ -760,8 +780,11 @@ export async function runEmbeddedAttempt(
             });
             return applyEmbeddedAttemptToolsAllow(allTools, params.toolsAllow);
           })();
+    arkaDiag(`attempt after create toolsRaw count=${toolsRaw.length}`);
     const toolsEnabled = supportsModelTools(params.model);
+    arkaDiag(`attempt toolsEnabled=${toolsEnabled}`);
     const bootstrapHasFileAccess = toolsEnabled && toolsRaw.some((tool) => tool.name === "read");
+    arkaDiag("attempt before resolveAttemptWorkspaceBootstrapRouting");
     const bootstrapRouting = await resolveAttemptWorkspaceBootstrapRouting({
       isWorkspaceBootstrapPending,
       bootstrapContextRunKind: params.bootstrapContextRunKind,
@@ -773,8 +796,10 @@ export async function runEmbeddedAttempt(
       resolvedWorkspace,
       hasBootstrapFileAccess: bootstrapHasFileAccess,
     });
+    arkaDiag("attempt after resolveAttemptWorkspaceBootstrapRouting");
     const bootstrapMode = bootstrapRouting.bootstrapMode;
     const shouldStripBootstrapFromContext = bootstrapRouting.shouldStripBootstrapFromContext;
+    arkaDiag("attempt before resolveAttemptBootstrapContext");
     const {
       bootstrapFiles: hookAdjustedBootstrapFiles,
       contextFiles: resolvedContextFiles,
@@ -803,6 +828,7 @@ export async function runEmbeddedAttempt(
           runKind: params.bootstrapContextRunKind,
         }),
     });
+    arkaDiag("attempt after resolveAttemptBootstrapContext");
     const remappedContextFiles = remapInjectedContextFilesToWorkspace({
       files: resolvedContextFiles,
       sourceWorkspaceDir: resolvedWorkspace,
@@ -883,35 +909,53 @@ export async function runEmbeddedAttempt(
       disableTools: params.disableTools || isRawModelRun,
       toolsAllow: params.toolsAllow,
     });
+    arkaDiag(`bundle mcp enabled=${bundleMcpEnabled}`);
     const bundleMcpSessionRuntime = bundleMcpEnabled
-      ? await getOrCreateSessionMcpRuntime({
-          sessionId: params.sessionId,
-          sessionKey: params.sessionKey,
-          workspaceDir: effectiveWorkspace,
-          cfg: params.config,
-        })
-      : undefined;
-    const bundleMcpRuntime = bundleMcpSessionRuntime
-      ? await materializeBundleMcpToolsForRun({
-          runtime: bundleMcpSessionRuntime,
-          reservedToolNames: [
-            ...tools.map((tool) => tool.name),
-            ...(clientTools?.map((tool) => tool.function.name) ?? []),
-          ],
-        })
-      : undefined;
-    const bundleLspRuntime =
-      toolsEnabled && !isRawModelRun
-        ? await createBundleLspToolRuntime({
+      ? await (async () => {
+          arkaDiag("before getOrCreateSessionMcpRuntime");
+          const runtime = await getOrCreateSessionMcpRuntime({
+            sessionId: params.sessionId,
+            sessionKey: params.sessionKey,
             workspaceDir: effectiveWorkspace,
             cfg: params.config,
+          });
+          arkaDiag("after getOrCreateSessionMcpRuntime");
+          return runtime;
+        })()
+      : undefined;
+    const bundleMcpRuntime = bundleMcpSessionRuntime
+      ? await (async () => {
+          arkaDiag("before materializeBundleMcpToolsForRun");
+          const runtime = await materializeBundleMcpToolsForRun({
+            runtime: bundleMcpSessionRuntime,
             reservedToolNames: [
               ...tools.map((tool) => tool.name),
               ...(clientTools?.map((tool) => tool.function.name) ?? []),
-              ...(bundleMcpRuntime?.tools.map((tool) => tool.name) ?? []),
             ],
-          })
+          });
+          arkaDiag("after materializeBundleMcpToolsForRun");
+          return runtime;
+        })()
+      : undefined;
+    const bundleLspRuntime =
+      toolsEnabled && !params.disableTools && !isRawModelRun
+        ? await (async () => {
+            arkaDiag("before createBundleLspToolRuntime");
+            const runtime = await createBundleLspToolRuntime({
+              workspaceDir: effectiveWorkspace,
+              cfg: params.config,
+              reservedToolNames: [
+                ...tools.map((tool) => tool.name),
+                ...(clientTools?.map((tool) => tool.function.name) ?? []),
+                ...(bundleMcpRuntime?.tools.map((tool) => tool.name) ?? []),
+              ],
+            });
+            arkaDiag("after createBundleLspToolRuntime");
+            return runtime;
+          })()
         : undefined;
+    arkaDiag("attempt after bundle runtime setup");
+    arkaDiag("attempt before applyFinalEffectiveToolPolicy");
     const filteredBundledTools = applyFinalEffectiveToolPolicy({
       bundledTools: [...(bundleMcpRuntime?.tools ?? []), ...(bundleLspRuntime?.tools ?? [])],
       config: params.config,
@@ -934,11 +978,16 @@ export async function runEmbeddedAttempt(
       ownerOnlyToolAllowlist: params.ownerOnlyToolAllowlist,
       warn: (message) => log.warn(message),
     });
+    arkaDiag(`attempt after applyFinalEffectiveToolPolicy count=${filteredBundledTools.length}`);
     const effectiveTools = [...tools, ...filteredBundledTools];
+    arkaDiag(`attempt effectiveTools count=${effectiveTools.length}`);
+    arkaDiag("attempt before collectAllowedToolNames");
     const allowedToolNames = collectAllowedToolNames({
       tools: effectiveTools,
       clientTools,
     });
+    arkaDiag("attempt after collectAllowedToolNames");
+    arkaDiag("attempt before collectAttemptExplicitToolAllowlistSources");
     const explicitToolAllowlistSources = collectAttemptExplicitToolAllowlistSources({
       config: params.config,
       sessionKey: params.sessionKey,
@@ -959,12 +1008,16 @@ export async function runEmbeddedAttempt(
       sandboxToolPolicy: sandbox?.tools,
       toolsAllow: params.toolsAllow,
     });
+    arkaDiag("attempt after collectAttemptExplicitToolAllowlistSources");
+    arkaDiag("attempt before buildEmptyExplicitToolAllowlistError");
     const emptyExplicitToolAllowlistError = buildEmptyExplicitToolAllowlistError({
       sources: explicitToolAllowlistSources,
       callableToolNames: effectiveTools.map((tool) => tool.name),
       toolsEnabled,
       disableTools: params.disableTools,
     });
+    arkaDiag("attempt after buildEmptyExplicitToolAllowlistError");
+    arkaDiag("attempt before logAgentRuntimeToolDiagnostics");
     logAgentRuntimeToolDiagnostics({
       runtimePlan: params.runtimePlan,
       tools: effectiveTools,
@@ -976,9 +1029,13 @@ export async function runEmbeddedAttempt(
       modelApi: params.model.api,
       model: params.model,
     });
+    arkaDiag("attempt after logAgentRuntimeToolDiagnostics");
 
+    arkaDiag("attempt before getMachineDisplayName");
     const machineName = await getMachineDisplayName();
+    arkaDiag("attempt after getMachineDisplayName");
     const runtimeChannel = normalizeMessageChannel(params.messageChannel ?? params.messageProvider);
+    arkaDiag("attempt after normalizeMessageChannel");
     let runtimeCapabilities = runtimeChannel
       ? (resolveChannelCapabilities({
           cfg: params.config,
@@ -1017,14 +1074,18 @@ export async function runEmbeddedAttempt(
           })
         : undefined;
     const sandboxInfo = buildEmbeddedSandboxInfo(sandbox, params.bashElevated);
-    const reasoningTagHint = isReasoningTagProvider(params.provider, {
-      config: params.config,
-      workspaceDir: effectiveWorkspace,
-      env: process.env,
-      modelId: params.modelId,
-      modelApi: params.model.api,
-      model: params.model,
-    });
+    arkaDiag("attempt before isReasoningTagProvider");
+    const reasoningTagHint = params.runtimePlan?.skipProviderRuntimeHooks
+      ? false
+      : isReasoningTagProvider(params.provider, {
+          config: params.config,
+          workspaceDir: effectiveWorkspace,
+          env: process.env,
+          modelId: params.modelId,
+          modelApi: params.model.api,
+          model: params.model,
+        });
+    arkaDiag("attempt after isReasoningTagProvider");
     // Resolve channel-specific message actions for system prompt
     const channelActions = runtimeChannel
       ? listChannelSupportedActions(
@@ -1051,11 +1112,14 @@ export async function runEmbeddedAttempt(
         })
       : undefined;
 
+    arkaDiag("attempt before resolveDefaultModelForAgent");
     const defaultModelRef = resolveDefaultModelForAgent({
       cfg: params.config ?? {},
       agentId: sessionAgentId,
     });
+    arkaDiag("attempt after resolveDefaultModelForAgent");
     const defaultModelLabel = `${defaultModelRef.provider}/${defaultModelRef.model}`;
+    arkaDiag("attempt before buildSystemPromptParams");
     const { runtimeInfo, userTimezone, userTime, userTimeFormat } = buildSystemPromptParams({
       config: params.config,
       agentId: sessionAgentId,
@@ -1074,6 +1138,7 @@ export async function runEmbeddedAttempt(
         channelActions,
       },
     });
+    arkaDiag("attempt after buildSystemPromptParams");
     const isDefaultAgent = sessionAgentId === defaultAgentId;
     const promptMode =
       params.promptMode ??
@@ -1082,12 +1147,14 @@ export async function runEmbeddedAttempt(
     // When toolsAllow is set, use minimal prompt and strip skills catalog
     const effectivePromptMode = params.toolsAllow?.length ? ("minimal" as const) : promptMode;
     const effectiveSkillsPrompt = params.toolsAllow?.length ? undefined : skillsPrompt;
+    arkaDiag("attempt before resolveOpenClawReferencePaths");
     const openClawReferences = await resolveOpenClawReferencePaths({
       workspaceDir: effectiveWorkspace,
       argv1: process.argv[1],
       cwd: effectiveWorkspace,
       moduleUrl: import.meta.url,
     });
+    arkaDiag("attempt after resolveOpenClawReferencePaths");
     const ttsHint = params.config
       ? buildTtsSystemPromptHint(params.config, sessionAgentId)
       : undefined;
@@ -1116,6 +1183,7 @@ export async function runEmbeddedAttempt(
       runtimeCapabilities,
       agentId: sessionAgentId,
     };
+    arkaDiag("attempt before promptContribution");
     const promptContribution =
       params.runtimePlan?.prompt.resolveSystemPromptContribution(promptContributionContext) ??
       resolveProviderSystemPromptContribution({
@@ -1124,7 +1192,9 @@ export async function runEmbeddedAttempt(
         workspaceDir: effectiveWorkspace,
         context: promptContributionContext,
       });
+    arkaDiag("attempt after promptContribution");
 
+    arkaDiag("attempt before buildEmbeddedSystemPrompt");
     const builtAppendPrompt =
       resolveSystemPromptOverride({
         config: params.config,
@@ -1167,6 +1237,7 @@ export async function runEmbeddedAttempt(
         memoryCitationsMode: params.config?.memory?.citations,
         promptContribution,
       });
+    arkaDiag("attempt after buildEmbeddedSystemPrompt");
     const appendPrompt = isRawModelRun
       ? ""
       : transformProviderSystemPrompt({
@@ -1671,7 +1742,12 @@ export async function runEmbeddedAttempt(
         agentDir,
         resolvedTransport,
         preparedRuntimeExtraParams
-          ? { preparedExtraParams: preparedRuntimeExtraParams }
+          ? {
+              preparedExtraParams: preparedRuntimeExtraParams,
+              skipProviderRuntimeHooks: params.runtimePlan?.skipProviderRuntimeHooks,
+            }
+          : params.runtimePlan?.skipProviderRuntimeHooks
+            ? { skipProviderRuntimeHooks: true }
           : undefined,
       );
       const effectivePromptCacheRetention = resolveCacheRetention(
@@ -1964,6 +2040,7 @@ export async function runEmbeddedAttempt(
         if (activeContextEngine) {
           try {
             unwindowedContextEngineMessagesForPrecheck = activeSession.messages.slice();
+            arkaDiag("before assembleAttemptContextEngine");
             const assembled = await assembleAttemptContextEngine({
               contextEngine: activeContextEngine,
               sessionId: params.sessionId,
@@ -1975,6 +2052,7 @@ export async function runEmbeddedAttempt(
               modelId: params.modelId,
               ...(params.prompt !== undefined ? { prompt: params.prompt } : {}),
             });
+            arkaDiag("after assembleAttemptContextEngine");
             if (!assembled) {
               throw new Error("context engine assemble returned no result");
             }
@@ -2719,7 +2797,9 @@ export async function runEmbeddedAttempt(
               inFlightPrompt: promptSubmission.prompt,
             });
             if (promptSubmission.runtimeOnly) {
+              arkaDiag("before activeSession.prompt runtimeOnly");
               await abortable(activeSession.prompt(promptSubmission.prompt));
+              arkaDiag("after activeSession.prompt runtimeOnly");
             } else {
               const runtimeContext = promptSubmission.runtimeContext?.trim();
               const runtimeSystemPrompt = runtimeContext
@@ -2732,19 +2812,25 @@ export async function runEmbeddedAttempt(
                 applySystemPromptOverrideToSession(activeSession, runtimeSystemPrompt);
               }
               try {
+                arkaDiag("before queueRuntimeContextForNextTurn");
                 await queueRuntimeContextForNextTurn({
                   session: activeSession,
                   runtimeContext,
                 });
+                arkaDiag("after queueRuntimeContextForNextTurn");
 
                 // Only pass images option if there are actually images to pass
                 // This avoids potential issues with models that don't expect the images parameter
                 if (imageResult.images.length > 0) {
+                  arkaDiag("before activeSession.prompt images");
                   await abortable(
                     activeSession.prompt(promptSubmission.prompt, { images: imageResult.images }),
                   );
+                  arkaDiag("after activeSession.prompt images");
                 } else {
+                  arkaDiag("before activeSession.prompt text");
                   await abortable(activeSession.prompt(promptSubmission.prompt));
+                  arkaDiag("after activeSession.prompt text");
                 }
               } finally {
                 if (runtimeSystemPrompt) {

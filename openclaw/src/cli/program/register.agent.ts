@@ -20,6 +20,12 @@ import { createDefaultDeps } from "../deps.js";
 import { formatHelpExamples } from "../help-format.js";
 import { collectOption } from "./helpers.js";
 
+const arkaDiag = (message: string) => {
+  if (process.env.OPENCLAW_ARKA_DIAG === "1") {
+    console.error(`[arka-diag] ${new Date().toISOString()} ${message}`);
+  }
+};
+
 export function registerAgentCommands(program: Command, args: { agentChannelOptions: string }) {
   program
     .command("agent")
@@ -78,13 +84,18 @@ ${formatHelpExamples([
 ${theme.muted("Docs:")} ${formatDocsLink("/cli/agent", "docs.openclaw.ai/cli/agent")}`,
     )
     .action(async (opts) => {
+      arkaDiag("register.agent action start");
       const verboseLevel =
         typeof opts.verbose === "string" ? normalizeLowercaseStringOrEmpty(opts.verbose) : "";
       setVerbose(verboseLevel === "on");
       // Build default deps (keeps parity with other commands; future-proofing).
+      arkaDiag("before createDefaultDeps");
       const deps = createDefaultDeps();
+      arkaDiag("after createDefaultDeps");
       await runCommandWithRuntime(defaultRuntime, async () => {
+        arkaDiag("before agentCliCommand");
         await agentCliCommand(opts, defaultRuntime, deps);
+        arkaDiag("after agentCliCommand");
       });
     });
 

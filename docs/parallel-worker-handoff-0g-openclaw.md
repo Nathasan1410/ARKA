@@ -1,24 +1,66 @@
-# Parallel Worker Handoff - 0G And OpenClaw
+# Parallel Worker Handoff - 2 Session Plan
 
-Use this handoff after baseline commit:
-
-```txt
-23d50f3d feat: add local OpenClaw fork and audit plugin baseline
-```
-
-Before doing anything:
+Use this handoff from the fast working copy:
 
 ```txt
-1. git pull origin main
-2. Read AGENTS.md
-3. Read docs/project-brief.md
-4. Read docs/real-vs-simulated.md
-5. Read docs/implementation-plan.md
-6. Read docs/openclaw-impact-assessment.md if your task touches OpenClaw
-7. Do not commit unless explicitly asked
+C:\Dev\ARKA-github
 ```
 
-Project invariant:
+Do not work from the old HDD repo unless explicitly using it as historical reference:
+
+```txt
+D:\Projekan\Macam2Hackathon\ARKA\ARKA-github
+```
+
+Current baseline:
+
+```txt
+a61bb033 docs: add parallel worker handoff
+```
+
+Local OpenClaw smoke config and MiniMax keys were moved outside the repo to:
+
+```txt
+C:\Dev\_openclaw-smoke\.env.local
+C:\Dev\_openclaw-smoke\openclaw.json
+C:\Dev\_openclaw-smoke\run-arka-openclaw-gateway.ps1
+```
+
+Do not print, commit, or copy secret values into repo files.
+
+## Shared Startup
+
+Every session starts with:
+
+```powershell
+cd C:\Dev\ARKA-github
+git status --short
+git pull origin main
+pnpm.cmd install
+```
+
+Read before editing:
+
+```txt
+AGENTS.md
+docs/project-brief.md
+docs/real-vs-simulated.md
+docs/implementation-plan.md
+docs/code-map.md
+checklist.md
+```
+
+If touching OpenClaw, also read:
+
+```txt
+Arka - OpenClaw Agent.md
+docs/openclaw-impact-assessment.md
+docs/openclaw-local-fork-plan.md
+docs/openclaw-plugin-skeleton-plan.md
+docs/openclaw-research-and-integration-plan.md
+```
+
+## Shared Project Invariant
 
 ```txt
 Backend/core creates AuditEvent.
@@ -29,222 +71,90 @@ Dashboard is Layer-2 visual investigation.
 0G Chain anchors proof references.
 ```
 
-Never claim unverified integrations work.
-
-If skipped or blocked, update `technical-debt.md`.
-
-If you materially change code/docs/specs, update `CHANGELOG.md` and `docs/ai-attribution.md`.
-
-## S2 - 0G Storage Research And Smoke
-
-Task: Verify the current 0G Storage integration path for ARKA without wiring app code yet.
-
-Owned paths:
+OpenClaw must not:
 
 ```txt
-docs/0g-storage-integration-plan.md if new doc is needed
-docs/technical-stack-brief.md only if SDK facts change
-docs/real-vs-simulated.md only if truthfulness changes
-technical-debt.md
-CHANGELOG.md
-docs/ai-attribution.md
+overwrite AuditEvent.status
+overwrite expected quantity
+overwrite actual quantity
+overwrite variance
+overwrite severity
+overwrite evidence references
+upload to 0G Storage
+register 0G Chain anchors
+send Telegram before channel policy is verified
+accuse staff of theft/fraud/guilt
 ```
 
-Goals:
+Truthfulness rules:
 
 ```txt
-1. Confirm current official 0G Storage SDK/CLI package, install method, upload API, endpoint/config requirements, auth requirements, and response shape.
-2. Determine what ARKA must store for AuditEvent Proof Package: localPackageHash, storage root/hash/ref, upload timestamp, status.
-3. Produce a minimal smoke plan or script proposal, but do not wire dashboard/backend yet unless explicitly asked.
-4. Confirm whether CLI fallback is viable.
+Do not claim real OpenClaw-backed ARKA triage until model-backed response + gateway/plugin/client path + app call are verified.
+Do not claim Telegram works until a real bot/channel flow is verified.
+Do not claim 0G Storage upload works until real upload is implemented and verified.
+Do not claim 0G Chain registry works until real deploy/tx/anchor is implemented and verified.
+Keep deterministic triage labeled as deterministic fallback.
 ```
 
-Constraints:
+Documentation rules:
 
 ```txt
-Use official 0G docs/source/examples only.
-Do not upload real proof unless explicitly approved and environment is provided.
-Do not put secrets in repo.
-Do not make OpenClaw upload to 0G.
-Do not change AuditEvent facts.
+Update CHANGELOG.md for meaningful work.
+Update docs/ai-attribution.md for material AI-assisted code/spec/docs.
+Update docs/real-vs-simulated.md only when truthfulness changes.
+Update docs/reused-libraries.md only when adding dependency/template/starter/copied public example.
+Update technical-debt.md when something is skipped, blocked, or needs human setup.
+Do not commit unless explicitly asked.
 ```
 
-Verification:
+## Subagent Usage Rule
+
+Each main session may use subagents, but only for bounded side work.
+
+Use subagents for:
 
 ```txt
-Run only safe local checks.
-If network/API smoke cannot run, record exact blocker in technical-debt.md.
+read-only codebase exploration
+researching current SDK/framework/API facts
+checking a narrow set of files for alignment
+reviewing a patch before final verification
 ```
 
-Report:
+Do not use subagents for:
 
 ```txt
-Files changed.
-Facts verified.
-Remaining unknowns.
-Exact next integration step.
+the immediate blocking task
+large overlapping edits
+duplicate work
+unbounded repo-wide rewrites
+commits or pushes
 ```
 
-## S3 - 0G Chain Contract
-
-Task: Implement or prepare the first `AuditProofRegistry` contract path.
-
-Owned paths:
+When delegating:
 
 ```txt
-contracts/**
-docs/0g-chain-brief.md
-docs/real-vs-simulated.md only if truthfulness changes
-technical-debt.md
-CHANGELOG.md
-docs/ai-attribution.md
+Give each subagent a 32k-64k context-sized task.
+Give exact owned paths.
+Tell them not to edit unless explicitly assigned as worker.
+Tell them to report files read, findings, commands run, and residual risks.
+Keep one main session responsible for final integration and verification.
 ```
 
-Goals:
+## Session A - OpenClaw Agent Track
+
+Mission:
 
 ```txt
-1. Implement Solidity AuditProofRegistry if not already implemented.
-2. Support registering proof anchors for AUDIT_EVENT_CREATED first.
-3. Include authorized registrar control.
-4. Store/emit auditEventId, proofType, localPackageHash, storageRoot/ref, registeredBy, registeredAt.
-5. Add local Hardhat tests for successful registration, duplicate guard, unauthorized caller, and event emission.
+Make the OpenClaw side real enough to test without breaking ARKA boundaries.
 ```
 
-Constraints:
+Primary focus:
 
 ```txt
-Local Hardhat only unless 0G RPC/faucet/deploy info is confirmed.
-Do not claim 0G Chain testnet works unless a real deploy/tx is verified.
-Do not store full AuditEvent JSON on-chain.
-Do not store staff messages or OpenClaw transcripts on-chain.
+OpenClaw gateway discovery/load of openclaw/extensions/arka-audit
+one bounded model-backed ARKA skill turn
+future packages/agent gateway client shape only after the gateway path is proven
 ```
-
-Verification:
-
-```txt
-pnpm install if needed.
-Hardhat compile/test.
-Root typecheck if package scripts touch root.
-```
-
-Report:
-
-```txt
-Files changed.
-Tests run.
-Contract API summary.
-What remains for testnet deploy.
-```
-
-## S4 - Proof Pipeline Boundary
-
-Task: Build the backend/core boundary for proof workflow without real 0G calls unless S2 has verified SDK details.
-
-Owned paths:
-
-```txt
-packages/core/**
-packages/shared/**
-packages/db/** only if persistence shape needs narrow update
-docs/database-structure-plan.md
-docs/real-vs-simulated.md
-technical-debt.md
-CHANGELOG.md
-docs/ai-attribution.md
-```
-
-Goals:
-
-```txt
-1. Keep existing AuditEvent Proof Package builder independent from OpenClaw.
-2. Add service/interface shape for proof lifecycle:
-   LOCAL_ONLY -> PENDING_UPLOAD -> STORED_ON_0G -> PENDING_REGISTRATION -> REGISTERED_ON_CHAIN -> VERIFIED.
-3. Add failure states:
-   FAILED_TO_STORE, RETRY_PENDING, FAILED_TO_REGISTER.
-4. Ensure failed proof attempts never delete or invalidate AuditEvent.
-5. Add unit tests for State C/D proof attempt state transitions if implemented.
-```
-
-Constraints:
-
-```txt
-Do not call real 0G Storage/Chain unless S2/S3 gives verified details.
-Do not add API routes unless explicitly assigned.
-Do not let OpenClaw own proof creation.
-Do not mutate AuditEvent reconciliation facts.
-```
-
-Verification:
-
-```txt
-pnpm.cmd --filter @arka/core test
-pnpm.cmd --filter @arka/shared test if shared changed
-pnpm.cmd run typecheck
-```
-
-Report:
-
-```txt
-Files changed.
-State machine/boundary summary.
-Tests run.
-Blockers.
-```
-
-## S5 - Dashboard Proof UX
-
-Task: Improve dashboard proof panel and local demo UX without claiming real 0G.
-
-Owned paths:
-
-```txt
-apps/web/**
-docs/real-vs-simulated.md
-technical-debt.md
-CHANGELOG.md
-docs/ai-attribution.md
-```
-
-Goals:
-
-```txt
-1. Show proof lifecycle clearly:
-   Audit Proof Status, Storage Status, Chain Status.
-2. Show localPackageHash if available.
-3. Show storage/chain as NOT_STARTED or simulated until real integration exists.
-4. Make State C/D proof attempt visible in the UI even if status is failure/not started.
-5. Keep triageSource visible and label deterministic fallback honestly.
-```
-
-Constraints:
-
-```txt
-Do not wire real 0G.
-Do not claim Telegram/OpenClaw runtime works.
-Do not build full admin dashboard.
-Keep scenario-card A/C/D first.
-```
-
-Verification:
-
-```txt
-pnpm.cmd --filter @arka/web build
-If build fails due stale .next lock, record exact blocker in technical-debt.md.
-Manual browser check if possible.
-```
-
-Report:
-
-```txt
-Files changed.
-UI states added.
-Build/manual verification.
-Blockers.
-```
-
-## S6 - OpenClaw Gateway Load
-
-Task: Continue real OpenClaw integration by proving the existing `arka-audit` plugin can be loaded by OpenClaw gateway.
 
 Owned paths:
 
@@ -252,49 +162,231 @@ Owned paths:
 openclaw/extensions/arka-audit/**
 openclaw/workspaces/arka/**
 packages/agent/** only if adding a narrow client boundary
+test/arka-openclaw.verify.test.ts
 docs/openclaw-local-fork-plan.md
 docs/openclaw-impact-assessment.md
+docs/openclaw-plugin-skeleton-plan.md
 docs/real-vs-simulated.md
 technical-debt.md
 CHANGELOG.md
 docs/ai-attribution.md
 ```
 
-Goals:
+Suggested subagents:
 
 ```txt
-1. Verify OpenClaw gateway discovery/load of openclaw/extensions/arka-audit.
-2. Run one bounded model-backed ARKA skill turn using the correct selector/session flags.
-3. Keep get_audit_event read-only until a real ARKA backend/API read path exists.
-4. If adding packages/agent gateway client, preserve deterministic fallback on timeout/error/unavailable runtime.
+Subagent A1 - OpenClaw CLI/Gateway Explorer:
+Read OpenClaw CLI/gateway docs and source around plugin discovery/load. Find the exact local command to prove arka-audit is discovered by gateway. Do not edit.
+
+Subagent A2 - Skill/Prompt Boundary Reviewer:
+Read openclaw/workspaces/arka and Arka - OpenClaw Agent.md. Check whether skill wording preserves AuditEvent-first and no-accusation/no-mutation boundaries. Do not edit unless assigned a surgical docs patch.
+
+Subagent A3 - packages/agent Boundary Reviewer:
+Read packages/agent/src. Confirm deterministic fallback remains safe and identify the smallest future gateway-client seam. Do not implement unless explicitly assigned.
 ```
 
-Constraints:
+Implementation order:
 
 ```txt
-Do not add DB writes.
-Do not send Telegram.
-Do not upload 0G or register chain.
-Do not mutate AuditEvent facts.
-Do not store secrets.
-Do not claim full ARKA OpenClaw integration until model-backed response + plugin/client path + app call are all verified.
+1. Confirm local C path config works with C:\Dev\_openclaw-smoke.
+2. Verify openclaw/extensions/arka-audit extension-local tests.
+3. Verify OpenClaw gateway discovery/load of arka-audit.
+4. Run one bounded model-backed ARKA turn using the correct selector/session flags.
+5. Only after 3-4 succeed, consider a narrow packages/agent client seam.
+```
+
+Allowed work:
+
+```txt
+fix plugin manifest/entrypoint if gateway cannot discover it
+fix workspace config/path references
+add narrow verification tests
+document exact commands and statuses
+```
+
+Forbidden work:
+
+```txt
+no DB writes from OpenClaw tools
+no Telegram sends
+no 0G Storage upload
+no 0G Chain registration
+no mutation of AuditEvent facts
+no secret commits
+no broad OpenClaw source refactors
 ```
 
 Verification:
 
-```txt
+```powershell
 pnpm.cmd --dir openclaw run test:extension arka-audit
 pnpm.cmd run verify:arka-openclaw
-Exact gateway/plugin command used
-Exact model-backed command used, if successful
 ```
 
-Report:
+If gateway/model checks succeed, report exact commands used.
+
+Completion report:
 
 ```txt
-Files changed.
-Gateway load yes/no.
-Model turn yes/no.
-Logs summary.
-Blockers.
+Files changed
+Gateway plugin load: yes/no
+Model-backed ARKA turn: yes/no
+packages/agent gateway call: yes/no
+Verification performed
+technical-debt.md updated yes/no and why
+Truthfulness docs updated yes/no and why
+Residual risks
+```
+
+## Session B - Web2 MVP App Track
+
+Mission:
+
+```txt
+Make the Web2 MVP app path solid before Web3 integration.
+```
+
+Primary focus:
+
+```txt
+scenario-card dashboard
+Order + Movement + AuditEvent display
+deterministic OpenClaw fallback display
+proof panel with local proof package/statuses
+database/core boundaries
+manual/local demo reliability
+```
+
+Owned paths:
+
+```txt
+apps/web/**
+packages/shared/**
+packages/core/**
+packages/db/**
+packages/agent/** only for display-safe type alignment, not OpenClaw runtime work
+docs/real-vs-simulated.md
+docs/code-map.md
+docs/implementation-plan.md
+docs/database-structure-plan.md
+technical-debt.md
+CHANGELOG.md
+docs/ai-attribution.md
+```
+
+Suggested subagents:
+
+```txt
+Subagent B1 - Dashboard Explorer:
+Read apps/web/app/dashboard and identify what is missing for A/C/D demo clarity. Do not edit unless assigned a specific UI patch.
+
+Subagent B2 - Core/Proof Explorer:
+Read packages/shared and packages/core. Confirm A/C/D fixtures, reconciliation, AuditEvent creation, and local proof package behavior. Do not edit unless assigned tests or types.
+
+Subagent B3 - DB Boundary Explorer:
+Read packages/db schema and docs/database-structure-plan.md. Confirm schema aligns with Web2 MVP and does not overclaim live DB persistence. Do not edit unless assigned a narrow schema/docs patch.
+```
+
+Implementation order:
+
+```txt
+1. Verify C:\Dev build environment:
+   pnpm.cmd install
+   pnpm.cmd --filter @arka/web build
+   pnpm.cmd run verify:arka-openclaw
+
+2. Fix web build/dev blockers first.
+
+3. Improve dashboard proof panel:
+   Audit Proof Status
+   Storage Status
+   Chain Status
+   localPackageHash
+   failure/retry placeholders
+
+4. Ensure State A/C/D are demo-clear:
+   expected vs actual
+   variance
+   severity
+   AuditEvent detail
+   triageOutcome
+   triageSource
+
+5. Keep 0G and Telegram labeled planned/simulated until real integration exists.
+```
+
+Allowed work:
+
+```txt
+dashboard UI improvements
+local proof package display
+scenario A/C/D reliability
+tests for shared/core/web-safe behavior
+docs truthfulness updates
+```
+
+Forbidden work:
+
+```txt
+no real 0G Storage integration
+no real 0G Chain deploy/tx
+no OpenClaw gateway implementation
+no Telegram implementation
+no full POS/editor/admin dashboard
+no ERP/warehouse/HR scope
+```
+
+Verification:
+
+```powershell
+pnpm.cmd --filter @arka/shared test
+pnpm.cmd --filter @arka/core test
+pnpm.cmd --filter @arka/agent test
+pnpm.cmd --filter @arka/db run typecheck
+pnpm.cmd --filter @arka/db run generate
+pnpm.cmd --filter @arka/web build
+pnpm.cmd run verify:arka-openclaw
+```
+
+Manual check if possible:
+
+```txt
+Run dashboard locally.
+Click State A, State C, State D.
+Confirm proof panel labels local/simulated/not-started correctly.
+Confirm OpenClaw panel says deterministic fallback unless Session A has proven runtime path.
+```
+
+Completion report:
+
+```txt
+Files changed
+Web2 MVP behavior improved
+Scenarios verified
+Build/tests run
+Manual browser verification yes/no
+technical-debt.md updated yes/no and why
+Truthfulness docs updated yes/no and why
+Residual risks
+```
+
+## After Session A And B
+
+Only after both tracks are stable:
+
+```txt
+Start Web3 phase.
+First: 0G Storage SDK/CLI smoke.
+Second: AuditProofRegistry local Hardhat tests.
+Third: connect local proof package -> storage upload -> chain anchor.
+Fourth: dashboard proof status from real results.
+```
+
+Do not start Web3 integration while:
+
+```txt
+dashboard build is broken
+A/C/D local demo is unclear
+OpenClaw truthfulness labels are misleading
+proof package local hash is not visible/testable
 ```

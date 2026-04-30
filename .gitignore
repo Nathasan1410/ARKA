@@ -12,6 +12,7 @@ typechain-types
 .env.*.local
 .DS_Store
 pnpm-debug.log*
+.tmp/
 
 # Local OpenClaw smoke state and secrets.
 _openclaw-smoke/
@@ -19,5 +20,9 @@ _openclaw-smoke/
 openclaw-smoke/
 openclaw/.env
 openclaw/.env.*
+openclaw/.artifacts/
+openclaw/.local/
+openclaw/.tmp/
+openclaw/dist-runtime/
 openclaw/workspaces/**/.env
 openclaw/workspaces/**/.env.*

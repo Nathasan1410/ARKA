@@ -41,6 +41,7 @@ type DemoRunRepository = {
 };
 
 const memoryRuns: DashboardRun[] = [];
+let totalRuns = 0;
 
 const inMemoryDemoRunRepository: DemoRunRepository = {
   async getHistory() {
@@ -49,6 +50,7 @@ const inMemoryDemoRunRepository: DemoRunRepository = {
   async saveRun(run) {
     memoryRuns.unshift(run);
     memoryRuns.splice(MAX_HISTORY);
+    totalRuns = Math.max(totalRuns, parseInt(run.caseId.split('-')[1], 10));
     return [...memoryRuns];
   },
   async updateRun(caseId, updater) {
@@ -84,6 +86,7 @@ export async function getDashboardInitialState(): Promise<RunScenarioResponse> {
   const history = await repository.getHistory();
 
   if (history.length > 0) {
+    totalRuns = Math.max(...history.map(r => parseInt(r.caseId.split('-')[1], 10)));
     return {
       run: history[0],
       history,
@@ -96,9 +99,8 @@ export async function getDashboardInitialState(): Promise<RunScenarioResponse> {
 
 export async function runDashboardScenario(scenarioKey: ScenarioKeyType): Promise<RunScenarioResponse> {
   const repository = getDemoRunRepository();
-  const history = await repository.getHistory();
-  const runNumber = history.length + 1;
-  const run = await createDashboardRun(scenarioKey, runNumber, repository.persistenceStatus());
+  totalRuns++;
+  const run = await createDashboardRun(scenarioKey, totalRuns, repository.persistenceStatus());
   const nextHistory = await repository.saveRun(run);
 
   return {
@@ -110,9 +112,8 @@ export async function runDashboardScenario(scenarioKey: ScenarioKeyType): Promis
 
 export async function runAdminMovementSimulation(input: AdminSimulationInput): Promise<RunScenarioResponse> {
   const repository = getDemoRunRepository();
-  const history = await repository.getHistory();
-  const runNumber = history.length + 1;
-  const run = await createAdminSimulationRun(input, runNumber, repository.persistenceStatus());
+  totalRuns++;
+  const run = await createAdminSimulationRun(input, totalRuns, repository.persistenceStatus());
   const nextHistory = await repository.saveRun(run);
 
   return {

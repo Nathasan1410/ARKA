@@ -107,6 +107,7 @@ async function setRuntimeApiKeyForCompletion(params: {
   cfg?: OpenClawConfig;
   workspaceDir?: string;
   profileId?: string;
+  skipProviderRuntimeAuth?: boolean;
 }): Promise<CompletionRuntimeCredential> {
   if (params.model.provider === "github-copilot") {
     const { resolveCopilotApiToken } = await import("./github-copilot-token.js");
@@ -117,6 +118,12 @@ async function setRuntimeApiKeyForCompletion(params: {
     return {
       apiKey: copilotToken.token,
       baseUrl: copilotToken.baseUrl,
+    };
+  }
+  if (params.skipProviderRuntimeAuth) {
+    params.authStorage.setRuntimeApiKey(params.model.provider, params.apiKey);
+    return {
+      apiKey: params.apiKey,
     };
   }
   const preparedAuth = await prepareProviderRuntimeAuth({
@@ -164,6 +171,9 @@ export async function prepareSimpleCompletionModel(params: {
   const resolved = params.skipPiDiscovery
     ? await resolveModelAsync(params.provider, params.modelId, params.agentDir, params.cfg, {
         skipPiDiscovery: true,
+        // Local one-shot completions should be able to run from inline/configured
+        // model definitions without waiting on provider-runtime dynamic discovery.
+        skipProviderRuntimeHooks: true,
       })
     : resolveModel(params.provider, params.modelId, params.agentDir, params.cfg);
   if (!resolved.model) {
@@ -211,6 +221,7 @@ export async function prepareSimpleCompletionModel(params: {
       cfg: params.cfg,
       workspaceDir: params.agentDir,
       profileId: auth.profileId,
+      skipProviderRuntimeAuth: params.skipPiDiscovery,
     });
     resolvedApiKey = runtimeCredential.apiKey;
     const runtimeBaseUrl = runtimeCredential.baseUrl?.trim();
