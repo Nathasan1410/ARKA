@@ -16,6 +16,17 @@ Owner: Human / Agent / Both
 
 ## Current Open Items
 
+### 2026-04-30 - Dashboard Focused Vitest Retry Blocked By Local EPERM
+
+```txt
+Area: Dashboard / Verification
+Status: RISK
+What happened: After the follow-up dashboard usability patch, `git diff --check` and the focused web TypeScript command passed, but `pnpm.cmd exec vitest run --config test/dashboard-demo.vitest.config.ts` failed before test collection with `Error: spawn EPERM` while Vite/esbuild loaded the config.
+Why it matters: The State A/C/D demo-service coverage previously passed and is recorded in CHANGELOG.md, but the latest small UI-label patch did not get a fresh focused Vitest rerun because the local process-spawn environment blocked it.
+Next action: Rerun `pnpm.cmd exec vitest run --config test/dashboard-demo.vitest.config.ts` in an unrestricted local terminal. If EPERM persists, investigate Windows policy/AV/process-spawn restrictions around esbuild.
+Owner: Human / Agent
+```
+
 ### 2026-04-30 - Dashboard Visual Click-Through Needs Human Browser Pass
 
 ```txt

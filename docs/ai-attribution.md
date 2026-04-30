@@ -16,6 +16,7 @@ This document tracks material AI-assisted work in ARKA.
 - Wired the dashboard to display deterministic local AuditEvent proof package hashes returned by the backend route while preserving honest 0G/OpenClaw/Telegram status labels.
 - Improved dashboard copy and data display for expected vs actual usage, movement before/after quantities, proof failure/retry placeholders, and owner/staff simulated-message boundaries.
 - Refactored the `/dashboard` layout into a clearer audit case console with a persistent scenario rail, case history, case summary, AuditEvent loop strip, Evidence / OpenClaw-Triage / Proof drilldowns, and always-visible local proof status.
+- Used bounded subagent review to tighten dashboard MVP usability: scenario card previews, richer case history, and clearer triage-simulation labeling.
 - Added focused demo-service tests for State A, State C, State D, and invalid simulated-agent actions.
 
 ### Files / Areas Affected
@@ -38,6 +39,9 @@ This document tracks material AI-assisted work in ARKA.
 - Pending / to be confirmed by repo owner.
 
 ### Verification
+- `git diff --check -- apps/web/app/dashboard/dashboard-shell.tsx apps/web/app/globals.css`
+- `pnpm.cmd --filter @arka/web exec tsc -p tsconfig.json --noEmit --incremental false --ignoreDeprecations 6.0`
+- `pnpm.cmd exec vitest run --config test/dashboard-demo.vitest.config.ts` was retried after the usability patch but failed before collection with local `spawn EPERM`; previous successful run remains recorded below.
 - `pnpm.cmd exec vitest run --config test/dashboard-demo.vitest.config.ts`
 - `pnpm.cmd --filter @arka/shared test`
 - `pnpm.cmd --filter @arka/core test`

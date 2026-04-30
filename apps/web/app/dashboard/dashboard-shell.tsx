@@ -139,6 +139,9 @@ export function DashboardShell({ initialState }: DashboardShellProps) {
                       {difference > 0 ? '+' : ''}
                       {difference}g / {scenario.triageOutcome}
                     </span>
+                    <span className="scenario-line">{card.expectedOutcome}</span>
+                    <span className="scenario-line">{card.triagePath}</span>
+                    <span className="scenario-line">{card.proofPath}</span>
                   </button>
                 );
               })}
@@ -157,7 +160,10 @@ export function DashboardShell({ initialState }: DashboardShellProps) {
                   onClick={() => setSelectedCaseId(run.caseId)}
                   type="button"
                 >
-                  <HistoryCell title={run.caseId} detail={`${run.auditEvent.status} / ${run.auditEvent.triageOutcome}`} />
+                  <HistoryCell
+                    title={run.caseId}
+                    detail={`${run.scenario.scenarioKey} / ${run.auditEvent.severity} / ${run.proofRecord.auditProofStatus}`}
+                  />
                 </button>
               ))}
             </div>
@@ -234,7 +240,7 @@ export function DashboardShell({ initialState }: DashboardShellProps) {
               Evidence
             </button>
             <button data-active={activeView === 'agent'} onClick={() => setActiveView('agent')} type="button">
-              OpenClaw / Triage
+              Triage Simulation
             </button>
             <button data-active={activeView === 'proof'} onClick={() => setActiveView('proof')} type="button">
               Proof Status

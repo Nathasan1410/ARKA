@@ -60,7 +60,7 @@ Inventory Movement Simulator: PARTIAL (scenario payload values + dashboard displ
 Reconciliation Engine: PARTIAL (pure core A/C/D only)
 AuditEvent Generator: PARTIAL (pure core A/C/D AuditEvent creation only)
 OpenClaw Triage Layer: PARTIAL (fallback verified; dashboard-only simulated interaction verified; local OpenClaw setup partially verified; app integration not verified)
-Dashboard UI: PARTIAL (task-focused case console builds, demo-service coverage passes, and API route smokes pass; manual browser verification remains open)
+Dashboard UI: PARTIAL (task-focused case console builds; scenario cards preview outcome/triage/proof; history shows severity/proof; demo-service coverage and API route smokes have passed previously; manual browser verification remains open)
 Local proof package creation: PARTIAL (core package builder/hash verified and exposed through local demo API route; no 0G upload)
 ```
 

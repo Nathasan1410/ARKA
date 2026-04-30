@@ -5,6 +5,7 @@ All meaningful ARKA changes should be recorded here in human-readable language.
 ## 2026-04-30
 
 ### Changed
+- Tightened the `/dashboard` MVP usability pass after subagent review: scenario cards now preview outcome, triage action, and proof path before running; case history now surfaces scenario, severity, and proof state; the triage tab is labeled as simulation.
 - Refactored the `/dashboard` MVP shell into a task-focused audit case console with a persistent scenario rail, case history, case summary, AuditEvent loop strip, and Evidence / OpenClaw-Triage / Proof drilldowns.
 - Kept local proof status visible in the main case command area while preserving detailed local package hash, 0G Storage, and 0G Chain placeholders in the proof view.
 - Added root-level dashboard demo-service coverage for State A local-only proof, State C simulated explanation flow, State D owner-review flow, and invalid/unavailable simulated actions.
@@ -20,6 +21,9 @@ All meaningful ARKA changes should be recorded here in human-readable language.
 - Updated implementation, code-map, and truthfulness docs for the dashboard-local proof hash display.
 
 ### Verification
+- `git diff --check -- apps/web/app/dashboard/dashboard-shell.tsx apps/web/app/globals.css`
+- `pnpm.cmd --filter @arka/web exec tsc -p tsconfig.json --noEmit --incremental false --ignoreDeprecations 6.0`
+- `pnpm.cmd exec vitest run --config test/dashboard-demo.vitest.config.ts` was retried after the usability patch but failed before collection with local `spawn EPERM`; previous successful run remains recorded below.
 - `pnpm.cmd exec vitest run --config test/dashboard-demo.vitest.config.ts`
 - `pnpm.cmd --filter @arka/shared test`
 - `pnpm.cmd --filter @arka/core test`

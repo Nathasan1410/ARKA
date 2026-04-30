@@ -438,7 +438,7 @@ textarea {
 .scenario-button.compact {
   display: grid;
   gap: 8px;
-  min-height: 118px;
+  min-height: 176px;
 }
 
 .scenario-title {
