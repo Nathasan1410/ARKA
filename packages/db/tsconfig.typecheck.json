@@ -1,0 +1,14 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "ignoreDeprecations": "6.0",
+    "baseUrl": ".",
+    // Typecheck against workspace sources without requiring `@arka/shared` dist builds.
+    // Keep `tsconfig.json` clean for builds (dist-based exports).
+    "rootDir": "..",
+    "paths": {
+      "@arka/shared": ["../shared/src/index.ts"],
+      "@arka/shared/*": ["../shared/src/*"]
+    }
+  }
+}
