@@ -5,6 +5,22 @@ All meaningful ARKA changes should be recorded here in human-readable language.
 ## 2026-04-30
 
 ### Changed
+- Improved the `/dashboard` Web2 MVP shell so State A/C/D cards show expected usage, actual movement, difference, and variance before selection.
+- Updated the dashboard proof panel to build and display a deterministic local AuditEvent proof package hash while keeping 0G Storage, 0G Chain, Telegram, and real OpenClaw runtime labels honest as not connected.
+- Added clearer movement before/after quantities, usage formula display, retry/failure placeholders, and simulated owner/staff message wording.
+- Updated implementation, code-map, and truthfulness docs for the dashboard-local proof hash display.
+
+### Verification
+- `pnpm.cmd --filter @arka/shared test`
+- `pnpm.cmd --filter @arka/core test`
+- `pnpm.cmd --filter @arka/agent test`
+- `pnpm.cmd --filter @arka/db run typecheck`
+- `pnpm.cmd --filter @arka/db run generate`
+- `pnpm.cmd --filter @arka/web build`
+- `pnpm.cmd run verify:arka-openclaw`
+- Local dev-server HTTP smoke: `http://127.0.0.1:3010/dashboard` returned 200 with dashboard/proof-panel content.
+
+### Changed
 - Updated the OpenClaw impact assessment into a current cross-layer plan for frontend, backend/API, database, `packages/agent`, proof, 0G Storage, 0G Chain, Telegram, security, and the local `openclaw/` fork.
 - Updated implementation, stack, database, code-map, MVP interaction, local-fork, and truthfulness docs so they reflect the verified local OpenClaw fork/gateway/skill/MiniMax setup without claiming model-backed ARKA integration.
 - Updated root-level briefs and tracker docs (`AGENTS.md`, `Arka - OpenClaw Agent.md`, `0G Storage Brief.md`, `ARKA 0G Chain Brief — Concept Draft.md`, `ARKA Demo Scenario Brief — Draft.md`, `Backend-Final.md`, `Database.md`, `checklist.md`, `docs/project-brief.md`, `docs/parallel-codex-session-prompts.md`, and the historical S2B handoff) so they no longer preserve stale OpenClaw or proof claims.

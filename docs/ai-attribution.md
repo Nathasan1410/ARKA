@@ -2,6 +2,40 @@
 
 This document tracks material AI-assisted work in ARKA.
 
+## 2026-04-30 - Web2 Dashboard Proof Panel
+
+### AI Tool Used
+- OpenAI Codex CLI (GPT-5.x)
+- GPT-5.x explorer subagents for bounded dashboard/core/DB read-only review
+
+### What AI Helped With
+- Reviewed the Web2 MVP dashboard, shared/core proof path, and DB boundary for State A/C/D demo clarity.
+- Wired the dashboard to display deterministic local AuditEvent proof package hashes while preserving honest 0G/OpenClaw/Telegram status labels.
+- Improved dashboard copy and data display for expected vs actual usage, movement before/after quantities, proof failure/retry placeholders, and owner/staff simulated-message boundaries.
+
+### Files / Areas Affected
+- `apps/web/app/dashboard/dashboard-data.ts`
+- `apps/web/app/dashboard/dashboard-shell.tsx`
+- `apps/web/app/globals.css`
+- `docs/real-vs-simulated.md`
+- `docs/code-map.md`
+- `docs/implementation-plan.md`
+- `CHANGELOG.md`
+- `docs/ai-attribution.md`
+
+### Human Review
+- Pending / to be confirmed by repo owner.
+
+### Verification
+- `pnpm.cmd --filter @arka/shared test`
+- `pnpm.cmd --filter @arka/core test`
+- `pnpm.cmd --filter @arka/agent test`
+- `pnpm.cmd --filter @arka/db run typecheck`
+- `pnpm.cmd --filter @arka/db run generate`
+- `pnpm.cmd --filter @arka/web build`
+- `pnpm.cmd run verify:arka-openclaw`
+- Local dev-server HTTP smoke: `http://127.0.0.1:3010/dashboard` returned 200 with dashboard/proof-panel content.
+
 ## 2026-04-30 - Parallel Worker Handoff
 
 ### AI Tool Used

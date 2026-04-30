@@ -155,8 +155,8 @@ Owner: Both
 ```txt
 Area: Dashboard UI
 Status: RISK
-What happened: The dashboard shell was verified with `pnpm.cmd --filter @arka/web build`. A follow-up `pnpm.cmd --filter @arka/web dev` attempt timed out after 24044ms in this environment before manual browser interaction could be completed, so State A / State C / State D were not clicked in a browser during this session.
-Why it matters: Static build success confirms compilation, not actual in-browser layout, button flow, triageSource visibility, or fallback/OpenClaw copy clarity for the A/C/D demo.
-Next action: Run `pnpm.cmd --filter @arka/web dev` from an interactive terminal, open `/dashboard`, and manually verify State A, State C, and State D before claiming the dashboard flow is demo-ready.
+What happened: The dashboard shell was verified with `pnpm.cmd --filter @arka/web build`. On 2026-04-30, a package-local Next dev server was started with `pnpm.cmd --filter @arka/web exec next dev --hostname 127.0.0.1 --port 3010`, and `http://127.0.0.1:3010/dashboard` returned HTTP 200 with dashboard and proof-panel content. No browser automation exists in the repo, so State A / State C / State D were not clicked in a real browser during this session.
+Why it matters: Static build and HTTP smoke confirm compilation and route serving, not actual in-browser layout, button flow, triageSource visibility after clicks, or fallback/OpenClaw copy clarity for the A/C/D demo.
+Next action: Open `http://127.0.0.1:3010/dashboard` in a browser and manually click State A, State C, and State D before claiming the dashboard flow is demo-ready.
 Owner: Both
 ```

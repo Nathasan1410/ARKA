@@ -402,6 +402,7 @@ Dashboard shows Order, Movement, AuditEvent data.
 AuditEvent detail explains expected vs actual.
 OpenClaw triage outcome is visible.
 Proof status is visible even if proof integration is not yet real.
+Local AuditEvent proof package hash is visible before any 0G upload or chain registration.
 ```
 
 Verification:
@@ -416,6 +417,7 @@ Truthfulness:
 
 ```txt
 Proof status must show LOCAL_ONLY / simulated states honestly until 0G is real.
+Dashboard-local package hashing must not be described as 0G Storage upload or on-chain anchoring.
 ```
 
 ## 8. Phase 7 - AuditEvent Proof Package

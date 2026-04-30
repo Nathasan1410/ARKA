@@ -1,7 +1,9 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+import { hashProofPackage } from '@arka/core';
 import {
+  demoScenarioSeeds,
   demoWorldSeed,
   ScenarioKey,
   TriageOutcome,
@@ -19,6 +21,58 @@ export function DashboardShell() {
     return runs.find((run) => run.caseId === selectedCaseId) ?? runs[0];
   }, [runs, selectedCaseId]);
 
+  useEffect(() => {
+    const pendingRuns = runs.filter((run) => run.localPackageHashStatus === 'PENDING_HASH');
+
+    if (pendingRuns.length === 0) {
+      return;
+    }
+
+    let isCancelled = false;
+
+    for (const run of pendingRuns) {
+      hashProofPackage(run.proofPackageCanonicalJson)
+        .then((localPackageHash) => {
+          if (isCancelled) {
+            return;
+          }
+
+          setRuns((currentRuns) =>
+            currentRuns.map((currentRun) =>
+              currentRun.caseId === run.caseId
+                ? {
+                    ...currentRun,
+                    localPackageHash,
+                    localPackageHashStatus: 'HASHED',
+                  }
+                : currentRun,
+            ),
+          );
+        })
+        .catch(() => {
+          if (isCancelled) {
+            return;
+          }
+
+          setRuns((currentRuns) =>
+            currentRuns.map((currentRun) =>
+              currentRun.caseId === run.caseId
+                ? {
+                    ...currentRun,
+                    localPackageHash: null,
+                    localPackageHashStatus: 'FAILED',
+                  }
+                : currentRun,
+            ),
+          );
+        });
+    }
+
+    return () => {
+      isCancelled = true;
+    };
+  }, [runs]);
+
   function handleRunScenario(scenarioKey: ScenarioKeyType) {
     const nextRun = createDashboardRun(scenarioKey, runs.length + 1);
     setRuns((currentRuns) => [nextRun, ...currentRuns]);
@@ -26,6 +80,12 @@ export function DashboardShell() {
   }
 
   const movementDifference = selectedRun.auditEvent.actualMovementGrams - selectedRun.auditEvent.expectedUsageGrams;
+  const localHashLabel =
+    selectedRun.localPackageHashStatus === 'HASHED'
+      ? selectedRun.localPackageHash
+      : selectedRun.localPackageHashStatus === 'FAILED'
+        ? 'Hash failed locally'
+        : 'Hashing local package...';
 
   return (
     <main className="app-shell">
@@ -66,6 +126,8 @@ export function DashboardShell() {
         <div className="runner-grid">
           {scenarioCards.map((card) => {
             const scenarioIsSelected = selectedRun.scenario.scenarioKey === card.key;
+            const cardScenario = demoScenarioSeeds[card.key];
+            const cardDifference = cardScenario.actualMovementGrams - cardScenario.expectedUsageGrams;
 
             return (
               <button
@@ -100,7 +162,21 @@ export function DashboardShell() {
                   <div className="scenario-meta">
                     <div>
                       <span className="label">Expected usage</span>
-                      <span className="value">{selectedRun.scenario.expectedUsageGrams}g whey</span>
+                      <span className="value">{cardScenario.expectedUsageGrams}g whey</span>
+                    </div>
+                    <div>
+                      <span className="label">Actual movement</span>
+                      <span className="value">{cardScenario.actualMovementGrams}g OUT</span>
+                    </div>
+                  </div>
+
+                  <div className="scenario-meta">
+                    <div>
+                      <span className="label">Difference</span>
+                      <span className="value">
+                        {cardDifference > 0 ? '+' : ''}
+                        {cardDifference}g / {cardScenario.variancePercent.toFixed(1)}%
+                      </span>
                     </div>
                     <div>
                       <span className="label">Triage</span>
@@ -139,6 +215,7 @@ export function DashboardShell() {
             <div className="kv-row">
               <strong>Expected usage</strong>
               <span>
+                {selectedRun.auditEvent.orderQuantity} x {selectedRun.auditEvent.usageRuleGramsPerUnit}g ={' '}
                 {selectedRun.auditEvent.expectedUsageGrams}g {selectedRun.auditEvent.inventoryItemName}
               </span>
             </div>
@@ -175,6 +252,12 @@ export function DashboardShell() {
               <span>{selectedRun.auditEvent.actualMovementGrams}g OUT</span>
             </div>
             <div className="kv-row">
+              <strong>Before / after</strong>
+              <span>
+                {selectedRun.movementBeforeGrams}g {'->'} {selectedRun.movementAfterGrams}g
+              </span>
+            </div>
+            <div className="kv-row">
               <strong>Movement time</strong>
               <span>{selectedRun.movementTimestampLabel} ICT</span>
             </div>
@@ -199,16 +282,28 @@ export function DashboardShell() {
               <span>{selectedRun.auditEvent.chainStatus}</span>
             </div>
             <div className="kv-row">
-              <strong>Proof type</strong>
-              <span>{selectedRun.auditEvent.proofType}</span>
+              <strong>Local package</strong>
+              <span>Created in dashboard</span>
             </div>
             <div className="kv-row">
               <strong>Local package hash</strong>
-              <span>Not created in this shell</span>
+              <code className="hash-value">{localHashLabel}</code>
             </div>
             <div className="kv-row">
-              <strong>0G root / tx</strong>
+              <strong>0G Storage root / tx</strong>
               <span>Not started</span>
+            </div>
+            <div className="kv-row">
+              <strong>0G Chain tx</strong>
+              <span>Not registered</span>
+            </div>
+            <div className="kv-row">
+              <strong>Failure state</strong>
+              <span>No failed upload or registration</span>
+            </div>
+            <div className="kv-row">
+              <strong>Retry state</strong>
+              <span>{selectedRun.proofRetryState}</span>
             </div>
           </div>
 
@@ -249,8 +344,15 @@ export function DashboardShell() {
             <div className="kv-row">
               <strong>Expected vs actual</strong>
               <span>
-                {selectedRun.auditEvent.expectedUsageGrams}g expected - {selectedRun.auditEvent.actualMovementGrams}g
+                {selectedRun.auditEvent.expectedUsageGrams}g expected / {selectedRun.auditEvent.actualMovementGrams}g
                 actual
+              </span>
+            </div>
+            <div className="kv-row">
+              <strong>Usage formula</strong>
+              <span>
+                {selectedRun.auditEvent.orderQuantity} {selectedRun.auditEvent.productName}s x{' '}
+                {selectedRun.auditEvent.usageRuleGramsPerUnit}g = {selectedRun.auditEvent.expectedUsageGrams}g
               </span>
             </div>
             <div className="kv-row">
@@ -315,7 +417,7 @@ export function DashboardShell() {
             </div>
             <div className="kv-row">
               <strong>Transport</strong>
-              <span>Dashboard simulation only</span>
+              <span>Dashboard simulation only; no Telegram message sent</span>
             </div>
           </div>
 
@@ -332,6 +434,7 @@ export function DashboardShell() {
             <div className="message-box">
               <span className="label">Staff follow-up preview</span>
               <p style={{ whiteSpace: 'pre-line' }}>{selectedRun.staffMessagePreview}</p>
+              <small className="message-footnote">Preview only. It is not sent before owner approval.</small>
             </div>
           ) : null}
         </section>
