@@ -39,16 +39,16 @@ Required scenario cards for P0: State A (CLEAR), State C (REQUEST_EXPLANATION), 
 
 | # | Feature | Planning readiness | MVP interface coverage | Implementation status | Next needed (honest) | Evidence |
 |---:|---|---|---|---|---|---|
-| 1 | Order Simulator | READY | P0 order panel + scenario cards | PARTIAL | Dashboard shell shows fixture-driven order data; no API/DB persistence yet. | `docs/mvp-demo-interaction-brief.md`, `Backend-Final.md`, `Database.md` |
+| 1 | Order Simulator | READY | P0 order panel + scenario cards | PARTIAL | Local demo API route creates fixture-driven order data for dashboard; no real DB persistence yet. | `docs/mvp-demo-interaction-brief.md`, `Backend-Final.md`, `Database.md` |
 | 2 | Usage Rule / Recipe | READY | P0 expected usage shown | PARTIAL | Canonical Protein Shake = 30g Whey exists in shared/core and dashboard shell; no DB/API persistence yet. | `docs/mvp-demo-interaction-brief.md`, `ARKA Demo Scenario Brief — Draft.md`, `Backend-Final.md`, `Database.md` |
-| 3 | Inventory Movement Simulator | READY | P0 movement panel + scenario cards | PARTIAL | Dashboard shell shows fixture-driven movement data; no API/DB persistence yet. | `docs/mvp-demo-interaction-brief.md`, `ARKA Demo Scenario Brief — Draft.md`, `Backend-Final.md`, `Database.md` |
+| 3 | Inventory Movement Simulator | READY | P0 movement panel + scenario cards | PARTIAL | Local demo API route creates fixture-driven movement data with before/after quantities; no real DB persistence yet. | `docs/mvp-demo-interaction-brief.md`, `ARKA Demo Scenario Brief — Draft.md`, `Backend-Final.md`, `Database.md` |
 | 4 | Usage Batch | NEEDS_DETAIL | P0 backend-only if needed | NOT_IMPLEMENTED | Keep UI out of P0 unless required to prevent false alerts. | `Backend-Final.md`, `Database.md` |
-| 5 | Reconciliation Engine | READY | P0 Run Reconciliation | PARTIAL | Pure A/C/D core reconciliation is verified; no DB/API-backed reconciliation route yet. | `docs/mvp-demo-interaction-brief.md`, `Backend-Final.md` |
-| 6 | AuditEvent Generator | READY | P0 list + detail | PARTIAL | Pure A/C/D AuditEvent creation is verified; dashboard shell consumes it; no DB/API persistence yet. | `docs/mvp-demo-interaction-brief.md`, `Backend-Final.md`, `Database.md` |
+| 5 | Reconciliation Engine | READY | P0 Run Reconciliation | PARTIAL | Pure A/C/D core reconciliation is verified and consumed by the local demo API route; no DB-backed workflow yet. | `docs/mvp-demo-interaction-brief.md`, `Backend-Final.md` |
+| 6 | AuditEvent Generator | READY | P0 list + detail | PARTIAL | Local demo API route creates A/C/D AuditEvents and dashboard consumes returned results; no real DB persistence yet. | `docs/mvp-demo-interaction-brief.md`, `Backend-Final.md`, `Database.md` |
 | 7 | OpenClaw Triage Layer | NEEDS_DETAIL | P0 OpenClaw panel + triageOutcome | PARTIAL | Deterministic fallback is verified; local OpenClaw source/install/strict-smoke/gateway/skill/MiniMax discovery are verified; model-backed ARKA response, plugin/tools, packages/agent gateway calls, and OpenClaw Telegram are not verified. | `Arka - OpenClaw Agent.md`, `docs/openclaw-local-fork-plan.md`, `docs/openclaw-impact-assessment.md` |
 | 8 | Telegram Conversation Flow | NEEDS_DETAIL | P0 real or simulated; staff reply optional | NOT_IMPLEMENTED | Use dashboard simulation unless real bot/channel flow is verified. Do not store tokens in repo. | `docs/mvp-demo-interaction-brief.md`, `docs/technical-stack-brief.md` |
 | 9 | Dashboard / Audit Arena | READY | P0 single-page panels | PARTIAL | Local `/dashboard` shell exists; manual browser verification remains needed. | `docs/mvp-demo-interaction-brief.md`, `docs/technical-stack-brief.md` |
-| 10 | 0G Storage Proof Package | NEEDS_DETAIL | P0 proof panel statuses | PARTIAL | Local proof package builder/hash exists in core; real 0G Storage upload is not implemented or verified. | `0G Storage Brief.md`, `docs/mvp-demo-interaction-brief.md`, `docs/technical-stack-brief.md` |
+| 10 | 0G Storage Proof Package | NEEDS_DETAIL | P0 proof panel statuses | PARTIAL | Local demo API route returns proof-record-shaped metadata and local package hash; real 0G Storage upload is not implemented or verified. | `0G Storage Brief.md`, `docs/mvp-demo-interaction-brief.md`, `docs/technical-stack-brief.md` |
 | 11 | 0G Chain Proof Registry | NEEDS_DETAIL | P0 proof panel statuses | NOT_IMPLEMENTED | Confirm 0G testnet RPC/chain ID/faucet; implement and verify real AuditProofRegistry deploy/call before claiming chain anchoring. | `docs/0g-chain-brief.md`, `ARKA 0G Chain Brief — Concept Draft.md` |
 | 12 | Demo Video + README | NEEDS_DETAIL | P0 demo packaging | NOT_IMPLEMENTED | Draft after at least one A/C/D path works end-to-end; keep real-vs-simulated claims honest. | `AGENTS.md`, `docs/real-vs-simulated.md`, `docs/mvp-demo-interaction-brief.md` |
 
@@ -60,8 +60,8 @@ Inventory Movement Simulator: PARTIAL (scenario payload values + dashboard displ
 Reconciliation Engine: PARTIAL (pure core A/C/D only)
 AuditEvent Generator: PARTIAL (pure core A/C/D AuditEvent creation only)
 OpenClaw Triage Layer: PARTIAL (fallback verified; local OpenClaw setup partially verified; app integration not verified)
-Dashboard UI: PARTIAL (local shell builds; manual browser verification remains open)
-Local proof package creation: PARTIAL (core package builder/hash verified; no 0G upload)
+Dashboard UI: PARTIAL (local shell builds and API route smokes pass; manual browser verification remains open)
+Local proof package creation: PARTIAL (core package builder/hash verified and exposed through local demo API route; no 0G upload)
 ```
 
 These are not complete P0 features until they are wired into API/UI, persisted or displayed where required, and verified through the dashboard demo flow.

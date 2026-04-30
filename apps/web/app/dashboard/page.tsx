@@ -1,5 +1,10 @@
 import { DashboardShell } from './dashboard-shell';
+import { getDashboardInitialState } from './demo-run-service';
 
-export default function DashboardPage() {
-  return <DashboardShell />;
+export const dynamic = 'force-dynamic';
+
+export default async function DashboardPage() {
+  const initialState = await getDashboardInitialState();
+
+  return <DashboardShell initialState={initialState} />;
 }

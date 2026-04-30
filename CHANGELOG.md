@@ -5,8 +5,11 @@ All meaningful ARKA changes should be recorded here in human-readable language.
 ## 2026-04-30
 
 ### Changed
+- Refactored the Web2 dashboard path so State A/C/D clicks call `POST /api/demo/run-scenario` instead of assembling AuditEvents and proof hashes in the browser.
+- Added a server-side demo run service that creates order-shaped data, movement-shaped data, AuditEvent facts, deterministic fallback triage, and local proof-record-shaped metadata through the existing shared/core/agent boundaries.
+- Added an explicit in-memory demo repository/persistence label for the dashboard while real Postgres write/read verification remains unclaimed.
 - Improved the `/dashboard` Web2 MVP shell so State A/C/D cards show expected usage, actual movement, difference, and variance before selection.
-- Updated the dashboard proof panel to build and display a deterministic local AuditEvent proof package hash while keeping 0G Storage, 0G Chain, Telegram, and real OpenClaw runtime labels honest as not connected.
+- Updated the dashboard proof panel to display a deterministic local AuditEvent proof package hash returned by the backend route while keeping 0G Storage, 0G Chain, Telegram, and real OpenClaw runtime labels honest as not connected.
 - Added clearer movement before/after quantities, usage formula display, retry/failure placeholders, and simulated owner/staff message wording.
 - Updated implementation, code-map, and truthfulness docs for the dashboard-local proof hash display.
 
@@ -16,9 +19,11 @@ All meaningful ARKA changes should be recorded here in human-readable language.
 - `pnpm.cmd --filter @arka/agent test`
 - `pnpm.cmd --filter @arka/db run typecheck`
 - `pnpm.cmd --filter @arka/db run generate`
+- `pnpm.cmd --filter @arka/web exec tsc -p tsconfig.json --noEmit --incremental false --ignoreDeprecations 6.0`
 - `pnpm.cmd --filter @arka/web build`
 - `pnpm.cmd run verify:arka-openclaw`
 - Local dev-server HTTP smoke: `http://127.0.0.1:3010/dashboard` returned 200 with dashboard/proof-panel content.
+- Local API route smoke for State A, State C, and State D returned expected status, severity, deterministic triage source, `LOCAL_ONLY`, `NOT_STARTED`, `NOT_REGISTERED`, and local package hashes.
 
 ### Changed
 - Updated the OpenClaw impact assessment into a current cross-layer plan for frontend, backend/API, database, `packages/agent`, proof, 0G Storage, 0G Chain, Telegram, security, and the local `openclaw/` fork.

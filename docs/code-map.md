@@ -30,7 +30,7 @@ Must include:
 - AuditEvent list and detail views
 - Proof status views
 - Local proof package/hash display sourced from deterministic core helpers, while external 0G execution remains outside the web UI
-- Lightweight route handlers for local app needs
+- Lightweight route handlers for local app needs, including the local `POST /api/demo/run-scenario` MVP scenario path
 
 Must not include:
 
@@ -40,6 +40,7 @@ Must not include:
 - OpenClaw policy logic
 - Drizzle schema definitions as the first source of truth
 - 0G Storage upload or 0G Chain registration claims unless the real backend/proof path is implemented and verified
+- Real database persistence claims unless Postgres migrations and demo route write/read behavior are verified
 
 ### `packages/shared`
 

@@ -366,6 +366,7 @@ Route:
 
 ```txt
 /dashboard
+POST /api/demo/run-scenario for local A/C/D scenario execution
 ```
 
 P0 panels:
@@ -398,11 +399,12 @@ Dashboard success criteria:
 
 ```txt
 User can run A/C/D.
-Dashboard shows Order, Movement, AuditEvent data.
+Dashboard calls the local scenario route and shows returned Order, Movement, AuditEvent data.
 AuditEvent detail explains expected vs actual.
 OpenClaw triage outcome is visible.
 Proof status is visible even if proof integration is not yet real.
 Local AuditEvent proof package hash is visible before any 0G upload or chain registration.
+Persistence mode is visible and must say in-memory demo until real Postgres write/read is verified.
 ```
 
 Verification:
@@ -418,6 +420,7 @@ Truthfulness:
 ```txt
 Proof status must show LOCAL_ONLY / simulated states honestly until 0G is real.
 Dashboard-local package hashing must not be described as 0G Storage upload or on-chain anchoring.
+The in-memory demo repository must not be described as real database persistence.
 ```
 
 ## 8. Phase 7 - AuditEvent Proof Package

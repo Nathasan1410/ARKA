@@ -42,6 +42,8 @@ Current implementation note:
 - `triageSource` is worth storing now because ARKA already distinguishes deterministic fallback vs future OpenClaw runtime output at the agent boundary, and the dashboard/docs need that truthfulness to survive persistence.
 - `triageSource` is already represented in the schema.
 - OpenClaw run/session/message/model/skill references remain deferred until a real sidecar/plugin write path exists.
+- The Web2 MVP dashboard route currently uses a server-process in-memory demo repository behind a repository boundary. It creates Order-shaped, Movement-shaped, AuditEvent, and ProofRecord-shaped response data, but it does not yet write/read these rows through Postgres.
+- Do not mark Postgres persistence as real until migrations are applied to a real database and the demo route writes and reads back the A/C/D path.
 
 ## P0 Models
 

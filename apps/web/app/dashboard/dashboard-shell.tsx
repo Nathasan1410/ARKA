@@ -1,113 +1,87 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
-import { hashProofPackage } from '@arka/core';
-import {
-  demoScenarioSeeds,
-  demoWorldSeed,
-  ScenarioKey,
-  TriageOutcome,
-  type ScenarioKey as ScenarioKeyType,
-} from '@arka/shared';
-import { createDashboardRun, scenarioCards, type DashboardRun } from './dashboard-data';
+import { useMemo, useState } from 'react';
+import { demoScenarioSeeds, demoWorldSeed, ScenarioKey, TriageOutcome, type ScenarioKey as ScenarioKeyType } from '@arka/shared';
+import { scenarioCards, type DashboardRun, type RunScenarioResponse } from './dashboard-data';
 
-const INITIAL_SCENARIO = ScenarioKey.STATE_A;
+type DashboardShellProps = {
+  initialState: RunScenarioResponse;
+};
 
-export function DashboardShell() {
-  const [runs, setRuns] = useState<DashboardRun[]>(() => [createDashboardRun(INITIAL_SCENARIO, 1)]);
-  const [selectedCaseId, setSelectedCaseId] = useState('CASE-001');
+export function DashboardShell({ initialState }: DashboardShellProps) {
+  const [runs, setRuns] = useState<DashboardRun[]>(initialState.history);
+  const [selectedCaseId, setSelectedCaseId] = useState(initialState.run.caseId);
+  const [isRunningScenario, setIsRunningScenario] = useState(false);
+  const [runError, setRunError] = useState<string | null>(null);
 
   const selectedRun = useMemo(() => {
     return runs.find((run) => run.caseId === selectedCaseId) ?? runs[0];
   }, [runs, selectedCaseId]);
 
-  useEffect(() => {
-    const pendingRuns = runs.filter((run) => run.localPackageHashStatus === 'PENDING_HASH');
+  async function handleRunScenario(scenarioKey: ScenarioKeyType) {
+    setIsRunningScenario(true);
+    setRunError(null);
 
-    if (pendingRuns.length === 0) {
-      return;
+    try {
+      const response = await fetch('/api/demo/run-scenario', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ scenarioKey }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`Scenario route failed with HTTP ${response.status}`);
+      }
+
+      const result = (await response.json()) as RunScenarioResponse;
+      setRuns(result.history);
+      setSelectedCaseId(result.run.caseId);
+    } catch (error) {
+      setRunError(error instanceof Error ? error.message : 'Scenario route failed.');
+    } finally {
+      setIsRunningScenario(false);
     }
+  }
 
-    let isCancelled = false;
-
-    for (const run of pendingRuns) {
-      hashProofPackage(run.proofPackageCanonicalJson)
-        .then((localPackageHash) => {
-          if (isCancelled) {
-            return;
-          }
-
-          setRuns((currentRuns) =>
-            currentRuns.map((currentRun) =>
-              currentRun.caseId === run.caseId
-                ? {
-                    ...currentRun,
-                    localPackageHash,
-                    localPackageHashStatus: 'HASHED',
-                  }
-                : currentRun,
-            ),
-          );
-        })
-        .catch(() => {
-          if (isCancelled) {
-            return;
-          }
-
-          setRuns((currentRuns) =>
-            currentRuns.map((currentRun) =>
-              currentRun.caseId === run.caseId
-                ? {
-                    ...currentRun,
-                    localPackageHash: null,
-                    localPackageHashStatus: 'FAILED',
-                  }
-                : currentRun,
-            ),
-          );
-        });
-    }
-
-    return () => {
-      isCancelled = true;
-    };
-  }, [runs]);
-
-  function handleRunScenario(scenarioKey: ScenarioKeyType) {
-    const nextRun = createDashboardRun(scenarioKey, runs.length + 1);
-    setRuns((currentRuns) => [nextRun, ...currentRuns]);
-    setSelectedCaseId(nextRun.caseId);
+  if (!selectedRun) {
+    return (
+      <main className="app-shell">
+        <section className="panel span-12">
+          <h1>Dashboard unavailable</h1>
+          <p className="panel-subtitle">No local scenario run could be loaded.</p>
+        </section>
+      </main>
+    );
   }
 
   const movementDifference = selectedRun.auditEvent.actualMovementGrams - selectedRun.auditEvent.expectedUsageGrams;
-  const localHashLabel =
-    selectedRun.localPackageHashStatus === 'HASHED'
-      ? selectedRun.localPackageHash
-      : selectedRun.localPackageHashStatus === 'FAILED'
-        ? 'Hash failed locally'
-        : 'Hashing local package...';
 
   return (
     <main className="app-shell">
       <header className="topbar">
         <div>
           <p className="eyebrow">ARKA - Audit Arena</p>
-          <h1>Local dashboard shell</h1>
+          <h1>AuditEvent dashboard MVP</h1>
           <p>
-            Scenario-driven dashboard route using the canonical State A / State C / State D fixtures plus pure
-            reconciliation and deterministic triage. Deterministic fallback is active here; real OpenClaw runtime,
-            Telegram transport, 0G upload, and chain calls are not connected in this shell.
+            Scenario cards now call a local backend route that creates order, movement, AuditEvent, deterministic
+            fallback triage, and a local proof record. Real OpenClaw runtime, Telegram delivery, 0G upload, and chain
+            calls are still not connected.
           </p>
         </div>
         <div className="status-stack">
           <span className="chip" data-tone="info">
             Dashboard UI - PARTIAL
           </span>
-          <span className="chip" data-tone="warning">
-            OpenClaw - FALLBACK_ONLY
+          <span className="chip" data-tone="info">
+            API route - LOCAL
           </span>
           <span className="chip" data-tone="warning">
-            Telegram - SIMULATED
+            DB - {selectedRun.persistence.mode}
+          </span>
+          <span className="chip" data-tone="warning">
+            OpenClaw - FALLBACK_ONLY
           </span>
           <span className="chip" data-tone="warning">
             0G Proof - NOT_STARTED
@@ -134,7 +108,8 @@ export function DashboardShell() {
                 key={card.key}
                 className="scenario-button"
                 data-active={scenarioIsSelected}
-                onClick={() => handleRunScenario(card.key)}
+                disabled={isRunningScenario}
+                onClick={() => void handleRunScenario(card.key)}
                 type="button"
               >
                 <div className="scenario-header">
@@ -148,165 +123,70 @@ export function DashboardShell() {
                 </div>
 
                 <div className="scenario-body">
-                  <div className="scenario-meta">
-                    <div>
-                      <span className="label">Expected result</span>
-                      <span className="value">{card.expectedOutcome}</span>
-                    </div>
-                    <div>
-                      <span className="label">Proof path</span>
-                      <span className="value">{card.proofPath}</span>
-                    </div>
-                  </div>
-
-                  <div className="scenario-meta">
-                    <div>
-                      <span className="label">Expected usage</span>
-                      <span className="value">{cardScenario.expectedUsageGrams}g whey</span>
-                    </div>
-                    <div>
-                      <span className="label">Actual movement</span>
-                      <span className="value">{cardScenario.actualMovementGrams}g OUT</span>
-                    </div>
-                  </div>
-
-                  <div className="scenario-meta">
-                    <div>
-                      <span className="label">Difference</span>
-                      <span className="value">
-                        {cardDifference > 0 ? '+' : ''}
-                        {cardDifference}g / {cardScenario.variancePercent.toFixed(1)}%
-                      </span>
-                    </div>
-                    <div>
-                      <span className="label">Triage</span>
-                      <span className="value">{card.triagePath}</span>
-                    </div>
-                  </div>
+                  <ScenarioMetric label="Expected result" value={card.expectedOutcome} />
+                  <ScenarioMetric label="Proof path" value={card.proofPath} />
+                  <ScenarioMetric label="Expected usage" value={`${cardScenario.expectedUsageGrams}g whey`} />
+                  <ScenarioMetric label="Actual movement" value={`${cardScenario.actualMovementGrams}g OUT`} />
+                  <ScenarioMetric
+                    label="Difference"
+                    value={`${cardDifference > 0 ? '+' : ''}${cardDifference}g / ${cardScenario.variancePercent.toFixed(1)}%`}
+                  />
+                  <ScenarioMetric label="Triage" value={card.triagePath} />
                 </div>
               </button>
             );
           })}
         </div>
+
+        {runError ? <p className="error-text">{runError}</p> : null}
       </section>
 
       <div className="dashboard-grid">
         <section className="panel span-4">
           <h2>Order Panel</h2>
-          <p className="panel-subtitle">Business intent for the selected case.</p>
-
+          <p className="panel-subtitle">Business intent created by the local scenario route.</p>
           <div className="panel-grid">
-            <div className="kv-row">
-              <strong>Order ID</strong>
-              <span>{selectedRun.orderId}</span>
-            </div>
-            <div className="kv-row">
-              <strong>Product</strong>
-              <span>{selectedRun.auditEvent.productName}</span>
-            </div>
-            <div className="kv-row">
-              <strong>Quantity</strong>
-              <span>{selectedRun.auditEvent.orderQuantity}</span>
-            </div>
-            <div className="kv-row">
-              <strong>Cashier</strong>
-              <span>{selectedRun.auditEvent.cashierName}</span>
-            </div>
-            <div className="kv-row">
-              <strong>Expected usage</strong>
-              <span>
-                {selectedRun.auditEvent.orderQuantity} x {selectedRun.auditEvent.usageRuleGramsPerUnit}g ={' '}
-                {selectedRun.auditEvent.expectedUsageGrams}g {selectedRun.auditEvent.inventoryItemName}
-              </span>
-            </div>
-            <div className="kv-row">
-              <strong>Audit window</strong>
-              <span>{selectedRun.evidenceWindowLabel}</span>
-            </div>
+            <Kv label="Order ID" value={selectedRun.orderId} />
+            <Kv label="Product" value={selectedRun.auditEvent.productName} />
+            <Kv label="Quantity" value={selectedRun.auditEvent.orderQuantity} />
+            <Kv label="Cashier" value={selectedRun.auditEvent.cashierName} />
+            <Kv
+              label="Expected usage"
+              value={`${selectedRun.auditEvent.orderQuantity} x ${selectedRun.auditEvent.usageRuleGramsPerUnit}g = ${selectedRun.auditEvent.expectedUsageGrams}g ${selectedRun.auditEvent.inventoryItemName}`}
+            />
+            <Kv label="Audit window" value={selectedRun.evidenceWindowLabel} />
           </div>
         </section>
 
         <section className="panel span-4">
           <h2>Movement Panel</h2>
-          <p className="panel-subtitle">Physical movement used by local reconciliation.</p>
-
+          <p className="panel-subtitle">Physical movement created by the local scenario route.</p>
           <div className="panel-grid">
-            <div className="kv-row">
-              <strong>Movement ID</strong>
-              <span>{selectedRun.movementId}</span>
-            </div>
-            <div className="kv-row">
-              <strong>Inventory item</strong>
-              <span>{selectedRun.auditEvent.inventoryItemName}</span>
-            </div>
-            <div className="kv-row">
-              <strong>Container</strong>
-              <span>{selectedRun.auditEvent.containerId}</span>
-            </div>
-            <div className="kv-row">
-              <strong>Handler</strong>
-              <span>{selectedRun.auditEvent.handlerName}</span>
-            </div>
-            <div className="kv-row">
-              <strong>Movement</strong>
-              <span>{selectedRun.auditEvent.actualMovementGrams}g OUT</span>
-            </div>
-            <div className="kv-row">
-              <strong>Before / after</strong>
-              <span>
-                {selectedRun.movementBeforeGrams}g {'->'} {selectedRun.movementAfterGrams}g
-              </span>
-            </div>
-            <div className="kv-row">
-              <strong>Movement time</strong>
-              <span>{selectedRun.movementTimestampLabel} ICT</span>
-            </div>
+            <Kv label="Movement ID" value={selectedRun.movementId} />
+            <Kv label="Inventory item" value={selectedRun.auditEvent.inventoryItemName} />
+            <Kv label="Container" value={selectedRun.auditEvent.containerId} />
+            <Kv label="Handler" value={selectedRun.auditEvent.handlerName} />
+            <Kv label="Movement" value={`${selectedRun.auditEvent.actualMovementGrams}g OUT`} />
+            <Kv label="Before / after" value={`${selectedRun.movementBeforeGrams}g -> ${selectedRun.movementAfterGrams}g`} />
+            <Kv label="Movement time" value={`${selectedRun.movementTimestampLabel} ICT`} />
           </div>
         </section>
 
         <section className="panel span-4">
           <h2>Proof Panel</h2>
-          <p className="panel-subtitle">Honest local status only; no proof integrations run here.</p>
-
+          <p className="panel-subtitle">Local proof record only; no 0G integrations run here.</p>
           <div className="panel-grid">
-            <div className="kv-row">
-              <strong>Audit proof status</strong>
-              <span>{selectedRun.auditEvent.auditProofStatus}</span>
-            </div>
-            <div className="kv-row">
-              <strong>Storage status</strong>
-              <span>{selectedRun.auditEvent.storageStatus}</span>
-            </div>
-            <div className="kv-row">
-              <strong>Chain status</strong>
-              <span>{selectedRun.auditEvent.chainStatus}</span>
-            </div>
-            <div className="kv-row">
-              <strong>Local package</strong>
-              <span>Created in dashboard</span>
-            </div>
-            <div className="kv-row">
-              <strong>Local package hash</strong>
-              <code className="hash-value">{localHashLabel}</code>
-            </div>
-            <div className="kv-row">
-              <strong>0G Storage root / tx</strong>
-              <span>Not started</span>
-            </div>
-            <div className="kv-row">
-              <strong>0G Chain tx</strong>
-              <span>Not registered</span>
-            </div>
-            <div className="kv-row">
-              <strong>Failure state</strong>
-              <span>No failed upload or registration</span>
-            </div>
-            <div className="kv-row">
-              <strong>Retry state</strong>
-              <span>{selectedRun.proofRetryState}</span>
-            </div>
+            <Kv label="Proof record ID" value={selectedRun.proofRecord.proofRecordId} />
+            <Kv label="Audit proof status" value={selectedRun.proofRecord.auditProofStatus} />
+            <Kv label="Storage status" value={selectedRun.proofRecord.storageStatus} />
+            <Kv label="Chain status" value={selectedRun.proofRecord.chainStatus} />
+            <Kv label="Local package hash" value={selectedRun.proofRecord.localPackageHash} code />
+            <Kv label="0G Storage root" value={selectedRun.proofRecord.storageRootHash ?? 'Not started'} />
+            <Kv label="0G Storage tx" value={selectedRun.proofRecord.storageTxHash ?? 'Not started'} />
+            <Kv label="0G Chain tx" value={selectedRun.proofRecord.chainTxHash ?? 'Not registered'} />
+            <Kv label="Failure state" value={selectedRun.proofRecord.failureState} />
+            <Kv label="Retry state" value={selectedRun.proofRecord.retryState} />
           </div>
-
           <div className="note-block">
             <p>{selectedRun.proofSummary}</p>
           </div>
@@ -315,72 +195,35 @@ export function DashboardShell() {
         <section className="panel span-8">
           <h2>AuditEvent Detail</h2>
           <p className="panel-subtitle">Selected case reasoning from order intent to local audit result.</p>
-
           <div className="panel-grid">
-            <div className="kv-row">
-              <strong>AuditEvent ID</strong>
-              <code>{selectedRun.auditEvent.auditEventId}</code>
-            </div>
-            <div className="kv-row">
-              <strong>Case ID</strong>
-              <code>{selectedRun.auditEvent.caseId}</code>
-            </div>
-            <div className="kv-row">
-              <strong>Scenario</strong>
-              <span>{selectedRun.auditEvent.scenarioKey}</span>
-            </div>
-            <div className="kv-row">
-              <strong>Case type</strong>
-              <span>{selectedRun.auditEvent.caseType}</span>
-            </div>
-            <div className="kv-row">
-              <strong>Status</strong>
-              <span>{selectedRun.auditEvent.status}</span>
-            </div>
-            <div className="kv-row">
-              <strong>Severity</strong>
-              <span>{selectedRun.auditEvent.severity}</span>
-            </div>
-            <div className="kv-row">
-              <strong>Expected vs actual</strong>
-              <span>
-                {selectedRun.auditEvent.expectedUsageGrams}g expected / {selectedRun.auditEvent.actualMovementGrams}g
-                actual
-              </span>
-            </div>
-            <div className="kv-row">
-              <strong>Usage formula</strong>
-              <span>
-                {selectedRun.auditEvent.orderQuantity} {selectedRun.auditEvent.productName}s x{' '}
-                {selectedRun.auditEvent.usageRuleGramsPerUnit}g = {selectedRun.auditEvent.expectedUsageGrams}g
-              </span>
-            </div>
-            <div className="kv-row">
-              <strong>Difference / variance</strong>
-              <span>
-                {movementDifference > 0 ? '+' : ''}
-                {movementDifference}g - {selectedRun.auditEvent.variancePercent.toFixed(1)}%
-              </span>
-            </div>
-            <div className="kv-row">
-              <strong>People context</strong>
-              <span>
-                Handler {selectedRun.auditEvent.handlerName} - Cashier {selectedRun.auditEvent.cashierName} - Owner{' '}
-                {selectedRun.auditEvent.ownerName}
-              </span>
-            </div>
-            <div className="kv-row">
-              <strong>Created at</strong>
-              <span>{selectedRun.createdAtLabel}</span>
-            </div>
-            <div className="kv-row">
-              <strong>Evidence window</strong>
-              <span>{selectedRun.evidenceWindowLabel} ICT</span>
-            </div>
-            <div className="kv-row">
-              <strong>Recommended action</strong>
-              <span>{renderRecommendedAction(selectedRun.auditEvent.triageOutcome ?? TriageOutcome.AUTO_CLEAR)}</span>
-            </div>
+            <Kv label="AuditEvent ID" value={selectedRun.auditEvent.auditEventId} code />
+            <Kv label="Case ID" value={selectedRun.auditEvent.caseId} code />
+            <Kv label="Scenario" value={selectedRun.auditEvent.scenarioKey} />
+            <Kv label="Case type" value={selectedRun.auditEvent.caseType} />
+            <Kv label="Status" value={selectedRun.auditEvent.status} />
+            <Kv label="Severity" value={selectedRun.auditEvent.severity} />
+            <Kv
+              label="Expected vs actual"
+              value={`${selectedRun.auditEvent.expectedUsageGrams}g expected / ${selectedRun.auditEvent.actualMovementGrams}g actual`}
+            />
+            <Kv
+              label="Usage formula"
+              value={`${selectedRun.auditEvent.orderQuantity} ${selectedRun.auditEvent.productName}s x ${selectedRun.auditEvent.usageRuleGramsPerUnit}g = ${selectedRun.auditEvent.expectedUsageGrams}g`}
+            />
+            <Kv
+              label="Difference / variance"
+              value={`${movementDifference > 0 ? '+' : ''}${movementDifference}g - ${selectedRun.auditEvent.variancePercent.toFixed(1)}%`}
+            />
+            <Kv
+              label="People context"
+              value={`Handler ${selectedRun.auditEvent.handlerName} - Cashier ${selectedRun.auditEvent.cashierName} - Owner ${selectedRun.auditEvent.ownerName}`}
+            />
+            <Kv label="Created at" value={selectedRun.createdAtLabel} />
+            <Kv label="Evidence window" value={`${selectedRun.evidenceWindowLabel} ICT`} />
+            <Kv
+              label="Recommended action"
+              value={renderRecommendedAction(selectedRun.auditEvent.triageOutcome ?? TriageOutcome.AUTO_CLEAR)}
+            />
           </div>
         </section>
 
@@ -389,47 +232,22 @@ export function DashboardShell() {
           <p className="panel-subtitle">
             Deterministic fallback is active. Real OpenClaw runtime and Telegram delivery remain unverified.
           </p>
-
           <div className="panel-grid">
-            <div className="kv-row">
-              <strong>Triage outcome</strong>
-              <span>{selectedRun.auditEvent.triageOutcome}</span>
-            </div>
-            <div className="kv-row">
-              <strong>Triage source</strong>
-              <span>{selectedRun.auditEvent.triageSource}</span>
-            </div>
-            <div className="kv-row">
-              <strong>Owner state</strong>
-              <span>{selectedRun.ownerAlertState}</span>
-            </div>
-            <div className="kv-row">
-              <strong>Owner recommendation</strong>
-              <span>{selectedRun.ownerRecommendation}</span>
-            </div>
-            <div className="kv-row">
-              <strong>Action log</strong>
-              <span>{selectedRun.actionLog}</span>
-            </div>
-            <div className="kv-row">
-              <strong>Case note</strong>
-              <span>{selectedRun.caseNote}</span>
-            </div>
-            <div className="kv-row">
-              <strong>Transport</strong>
-              <span>Dashboard simulation only; no Telegram message sent</span>
-            </div>
+            <Kv label="Triage outcome" value={selectedRun.auditEvent.triageOutcome} />
+            <Kv label="Triage source" value={selectedRun.auditEvent.triageSource} />
+            <Kv label="Owner state" value={selectedRun.ownerAlertState} />
+            <Kv label="Owner recommendation" value={selectedRun.ownerRecommendation} />
+            <Kv label="Action log" value={selectedRun.actionLog} />
+            <Kv label="Case note" value={selectedRun.caseNote} />
+            <Kv label="Transport" value="Dashboard simulation only; no Telegram message sent" />
           </div>
-
           <div className="note-block">
             <p>{selectedRun.triageRuntimeSummary}</p>
           </div>
-
           <div className="message-box">
             <span className="label">Owner alert preview</span>
             <p>{selectedRun.ownerAlertCopy}</p>
           </div>
-
           {selectedRun.staffMessagePreview ? (
             <div className="message-box">
               <span className="label">Staff follow-up preview</span>
@@ -441,8 +259,9 @@ export function DashboardShell() {
 
         <section className="panel span-12">
           <h2>AuditEvent History</h2>
-          <p className="panel-subtitle">Local in-memory case list for the current browser session.</p>
-
+          <p className="panel-subtitle">
+            {selectedRun.persistence.label}. {selectedRun.persistence.detail}
+          </p>
           <div className="history-list">
             {runs.map((run) => (
               <button
@@ -453,33 +272,18 @@ export function DashboardShell() {
                 type="button"
               >
                 <div className="history-row">
-                  <div className="history-cell">
-                    <strong>{run.caseId}</strong>
-                    <small>{run.scenario.label}</small>
-                  </div>
-                  <div className="history-cell">
-                    <strong>{run.auditEvent.status}</strong>
-                    <small>{run.auditEvent.severity}</small>
-                  </div>
-                  <div className="history-cell">
-                    <strong>{run.auditEvent.triageOutcome}</strong>
-                    <small>{run.ownerAlertState}</small>
-                  </div>
-                  <div className="history-cell">
-                    <strong>{run.auditEvent.auditProofStatus}</strong>
-                    <small>
-                      {run.auditEvent.storageStatus} / {run.auditEvent.chainStatus}
-                    </small>
-                  </div>
-                  <div className="history-cell">
-                    <strong>{run.createdAtLabel}</strong>
-                    <small>Handler {run.auditEvent.handlerName}</small>
-                  </div>
+                  <HistoryCell title={run.caseId} detail={run.scenario.label} />
+                  <HistoryCell title={run.auditEvent.status} detail={run.auditEvent.severity} />
+                  <HistoryCell title={run.auditEvent.triageOutcome} detail={run.ownerAlertState} />
+                  <HistoryCell
+                    title={run.proofRecord.auditProofStatus}
+                    detail={`${run.proofRecord.storageStatus} / ${run.proofRecord.chainStatus}`}
+                  />
+                  <HistoryCell title={run.createdAtLabel} detail={`Handler ${run.auditEvent.handlerName}`} />
                 </div>
               </button>
             ))}
           </div>
-
           <p className="microcopy">
             State C and State D surface proof lifecycle placeholders, but proof failure cannot delete or invalidate the
             AuditEvent. Final decision stays with the owner or auditor.
@@ -487,6 +291,33 @@ export function DashboardShell() {
         </section>
       </div>
     </main>
+  );
+}
+
+function ScenarioMetric({ label, value }: { label: string; value: string }) {
+  return (
+    <div>
+      <span className="label">{label}</span>
+      <span className="value">{value}</span>
+    </div>
+  );
+}
+
+function Kv({ label, value, code = false }: { label: string; value: number | string | null; code?: boolean }) {
+  return (
+    <div className="kv-row">
+      <strong>{label}</strong>
+      {code ? <code className="hash-value">{value}</code> : <span>{value}</span>}
+    </div>
+  );
+}
+
+function HistoryCell({ title, detail }: { title: string | null; detail: string }) {
+  return (
+    <div className="history-cell">
+      <strong>{title}</strong>
+      <small>{detail}</small>
+    </div>
   );
 }
 

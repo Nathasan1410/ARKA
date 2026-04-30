@@ -78,9 +78,9 @@ Owner: Both
 ```txt
 Area: Database / Postgres
 Status: NEEDS_HUMAN
-What happened: The first Drizzle schema package can typecheck and generate migrations locally, but no real Postgres instance or confirmed DATABASE_URL has been provided yet for applying migrations or verifying write/read behavior against a database.
-Why it matters: ARKA should not claim real database persistence beyond schema definition and SQL generation until migrations run successfully against a real Postgres target.
-Next action: Provide a Postgres DATABASE_URL, run the generated migration against that database, and verify the demo world can persist and read back an AuditEvent path.
+What happened: The first Drizzle schema package can typecheck and generate migrations locally, but no real Postgres instance or confirmed DATABASE_URL has been provided yet for applying migrations or verifying write/read behavior against a database. The Web2 MVP demo route now has a repository boundary, but it intentionally uses an in-memory server-process repository and labels that mode in the dashboard.
+Why it matters: ARKA should not claim real database persistence beyond schema definition, SQL generation, and the in-memory demo boundary until migrations run successfully against a real Postgres target and the demo route writes/reads Order, Movement, AuditEvent, and ProofRecord rows.
+Next action: Provide a Postgres DATABASE_URL, run the generated migration against that database, implement the verified Postgres repository behind the existing demo-run repository interface, and verify the demo world can persist and read back an AuditEvent path.
 Owner: Both
 ```
 
@@ -156,7 +156,8 @@ Owner: Both
 Area: Dashboard UI
 Status: RISK
 What happened: The dashboard shell was verified with `pnpm.cmd --filter @arka/web build`. On 2026-04-30, a package-local Next dev server was started with `pnpm.cmd --filter @arka/web exec next dev --hostname 127.0.0.1 --port 3010`, and `http://127.0.0.1:3010/dashboard` returned HTTP 200 with dashboard and proof-panel content. No browser automation exists in the repo, so State A / State C / State D were not clicked in a real browser during this session.
-Why it matters: Static build and HTTP smoke confirm compilation and route serving, not actual in-browser layout, button flow, triageSource visibility after clicks, or fallback/OpenClaw copy clarity for the A/C/D demo.
+Additional verification: After the dashboard was refactored to call `POST /api/demo/run-scenario`, direct HTTP POST checks for State A, State C, and State D returned the expected status, severity, deterministic fallback triage source, `LOCAL_ONLY`, `NOT_STARTED`, `NOT_REGISTERED`, and local package hashes.
+Why it matters: Static build and HTTP smoke confirm compilation, route serving, and API behavior, not actual in-browser layout, button flow, triageSource visibility after clicks, or fallback/OpenClaw copy clarity for the A/C/D demo.
 Next action: Open `http://127.0.0.1:3010/dashboard` in a browser and manually click State A, State C, and State D before claiming the dashboard flow is demo-ready.
 Owner: Both
 ```
