@@ -107,11 +107,13 @@ pnpm.cmd run typecheck passes for packages/shared, packages/core, and packages/a
 packages/shared contains canonical enums/types and A/C/D fixtures.
 packages/core contains pure A/C/D reconciliation and AuditEvent creation.
 packages/agent contains deterministic A/C/D triage fallback only.
-OpenClaw has been researched and cloned outside the repo at D:\Projekan\Macam2Hackathon\ARKA\_research\openclaw.
-No OpenClaw gateway/plugin/skill integration has been implemented or verified in ARKA yet.
-No database schema is implemented yet.
-No dashboard UI is implemented yet.
-No proof package builder is implemented yet.
+OpenClaw has been researched, copied into openclaw/ as a repo-local source fork, locally installed, strict-smoke built, CLI-smoked, gateway-smoked, and configured to load the ARKA arka-audit skill.
+MiniMax model discovery/auth is verified in the local smoke setup.
+Read-only `arka-audit` plugin skeleton static smoke is verified.
+Model-backed ARKA OpenClaw response, OpenClaw gateway discovery/load of the plugin, packages/agent gateway calls, and OpenClaw Telegram are not verified.
+packages/db schema exists, but real Postgres migration/write-read verification is not done.
+Dashboard UI shell exists for local A/C/D fixtures, but manual browser verification remains open.
+Local proof package builder/hash exists in packages/core, but 0G upload is not implemented.
 No contract implementation is implemented yet.
 No 0G upload or chain registration is implemented yet.
 No Telegram implementation is implemented yet.
@@ -152,8 +154,8 @@ Truthfulness rules:
 Do not claim 0G Storage upload works unless real upload is implemented and verified.
 Do not claim 0G Chain registry works unless real transaction/anchor is implemented and verified.
 Do not claim Telegram works unless a real bot flow is implemented and verified.
-Do not claim full OpenClaw runtime works unless it is implemented and verified.
-Label deterministic triage as fallback-only / no verified OpenClaw runtime.
+Do not claim full ARKA OpenClaw integration works unless model-backed response, plugin/client path, and app call are implemented and verified.
+Label deterministic triage as fallback-only even though local OpenClaw gateway/skill setup is partially verified.
 If an agent task touches OpenClaw integration, it must first read docs/openclaw-research-and-integration-plan.md.
 Proof failure must not delete or invalidate an AuditEvent.
 ```
@@ -365,8 +367,8 @@ Owned paths:
 
 ```txt
 packages/agent/**
-packages/openclaw-plugin-arka/** only if explicitly implementing plugin code
-OpenClaw workspace/research paths only if explicitly chosen by the user
+openclaw/extensions/arka-audit/** only if explicitly implementing plugin code
+openclaw/workspaces/arka/** only if explicitly changing OpenClaw workspace/skill behavior
 docs/reused-libraries.md
 docs/real-vs-simulated.md
 technical-debt.md
@@ -376,7 +378,7 @@ Required work:
 
 ```txt
 1. Read docs/openclaw-research-and-integration-plan.md before editing.
-2. Prefer OpenClaw sidecar gateway + ARKA skill/plugin over vendoring or forking OpenClaw.
+2. Use the repo-local OpenClaw source fork and sidecar gateway + ARKA skill/plugin path; do not create a second plugin package unless explicitly requested.
 3. If running smoke setup, verify the smallest safe OpenClaw command and record exactly what works.
 4. If creating plugin/skill code, keep it AuditEvent-first and forbid mutation of reconciliation facts.
 5. If copying, vendoring, adding dependency, or modifying OpenClaw source, update docs/reused-libraries.md and docs/ai-attribution.md.

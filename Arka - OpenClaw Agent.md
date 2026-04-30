@@ -6,7 +6,10 @@ Research update:
 OpenClaw is a gateway/runtime/plugin/skills system, not just a local TypeScript adapter.
 ARKA should build on OpenClaw through an OpenClaw sidecar gateway plus ARKA-specific skill/plugin work.
 packages/agent is ARKA's app-facing boundary and deterministic fallback, not the full OpenClaw runtime.
-No OpenClaw runtime has been installed, modified, or verified inside ARKA yet.
+OpenClaw public source is now copied as a repo-local fork under openclaw/.
+Local install, strict-smoke build, direct CLI checks, local dev gateway connectivity, ARKA skill loading, and MiniMax model discovery are verified.
+Read-only `arka-audit` plugin skeleton static smoke is verified.
+Model-backed ARKA agent response, OpenClaw gateway discovery/load of the plugin, packages/agent gateway calls, and OpenClaw Telegram are not verified yet.
 ```
 
 ## 0. Positioning
@@ -186,7 +189,7 @@ OpenClaw recommends requesting explanation
 ↓
 Owner approves message to staff
 ↓
-OpenClaw sends message to handler/staff
+OpenClaw or the selected Telegram/dashboard transport sends message to handler/staff only after that transport is implemented and verified
 ↓
 Staff replies
 ↓
@@ -265,14 +268,14 @@ Reply:
 
 ## 4. Staff Reply Flow
 
-Staff can reply directly to OpenClaw.
+Staff can reply through OpenClaw only after the channel integration is implemented and verified. Until then, the dashboard may simulate the staff reply flow.
 
 But staff replies should not automatically resolve the case.
 
 Flow:
 
 ```txt
-Staff replies to OpenClaw
+Staff replies through the verified channel, or the dashboard simulates the reply
 ↓
 OpenClaw summarizes staff explanation
 ↓
@@ -371,7 +374,7 @@ Owner replies:
 Send
 ```
 
-Then OpenClaw sends.
+Then OpenClaw or the selected transport sends, only if the transport is implemented and verified. Otherwise the dashboard keeps it as a preview.
 
 ### 6.2 Revoke/Edit Rule
 
@@ -758,7 +761,7 @@ For production, this becomes owner-configurable policy.
 
 ### Daily Report MVP Rule
 
-Daily report is P0 as an OpenClaw capability, but DailyReportSnapshot is not required for MVP.
+Daily report is not required for the P0 A/C/D proof demo. It is a later OpenClaw capability unless the core AuditEvent, proof, and triage path is already stable.
 
 For MVP, daily report can be generated dynamically from AuditEvents, CaseNotes, ActionLogs, StaffClarificationRequests, and ProofRecords.
 
@@ -952,12 +955,12 @@ Do not build policy UI.
 
 ```txt
 Backend creates AuditEvent.
-OpenClaw triages AuditEvent.
+OpenClaw triages AuditEvent after gateway/plugin/client integration is verified; until then packages/agent deterministic fallback is the safe local path.
 Owner controls serious actions.
-Staff can explain through OpenClaw.
-Telegram is the conversation layer.
+Staff can explain through OpenClaw only after channel integration is verified.
+Telegram or dashboard preview is the conversation layer depending on implementation status.
 Dashboard is deeper visual investigation.
-0G seals AuditEvent proof and final resolution proof.
+0G seals AuditEvent proof and final resolution proof only after 0G Storage upload and 0G Chain registration are implemented and verified.
 ```
 
 Bottom Notes :

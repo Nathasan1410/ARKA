@@ -1,0 +1,13 @@
+{
+  "id": "arka-audit",
+  "activation": {
+    "onStartup": true
+  },
+  "name": "ARKA Audit",
+  "description": "Read-only AuditEvent triage tools for ARKA",
+  "configSchema": {
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {}
+  }
+}

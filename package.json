@@ -10,6 +10,8 @@
     "dev:web": "pnpm --filter @arka/web dev",
     "build": "pnpm -r --if-present run build",
     "build:web": "pnpm --filter @arka/web build",
+    "test:arka-openclaw": "vitest run test/arka-openclaw.verify.test.ts",
+    "verify:arka-openclaw": "pnpm run test:arka-openclaw && pnpm --filter @arka/shared test && pnpm --filter @arka/core test && pnpm --filter @arka/agent test && pnpm run typecheck",
     "typecheck": "pnpm --filter @arka/shared --filter @arka/core --filter @arka/agent --filter @arka/db run typecheck",
     "lint": "pnpm -r --if-present run lint",
     "clean": "pnpm -r --if-present run clean"

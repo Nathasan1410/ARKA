@@ -1,13 +1,19 @@
 # OpenClaw Research and ARKA Integration Plan
 
-Last updated: 2026-04-29
+Last updated: 2026-04-30
 
 ## Status
 
 ```txt
 Research clone: DONE
-OpenClaw installed into ARKA repo: NO
-OpenClaw vendored/copied into ARKA repo: NO
+OpenClaw local source fork in ARKA repo: YES, under openclaw/
+OpenClaw local install in ARKA repo: YES, verified with pnpm 10.33.0
+OpenClaw local build in ARKA repo: PARTIAL, build:strict-smoke verified; full build not verified
+OpenClaw local CLI smoke: YES, direct source entrypoint verified
+OpenClaw gateway connectivity: YES, local dev gateway status probe verified on 127.0.0.1:19001
+ARKA workspace/skill loaded in OpenClaw: YES, arka-audit ready from openclaw-workspace
+MiniMax model discovery: YES, minimax/MiniMax-M2.7 listed with auth=yes
+Model-backed ARKA agent turn: NO / NOT VERIFIED
 OpenClaw runtime integrated with ARKA: NO
 ARKA deterministic fallback: YES, in packages/agent
 ```
@@ -20,7 +26,7 @@ Official docs: https://docs.openclaw.ai
 Local research clone: D:\Projekan\Macam2Hackathon\ARKA\_research\openclaw
 ```
 
-The research clone is outside `ARKA-github` and must stay research-only unless the repo owner explicitly chooses a vendoring, submodule, or fork strategy.
+The research clone remains outside `ARKA-github` as the upstream reference. ARKA now also has a repo-local copied source fork at `openclaw/` for future OpenClaw-side workspace/plugin/runtime work. The local fork can install, pass the targeted strict-smoke build, run direct CLI help/version commands, start a local dev gateway reachable by status probe, load the ARKA `arka-audit` skill, and discover MiniMax M2.7. Model-backed ARKA agent response and plugin integration are not verified yet.
 
 ## What OpenClaw Is
 
@@ -61,7 +67,9 @@ This means ARKA should not describe `packages/agent` deterministic policy as "th
 
 ## Install and Run Shape
 
-OpenClaw recommended install:
+Upstream OpenClaw supports global installation, but ARKA is not using a global install for the hackathon repo.
+
+Upstream reference install:
 
 ```bash
 npm install -g openclaw@latest
@@ -71,6 +79,18 @@ pnpm add -g openclaw@latest
 openclaw onboard --install-daemon
 ```
 
+ARKA local-fork install/build shape:
+
+```powershell
+pnpm.cmd --dir openclaw install
+pnpm.cmd --dir openclaw run build:strict-smoke
+node openclaw\openclaw.mjs --help
+node openclaw\openclaw.mjs --version
+node openclaw\openclaw.mjs --dev gateway status
+```
+
+Do not use global OpenClaw commands as the ARKA demo path unless the project explicitly switches strategy later.
+
 Runtime requirement:
 
 ```txt
@@ -79,16 +99,13 @@ Node 22.14+ supported
 Windows native supported, but WSL2 is strongly recommended for full experience
 ```
 
-Useful runtime commands:
+Useful upstream runtime commands, adapted to local-fork entrypoints where possible:
 
 ```bash
-openclaw onboard --install-daemon
-openclaw gateway --port 18789 --verbose
-openclaw gateway status
-openclaw dashboard
-openclaw agent --message "Ship checklist" --thinking high
-openclaw plugins list
-openclaw skills list
+node openclaw/openclaw.mjs --dev gateway run --port 19001 --verbose --allow-unconfigured
+node openclaw/openclaw.mjs --dev gateway status
+node openclaw/openclaw.mjs --dev skills list
+node openclaw/openclaw.mjs --dev models list --provider minimax
 ```
 
 From source, the repo uses:
@@ -103,7 +120,7 @@ test: node scripts/test-projects.mjs
 fast tests: node scripts/run-vitest.mjs run --config test/vitest/vitest.unit.config.ts
 ```
 
-No OpenClaw install/run was performed yet in ARKA. The source clone was inspected only.
+ARKA has already performed a local-fork smoke path. Local install, targeted strict-smoke build, direct source CLI help/version/gateway-help, local dev gateway connectivity, ARKA `arka-audit` skill loading, MiniMax model discovery, and read-only `arka-audit` plugin skeleton static smoke are documented as verified in `docs/openclaw-local-fork-plan.md`. Full production build, model-backed ARKA agent response, gateway discovery/load of the ARKA plugin skeleton, OpenClaw Telegram, and `packages/agent` gateway calls remain unverified.
 
 ## Relevant OpenClaw Concepts For ARKA
 
@@ -288,9 +305,8 @@ Because ARKA P0 needs a reliable dashboard/proof demo, Option B may be simpler f
 Recommendation:
 
 ```txt
-Use OpenClaw as a sidecar gateway/runtime plus an ARKA-specific OpenClaw plugin/skill.
-Do not copy OpenClaw source into ARKA-github yet.
-Do not fork OpenClaw unless we need to patch runtime behavior.
+Use the repo-local OpenClaw source fork as ARKA's OpenClaw-side development surface.
+Run OpenClaw as a local sidecar gateway/runtime with an ARKA-specific workspace skill and plugin skeleton.
 Keep packages/agent as ARKA's local integration boundary and deterministic fallback.
 ```
 
@@ -298,7 +314,7 @@ Why:
 
 ```txt
 OpenClaw is large and already owns gateway/channel/session/plugin behavior.
-ARKA should not vendor 16k+ upstream files into a hackathon repo unless needed.
+The repo owner chose a local source fork instead of a global install so ARKA can build and adapt the OpenClaw-side agent path locally.
 OpenClaw plugins are designed for this kind of extension.
 This preserves the product story: ARKA's agent layer is built on OpenClaw.
 This preserves demo safety: ARKA can still work through deterministic fallback if OpenClaw setup fails.
@@ -308,8 +324,8 @@ Avoid for now:
 
 ```txt
 Directly importing OpenClaw internal src files into packages/agent.
-Copying the entire OpenClaw repo into ARKA-github.
-Forking OpenClaw before we know whether plugin hooks/tools are enough.
+Recopying upstream OpenClaw without preserving provenance.
+Force-adding ignored OpenClaw generated folders such as node_modules, dist, dist-runtime, .local, or .artifacts.
 Making OpenClaw runtime a hard blocker for AuditEvent/proof demo.
 ```
 
@@ -449,19 +465,19 @@ Telegram worker: choose ARKA-owned grammY vs OpenClaw channel explicitly.
 
 ## ARKA OpenClaw Plugin Shape
 
-Likely future package:
+Current local-fork plugin skeleton:
 
 ```txt
-packages/openclaw-plugin-arka
+openclaw/extensions/arka-audit
 ```
 
-Possible files:
+Current files:
 
 ```txt
-packages/openclaw-plugin-arka/package.json
-packages/openclaw-plugin-arka/openclaw.plugin.json
-packages/openclaw-plugin-arka/src/index.ts
-packages/openclaw-plugin-arka/skills/arka-audit/SKILL.md
+openclaw/extensions/arka-audit/package.json
+openclaw/extensions/arka-audit/openclaw.plugin.json
+openclaw/extensions/arka-audit/index.ts
+openclaw/extensions/arka-audit/src/get-audit-event.ts
 ```
 
 Plugin responsibilities:
@@ -487,21 +503,21 @@ Accuse staff of theft/fraud.
 
 ## Suggested Phases
 
-### Phase 1 - Research Clone Only
+### Phase 1 - Research Clone And Local Fork
 
 Done:
 
 ```txt
 Cloned upstream OpenClaw to D:\Projekan\Macam2Hackathon\ARKA\_research\openclaw
 Read README, package scripts, architecture docs, agent docs, plugin docs, Telegram docs, workspace/skills docs.
+Copied upstream OpenClaw source into ARKA-github/openclaw as a repo-local source fork.
+Preserved upstream LICENSE and provenance.
 ```
 
 Not done:
 
 ```txt
-No OpenClaw install.
-No OpenClaw gateway run.
-No OpenClaw plugin added to ARKA.
+Do not treat the local fork as ARKA app integration by itself.
 ```
 
 ### Phase 2 - Minimal OpenClaw Smoke Setup
@@ -512,15 +528,15 @@ Goal:
 Prove OpenClaw can run locally on this machine.
 ```
 
-Potential commands:
+Current status:
 
-```bash
-node --version
-npm install -g openclaw@latest
-openclaw --help
-openclaw onboard
-openclaw gateway --port 18789 --verbose
-openclaw gateway status
+```txt
+Local install: verified.
+Strict-smoke build: verified.
+Direct local CLI help/version/gateway-help: verified.
+Local dev gateway connectivity: verified.
+Full production build: not verified.
+Model-backed ARKA agent response: not verified.
 ```
 
 Risks:
@@ -534,13 +550,13 @@ May create global user config under ~/.openclaw.
 
 ### Phase 3 - ARKA Workspace Skill
 
-Create an OpenClaw workspace outside ARKA source, for example:
+Created local-fork ARKA workspace:
 
 ```txt
-D:\Projekan\Macam2Hackathon\ARKA\_openclaw-workspace
+openclaw/workspaces/arka
 ```
 
-Seed:
+Files:
 
 ```txt
 AGENTS.md
@@ -560,20 +576,42 @@ State A/C/D behavior
 Proof status language
 ```
 
+Current status:
+
+```txt
+arka-audit skill loads as ready from openclaw-workspace.
+The skill is instruction-only; it is not the same as app integration.
+```
+
 ### Phase 4 - ARKA OpenClaw Plugin
 
-Create a plugin package only after smoke setup succeeds.
+Current local-fork skeleton:
 
-Use OpenClaw plugin SDK patterns:
+```txt
+openclaw/extensions/arka-audit
+```
+
+Uses OpenClaw plugin SDK patterns:
 
 ```ts
 import { definePluginEntry } from "openclaw/plugin-sdk/plugin-entry";
 ```
 
-Register safe tools:
+Current implemented tool:
 
 ```txt
 get_audit_event
+```
+
+Current behavior:
+
+```txt
+read-only skeleton, returns status=unavailable until ARKA backend/API read path exists
+```
+
+Future safe tools:
+
+```txt
 set_triage_auto_clear
 set_triage_silent_log
 request_explanation
@@ -582,7 +620,14 @@ create_case_note
 create_action_log
 ```
 
-For P0, tools can return structured payloads without DB writes. DB writes can come later.
+For P0, tools can return structured payloads without DB writes. DB writes can come later through ARKA API/DB contracts.
+
+Current status:
+
+```txt
+Static plugin smoke checks passed.
+OpenClaw gateway discovery/load of the plugin skeleton is not verified yet.
+```
 
 ### Phase 5 - Connect ARKA packages/agent
 
@@ -667,10 +712,10 @@ No secrets should be committed.
 ## Open Questions
 
 ```txt
-Should ARKA use OpenClaw global install or local source clone for hackathon demo?
-Should ARKA create a plugin package inside ARKA repo or keep it in OpenClaw workspace first?
+Should ARKA ever need a global OpenClaw install, or is the local source fork enough for the demo?
+Should ARKA keep the plugin under openclaw/extensions/arka-audit, or later extract it into a separate package for publishing?
 Should Telegram P0 be OpenClaw-owned or ARKA-owned grammY?
-Can OpenClaw gateway be reliably run on this Windows machine without WSL2?
+Can a model-backed ARKA OpenClaw turn be made reliable on this Windows machine without WSL2?
 Which model provider will OpenClaw use during demo?
 Will judges see OpenClaw dashboard/gateway or only ARKA dashboard?
 ```
@@ -680,16 +725,18 @@ Will judges see OpenClaw dashboard/gateway or only ARKA dashboard?
 Correct:
 
 ```txt
-ARKA currently has deterministic OpenClaw-compatible fallback triage.
-OpenClaw itself has been researched and cloned outside the repo.
-Real OpenClaw runtime integration is planned but not implemented.
+ARKA has deterministic OpenClaw-compatible fallback triage.
+OpenClaw public source is copied as a repo-local fork under openclaw/.
+Local install, strict-smoke build, direct CLI checks, local dev gateway connectivity, ARKA skill loading, and MiniMax model discovery are verified.
+Real ARKA app integration through OpenClaw gateway/plugin/client is planned but not implemented.
 ```
 
 Incorrect:
 
 ```txt
-ARKA has a working OpenClaw agent.
-ARKA has modified OpenClaw.
+ARKA has a working model-backed OpenClaw agent turn for ARKA.
+ARKA packages/agent calls OpenClaw gateway/plugin.
+ARKA has an OpenClaw plugin writing DB records.
 ARKA has OpenClaw Telegram running.
-ARKA has OpenClaw runtime verified.
+OpenClaw uploads to 0G Storage or registers 0G Chain anchors.
 ```

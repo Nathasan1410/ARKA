@@ -1,270 +1,294 @@
-# OpenClaw Impact Assessment
+# OpenClaw Cross-Layer Impact Assessment
 
-Last updated: 2026-04-29
+Last updated: 2026-04-30
 
 ## Verdict
 
-Severity:
+OpenClaw is now a central ARKA integration track, but it still has a precise boundary:
 
 ```txt
-HIGH for OpenClaw integration direction and demo truthfulness.
-NOT a full project restart.
+OpenClaw = Layer-1 conversational triage over AuditEvent
+packages/agent = ARKA app-facing client boundary plus deterministic fallback
+backend/core = source of AuditEvent facts
+database = ARKA-owned evidence, triage outputs, and proof metadata
+proof/storage/chain = ARKA proof layer, not OpenClaw-owned execution
+dashboard = Layer-2 visual investigation and truthfulness display
 ```
 
-The issue is real: ARKA initially treated `packages/agent` too much like the OpenClaw agent itself. After upstream research, that is incorrect. OpenClaw is a gateway/runtime/plugin/skills system, and ARKA still has only an app-facing adapter boundary plus deterministic fallback.
-
-The issue does not invalidate the whole AuditEvent-first architecture.
-
-The following remain aligned:
+Current verified OpenClaw status:
 
 ```txt
-Backend creates AuditEvent.
-Database stores operational evidence and proof metadata.
-OpenClaw reads AuditEvent first and appends triage/action outputs.
-Dashboard shows visual investigation and status.
-0G Storage stores sealed proof packages.
-0G Chain anchors proof references.
+OpenClaw source fork under openclaw/: VERIFIED
+OpenClaw local install: VERIFIED
+OpenClaw strict-smoke build: VERIFIED
+Direct local CLI help/version/gateway-help: VERIFIED
+Local dev gateway connectivity: VERIFIED
+ARKA arka-audit workspace skill loaded: VERIFIED
+MiniMax model discovery/auth: VERIFIED
+Model-backed ARKA agent response: NOT VERIFIED
+ARKA plugin/tool integration: READ-ONLY SKELETON STATIC-SMOKE VERIFIED; GATEWAY LOAD NOT VERIFIED
+packages/agent gateway/client call path: NOT IMPLEMENTED
+OpenClaw Telegram channel for ARKA: NOT IMPLEMENTED
 ```
 
-The correction required is:
+This means ARKA may honestly say it has a repo-local OpenClaw fork, a locally smoke-tested gateway, and an ARKA skill loaded by OpenClaw. It must not yet say the ARKA app is integrated with OpenClaw until ARKA sends AuditEvents through a verified gateway/plugin/client path and receives an OpenClaw-backed result.
+
+## Cross-Layer Fit
+
+The right ARKA shape is:
 
 ```txt
-Treat OpenClaw as sidecar gateway/runtime + ARKA skill/plugin.
-Treat packages/agent as ARKA client boundary + deterministic fallback.
-Label fallback honestly until OpenClaw runtime is verified.
+Scenario / API
+  -> packages/core creates immutable AuditEvent facts
+  -> packages/db persists operational evidence and proof metadata
+  -> packages/agent tries OpenClaw gateway/client when available
+     -> OpenClaw workspace skill/plugin reads AuditEvent first
+     -> deterministic fallback remains available if runtime/provider fails
+  -> database appends triageOutcome, triageSource, CaseNote, ActionLog, StaffClarificationRequest
+  -> dashboard shows both investigation data and runtime truthfulness
+  -> proof layer creates/upload/anchors packages independently
 ```
 
-## Does ARKA Need To Restart?
-
-No.
-
-Restarting from zero would destroy valid work that is independent from the OpenClaw misunderstanding:
+Forbidden shape:
 
 ```txt
-shared enums and A/C/D fixtures
-core reconciliation logic
-local AuditEvent generation
-local proof package hashing
-Drizzle schema direction
-dashboard shell direction
-0G Storage / 0G Chain proof ownership
+OpenClaw recalculates expected vs actual as source of truth.
+OpenClaw mutates AuditEvent.status, severity, variance, quantities, evidence refs, or proof history.
+OpenClaw directly uploads to 0G Storage or registers 0G Chain anchors.
+Dashboard labels deterministic fallback as real OpenClaw-backed runtime.
+DB mirrors full OpenClaw internal transcripts for P0.
 ```
 
-What ARKA needs is a controlled remediation pass before claiming OpenClaw integration:
+## Sector Impact Matrix
+
+| Sector | Impact | Required alignment |
+| --- | --- | --- |
+| Frontend / `apps/web` | Medium | Dashboard must treat OpenClaw as the visible triage center, but show `triageSource` and runtime status honestly. It should call ARKA APIs or `packages/agent`, not OpenClaw internals directly. |
+| Backend / API routes | High | Backend remains the only source that creates AuditEvents. Future routes should expose AuditEvent context to OpenClaw tools and reject any attempt to rewrite reconciliation facts. |
+| `packages/core` | Low | No OpenClaw dependency. Core remains pure reconciliation and proof package logic. OpenClaw outputs can be appended later, not used to create facts. |
+| `packages/agent` | High | This becomes the ARKA client/fallback boundary. Next shape: deterministic fallback in `policy.ts`, gateway client in a future `openclaw-client.ts`, public `triageAuditEvent` returning `triageOutcome` and `triageSource`. |
+| `packages/db` | Medium | Schema already stores `triageOutcome`, `triageSource`, `CaseNote`, `ActionLog`, `StaffClarificationRequest`, and `ProofRecord`. Add OpenClaw run/session/message refs only after a real plugin/client write path exists. |
+| OpenClaw fork / `openclaw/` | High | This is where ARKA OpenClaw-side workspace, skills, and plugin/tool code should live or be prototyped. Do not store secrets, `node_modules`, or generated dist as project source. |
+| Dashboard conversation panel | High | Should become the operator view of OpenClaw triage, owner approval, staff clarification preview, and proof status. P0 can still use deterministic fallback if OpenClaw model turns remain unstable. |
+| 0G Storage | Low/Medium | OpenClaw may explain proof status or recommend package creation, but backend/proof layer owns package creation and upload. Proof package may later include OpenClaw action summaries as appended metadata. |
+| 0G Chain | Low/Medium | OpenClaw may describe whether an anchor exists, but backend/proof registrar owns transactions. Do not put OpenClaw transcripts or staff messages on-chain. |
+| Telegram / channels | Medium | OpenClaw Telegram is a good P1 path. P0 should not block AuditEvent/proof demo on Telegram; dashboard simulation remains acceptable until channel flow is verified. |
+| Security / secrets | High | MiniMax key and OpenClaw smoke config stay outside repo. `.gitignore` must continue blocking `.env*`, smoke state, OpenClaw runtime state, and secrets. |
+
+## Frontend Impact
+
+The dashboard should present OpenClaw as the Layer-1 triage surface:
 
 ```txt
-1. Keep current shared/core/proof/db/dashboard work.
-2. Fix code boundaries that make local fallback look like real OpenClaw.
-3. Add OpenClaw smoke setup or ARKA OpenClaw skill/plugin work as a separate slice.
-4. Update dashboard/README/real-vs-simulated copy to expose fallback vs OpenClaw-backed output.
-5. Re-run checks in a clean shell because current verification is blocked by EPERM.
+AuditEvent facts
+OpenClaw/fallback recommendation
+triageSource
+owner approval state
+staff clarification draft
+CaseNote / ActionLog
+proof lifecycle summary
 ```
 
-## Impact Matrix
-
-| Area | Impact | Current assessment | Required action |
-| --- | --- | --- | --- |
-| `packages/shared` | Low | Canonical enums and scenario seeds remain valid. | Keep. Add only future source/run enums if implementation needs them. |
-| `packages/core` reconciliation | Low | AuditEvent generation does not depend on OpenClaw and remains aligned. | Keep. Minor cleanup later for unused movement-direction parameter if desired. |
-| `packages/core` proof | Low | Local proof package creation correctly does not depend on OpenClaw. | Keep. Continue to 0G upload later. |
-| `packages/agent` | High | Now framed as adapter/fallback, but not a real OpenClaw runtime. | Keep as boundary, but do not claim real OpenClaw. Add real sidecar/plugin path later. |
-| `apps/web` dashboard | Medium | Useful local demo shell, but imports built `dist` paths and should display triage source more explicitly. | Fix package imports and show fallback vs OpenClaw-backed status before demo. |
-| `packages/db` | Medium | Schema preserves AuditEvent ownership and stores triage outcome, but lacks OpenClaw source/run metadata and StaffClarificationRequest table. | Keep. Add metadata/table only when persistence flow needs it. |
-| Backend/API routes | Medium | No backend API routes yet, so no broken integration exists. | When added, expose AuditEvent context safely and reject OpenClaw fact mutation. |
-| Telegram | Medium | Still unimplemented; OpenClaw has Telegram support, but ARKA P0 may use dashboard simulation or ARKA-owned grammY. | Decide explicitly before implementation; do not mix paths silently. |
-| 0G Storage | Low | OpenClaw finding does not affect proof package ownership. | Continue independent proof path. |
-| 0G Chain | Low | OpenClaw finding does not affect anchor registry design. | Continue independent contract path. |
-| Docs/truthfulness | High | Docs needed correction because fallback must not be called real OpenClaw integration. | Updated, but README later must also say this clearly. |
-
-## Code Findings
-
-### Valid And Aligned
-
-`packages/shared`:
+Required UI truthfulness:
 
 ```txt
-Canonical enums exist and match current docs.
-ScenarioKey currently covers required P0 A/C/D.
-State A/C/D facts match the demo brief.
+DETERMINISTIC_FALLBACK = local fallback, not real OpenClaw-backed output.
+OPENCLAW_RUNTIME = only after packages/agent receives a verified OpenClaw gateway/plugin result.
+Gateway connected / skill loaded / model discovered are setup statuses, not proof of ARKA triage integration.
 ```
 
-`packages/core`:
+The current dashboard shell already displays deterministic fallback and `triageSource`. The next UI slice should add a compact runtime status panel:
 
 ```txt
-Reconciliation is pure and OpenClaw-independent.
-AuditEvent starts with triageOutcome = null.
-Proof statuses start LOCAL_ONLY / NOT_STARTED / NOT_REGISTERED.
+OpenClaw fork: verified
+Gateway: local smoke verified
+Skill: arka-audit loaded
+Model: MiniMax discovered
+ARKA plugin: read-only skeleton static-smoke and extension-test verified; gateway load not verified
+ARKA app call: not implemented
 ```
 
-`packages/core/src/proof.ts`:
+## Backend/API Impact
+
+Future backend route handlers should be shaped around safe OpenClaw tools:
 
 ```txt
-Local proof package builder is independent from OpenClaw.
-Canonical hash work remains useful for 0G Storage and Chain.
+GET audit event context
+record triage outcome
+create case note
+create action log
+prepare staff clarification request
+record owner approval
+read proof status
 ```
 
-`packages/db`:
+Backend must enforce immutable fields:
 
 ```txt
-Schema is mostly aligned with ARKA-owned persistence.
-OpenClaw does not become the source of truth.
-CaseNote and ActionLog exist for appended agent outputs.
+expectedUsageQuantity
+actualMovementQuantity
+netMovementQuantity
+variancePercent
+status
+severity
+scenarioKey
+caseType
+evidence refs
+proof history
 ```
 
-### Needs Remediation
-
-`packages/agent`:
+OpenClaw can recommend or append:
 
 ```txt
-Current implementation is deterministic fallback plus adapter boundary only.
-It is not an OpenClaw runtime, plugin, skill, gateway, or Telegram channel.
-Imports should use workspace package imports instead of reaching into ../../shared/src.
-Fallback currently defaults unknown cases to AUTO_CLEAR, which is acceptable only for current A/C/D tests but should be hardened before broader states.
+triageOutcome
+triageSource
+CaseNote
+ActionLog
+StaffClarificationRequest draft
+owner recommendation
+caseResolutionStatus later
 ```
 
-`apps/web`:
+## Database Impact
+
+The current schema is broadly aligned because it stores ARKA-owned outputs instead of OpenClaw internals:
 
 ```txt
-Dashboard imports built dist paths through relative paths.
-This is fragile and should be replaced with package imports such as @arka/shared, @arka/core, and @arka/agent once Next workspace transpilation is configured.
-Dashboard copy says deterministic triage, which is good.
-Dashboard should also show triageSource explicitly.
+audit_events.triage_outcome
+audit_events.triage_source
+case_notes
+action_logs
+staff_clarification_requests
+proof_records
 ```
 
-`packages/db`:
+Do not add full OpenClaw transcript persistence for P0. After the plugin/client path works, add only narrow references if needed:
 
 ```txt
-OpenClaw source/run/session metadata is not stored yet.
-StaffClarificationRequest is documented but not yet represented as a table.
-This is not a restart blocker, but it is a gap before full conversation persistence.
+openclaw_run_id
+openclaw_session_id
+openclaw_message_ref
+openclaw_model_ref
+openclaw_skill_name
+openclaw_gateway_url/profile
 ```
 
-## Corrected Architecture Mapping
+Those fields should be optional and append-only where possible. They should help trace an OpenClaw recommendation without making OpenClaw the ARKA database.
+
+## Proof, 0G Storage, And 0G Chain Impact
+
+OpenClaw should be proof-aware, not proof-owning.
+
+Allowed:
 
 ```txt
-Scenario runner / API route
-  -> packages/core creates AuditEvent
-  -> database persists AuditEvent and evidence refs
-  -> proof layer can build AuditEvent Proof Package immediately
-  -> packages/agent asks OpenClaw boundary for triage
-     -> if OpenClaw gateway/plugin is available: OpenClaw-backed triage
-     -> if unavailable: deterministic fallback
-  -> database appends triageOutcome, CaseNote, ActionLog, StaffClarificationRequest as allowed
-  -> dashboard shows triageSource and proof status honestly
+Read local ProofRecord.
+Explain LOCAL_ONLY / STORED_ON_0G / REGISTERED_ON_CHAIN honestly.
+Recommend creating or verifying a proof package.
+Write an ActionLog that proof was requested or reviewed.
+Contribute a summary to a Final Resolution Package after owner decision.
 ```
 
-Forbidden mapping:
+Not allowed:
 
 ```txt
-OpenClaw must not calculate expected vs actual as the source of truth.
-OpenClaw must not mutate AuditEvent.status, severity, variance, quantities, or evidence refs.
-OpenClaw must not directly own 0G Storage upload or 0G Chain registration.
-Dashboard must not label deterministic fallback as real OpenClaw runtime.
+Upload proof packages to 0G Storage directly.
+Submit AuditProofRegistry transactions directly.
+Overwrite proof status.
+Delete AuditEvents when proof fails.
+Put staff chat or private notes on-chain.
+Claim a proof is stored or anchored before the backend verifies it.
 ```
 
-## Parallel Session Impact
-
-S1 shared/core tests:
+Proof package sequencing remains:
 
 ```txt
-Keep.
-OpenClaw correction does not invalidate A/C/D reconciliation tests.
+AuditEvent Proof Package can be created before OpenClaw model response.
+OpenClaw outputs can be included later in Action Timeline or Final Resolution packages.
+0G Storage upload and 0G Chain registration remain backend/proof responsibilities.
 ```
 
-S2 agent:
+## OpenClaw-Side Build Path
+
+The local fork should be used for OpenClaw-side development in this order:
 
 ```txt
-Needs correction path, not deletion.
-Current adapter/fallback split is a useful boundary.
-Next S2 work should research/run OpenClaw smoke setup and design/create ARKA skill/plugin instead of only editing local fallback.
+1. Keep `openclaw/workspaces/arka` as the instruction/skill layer.
+2. Debug a successful minimal model-backed agent turn.
+3. Verify OpenClaw gateway discovery/load of `openclaw/extensions/arka-audit`.
+4. Wire read-only `get_audit_event` to a real ARKA backend/API read path.
+5. Add append-only triage tools after DB/API contracts exist.
+6. Connect `packages/agent` to the gateway/plugin with deterministic fallback.
 ```
 
-S3 dashboard:
+Minimal plugin/tool set:
 
 ```txt
-Keep as local UI shell.
-Required cleanup: package imports, triageSource display, and explicit "OpenClaw runtime not connected" status until verified.
+get_audit_event: P0 read-only
+set_triage_auto_clear: P0 append/update triage only
+request_explanation: P0 draft request, owner approval required before staff delivery
+recommend_escalation: P0 append recommendation only
+create_case_note: P0 append-only
+create_action_log: P0 append-only
+prepare_staff_clarification_request: P0 draft-only
+set_triage_silent_log: P1 unless State B enters P0
 ```
 
-S4 database:
+## Recommended Next Slices
+
+### Slice 1 - OpenClaw Model Turn Debug
+
+Scope:
 
 ```txt
-Keep.
-Potential later additions: triage_source, openclaw_run_id, openclaw_session_id, openclaw_message_ref, StaffClarificationRequest.
-Do not add these blindly until API/write flow needs them.
+openclaw/
+docs/openclaw-local-fork-plan.md
+technical-debt.md
 ```
 
-S5 proof:
+Goal:
 
 ```txt
-Keep.
-Proof path is correctly independent from OpenClaw.
+Get `node openclaw\openclaw.mjs --dev agent --message "Reply with OK only."` to return a response using MiniMax.
+Then test one ARKA State C prompt with arka-audit loaded.
 ```
 
-S6 contracts:
+Do not implement ARKA plugin/API/DB writes in this slice.
+
+### Slice 2 - ARKA OpenClaw Plugin Gateway Load
+
+Scope:
 
 ```txt
-Can proceed.
-OpenClaw correction does not affect AuditProofRegistry except that final/action timeline packages may later include OpenClaw outputs.
+openclaw/extensions/arka-audit/
+docs/openclaw-local-fork-plan.md
+test/arka-openclaw.verify.test.ts
 ```
 
-## Verification Performed In This Session
-
-Inspected:
+Goal:
 
 ```txt
-docs/openclaw-research-and-integration-plan.md
-docs/code-map.md
-docs/implementation-plan.md
-packages/agent/src/openclaw-adapter.ts
-packages/agent/src/policy.ts
-packages/agent/src/triage.ts
-packages/shared/src/types.ts
-packages/core/src/reconciliation.ts
-packages/core/src/proof.ts
-packages/db/src/schema.ts
-apps/web/app/dashboard/dashboard-data.ts
-apps/web/app/dashboard/dashboard-shell.tsx
+Verify the existing read-only arka-audit plugin skeleton can be discovered/loaded by OpenClaw gateway.
+Keep get_audit_event read-only and unavailable until ARKA backend/API read path exists.
 ```
 
-Attempted checks:
+Do not send Telegram, upload 0G, register chain anchors, or mutate reconciliation facts.
+
+### Slice 3 - packages/agent Gateway Client
+
+Scope:
 
 ```txt
-pnpm.cmd --filter @arka/shared test
-pnpm.cmd --filter @arka/core test
-pnpm.cmd --filter @arka/agent test
-pnpm.cmd run typecheck
+packages/agent/**
+test/arka-openclaw.verify.test.ts
 ```
 
-Result:
+Goal:
 
 ```txt
-Not verified in this session.
-The commands failed due EPERM filesystem/process permission errors in the current PowerShell/Node environment.
-The observed failures were startup/spawn/open permission failures, not test assertion failures.
-Earlier worker reports claimed these checks passed, but this session cannot independently confirm them.
-```
-
-## Required Remediation Before Next Commit Or Demo Claim
-
-P0 remediation:
-
-```txt
-1. Keep docs truthfulness: OpenClaw = researched, not integrated.
-2. Show triageSource in dashboard.
-3. Replace dashboard relative dist imports with package imports or document why that is temporarily blocked.
-4. Replace packages/agent internal shared source imports with @arka/shared.
-5. Re-run shared/core/agent/db typecheck and tests in a clean shell.
-```
-
-P1 remediation:
-
-```txt
-1. Run OpenClaw smoke setup.
-2. Create ARKA OpenClaw workspace skill.
-3. Create or plan ARKA OpenClaw plugin tools.
-4. Add optional DB fields for OpenClaw source/run/session references once integration shape is confirmed.
-5. Decide whether Telegram P0 is ARKA-owned grammY, OpenClaw channel, or dashboard-only simulation.
+Add an optional OpenClaw gateway/client call path.
+Return `OPENCLAW_RUNTIME` only after a verified response.
+Fall back to deterministic policy on timeout, unavailable gateway, or invalid response.
 ```
 
 ## Honest Current Claim
@@ -272,17 +296,20 @@ P1 remediation:
 Correct:
 
 ```txt
-ARKA has an AuditEvent-first core direction.
-ARKA has deterministic A/C/D fallback triage.
-ARKA has researched upstream OpenClaw and documented the intended sidecar/plugin path.
-ARKA does not yet have real OpenClaw runtime integration.
+ARKA has a verified AuditEvent-first core for A/C/D.
+ARKA has deterministic fallback triage for A/C/D.
+ARKA has a repo-local OpenClaw source fork.
+ARKA has a locally smoke-tested OpenClaw dev gateway.
+ARKA has an ARKA `arka-audit` skill loaded by OpenClaw.
+ARKA has MiniMax model discovery/auth in the local smoke setup.
 ```
 
 Incorrect:
 
 ```txt
-ARKA has a working OpenClaw agent.
-ARKA has modified OpenClaw.
+ARKA has a working model-backed OpenClaw agent turn.
+ARKA packages/agent calls OpenClaw.
+ARKA has an OpenClaw plugin writing DB records.
 ARKA has OpenClaw Telegram running.
-ARKA has verified OpenClaw gateway/plugin integration.
+OpenClaw uploads to 0G Storage or registers 0G Chain anchors.
 ```

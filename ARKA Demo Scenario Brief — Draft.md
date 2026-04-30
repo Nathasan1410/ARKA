@@ -527,7 +527,7 @@ Telegram can be real or partially simulated, but must be honest.
 Minimum useful flow:
 
 ```txt
-OpenClaw sends owner alert/recommendation.
+OpenClaw or deterministic fallback prepares owner alert/recommendation.
 Owner approves explanation request or final decision.
 OpenClaw records ActionLog / CaseNote.
 ```
@@ -578,14 +578,14 @@ Must be tracked honestly.
 Suggested MVP truthfulness target:
 
 ```txt
-Order simulator = REAL within demo system
-Inventory movement simulator = REAL within demo system
-Reconciliation Engine = REAL
-AuditEvent Generator = REAL
-OpenClaw triage policy = REAL rule-based + optional LLM summary
-Telegram owner alert = REAL if bot works, otherwise PARTIAL/SIMULATED
-0G Storage upload = REAL target
-0G Chain registry = REAL target
+Order simulator = PARTIAL until API/UI/persistence are verified
+Inventory movement simulator = PARTIAL until API/UI/persistence are verified
+Reconciliation Engine = PARTIAL/REAL only for the verified pure A/C/D core path
+AuditEvent Generator = PARTIAL/REAL only for the verified pure A/C/D core path
+OpenClaw triage policy = PARTIAL: deterministic fallback is verified; model-backed OpenClaw response and ARKA plugin/client integration are not verified
+Telegram owner alert = REAL only if a real bot/channel flow sends successfully; otherwise PARTIAL/SIMULATED
+0G Storage upload = REAL only after a real upload succeeds; current target is PLANNED
+0G Chain registry = REAL only after a real transaction/anchor succeeds; current target is PLANNED
 Hardware input = SIMULATED or OPTIONAL
 CCTV clip = METADATA ONLY
 YOLO = PLANNED / FUTURE

@@ -16,6 +16,39 @@ Owner: Human / Agent / Both
 
 ## Current Open Items
 
+### 2026-04-30 - OpenClaw Plugin Skeleton Broad Verification Timeout
+
+```txt
+Area: OpenClaw / Plugin Verification
+Status: RISK
+What happened: The read-only `arka-audit` plugin skeleton was added under `openclaw/extensions/arka-audit/`. Static tsx smoke checks passed for entrypoint import, plugin id/register shape, tool registration, and read-only unavailable response. Extension-local tests were added and `pnpm.cmd --dir openclaw run test:extension arka-audit` passed with 1 test file and 3 tests. Broader OpenClaw checks timed out in this HDD environment: `pnpm.cmd --dir openclaw run build:strict-smoke` after 20 minutes, `pnpm.cmd --dir openclaw run test:contracts:plugins` after 5 minutes, and `pnpm.cmd --dir openclaw install --lockfile-only --ignore-scripts --offline` after 5 minutes.
+Why it matters: ARKA can claim the plugin skeleton exists and passes static smoke checks, but cannot claim OpenClaw gateway discovery/load or broad OpenClaw plugin-contract compatibility after this change.
+Next action: In an interactive terminal with sufficient time, refresh the OpenClaw workspace lockfile if needed, then rerun `pnpm.cmd --dir openclaw run build:strict-smoke` and a plugin discovery/load check before expanding beyond read-only behavior.
+Owner: Both
+```
+
+### 2026-04-30 - OpenClaw Model-Turn Invocation Requires Session Selector
+
+```txt
+Area: OpenClaw / CLI smoke
+Status: NEEDS_HUMAN
+What happened: The local smoke invocation `node openclaw\openclaw.mjs --dev agent --message "Reply with OK only."` does not form a valid agent request because the `agent` command requires one of `--to`, `--session-id`, or `--agent`. In the current smoke path, the gateway layer also uses a long default timeout, so a stalled run can look hung before the validation error is observed.
+Why it matters: Reviewers can mistake the long startup/wait time for a broken model path. The command must be made explicit before model-backed behavior can be judged.
+Next action: Retry with a concrete selector and a short timeout, for example `node openclaw\openclaw.mjs --dev agent --session-id <existing-or-smoke-session> --message "Reply with OK only." --timeout 15`, then confirm whether the gateway returns a response or a bounded failure.
+Owner: Human / Agent
+```
+
+### 2026-04-30 - Telegram Bot Token Handling
+
+```txt
+Area: Telegram / Secrets
+Status: NEEDS_HUMAN
+What happened: A Telegram bot token was provided in chat for ARKA/OpenClaw work. It was not written to the repository, docs, or committed env files.
+Why it matters: Bot tokens must not be committed or repeated in project history. If the chat/log is shared or exposed, the token should be considered compromised.
+Next action: Store the token only in a local `.env` or external smoke config when Telegram work begins. Rotate it through BotFather before any public demo or repo sharing if exposure is possible.
+Owner: Human
+```
+
 ### 2026-04-29 - Verification Blocked By Local EPERM
 
 ```txt
@@ -32,10 +65,11 @@ Owner: Both
 
 ```txt
 Area: OpenClaw / Dashboard / Package Boundaries
-Status: RISK
+Status: RESOLVED FOR REMEDIATION
 What happened: The OpenClaw misunderstanding does not require a full project restart, but it exposed code-boundary cleanup that must happen before demo claims. `packages/agent` is only an adapter/fallback boundary, not a real OpenClaw runtime. The dashboard currently imports built `dist` paths through relative paths, and the UI does not expose `triageSource` clearly enough.
 Why it matters: ARKA must not blur deterministic fallback, dashboard simulation, and real OpenClaw runtime behavior. Package-boundary shortcuts also make parallel work more fragile.
-Next action: Replace internal/relative shared imports with workspace package imports, show triage source in the dashboard, keep OpenClaw runtime marked unverified, and run checks again after cleanup.
+Resolution: The remediation batch replaced internal/relative package imports, made dashboard fallback/triageSource explicit, and kept OpenClaw runtime truthfulness separate from deterministic fallback. The remaining OpenClaw work is now tracked by the local fork/plugin/model-turn entries below.
+Next action: Keep this closed unless package-boundary shortcuts return.
 Owner: Both
 ```
 
@@ -66,9 +100,9 @@ Owner: Both
 ```txt
 Area: 0G Chain
 Status: NEEDS_HUMAN
-What happened: The project docs define `AuditProofRegistry` as a P0 target, but the current 0G testnet RPC, chain ID, faucet/funding path, explorer format, and Hardhat version choice are not verified yet.
+What happened: The project docs now record the intended 0G Galileo testnet direction, including RPC/chain ID/explorer/faucet guidance, but ARKA has not implemented, deployed, called, or read back `AuditProofRegistry` on a real 0G network yet.
 Why it matters: ARKA must not claim real chain anchoring until the contract can be deployed, called, and checked through a real transaction.
-Next action: Verify current official 0G Chain deployment docs, choose Hardhat version from current examples, choose one transaction client (`viem` or `ethers`), and record env requirements in `.env.example` when implementation begins.
+Next action: Implement `AuditProofRegistry`, choose the final contract stack/client from current 0G examples, deploy to the verified 0G testnet environment, register at least one State C or D proof anchor, and record tx/contract details.
 Owner: Both
 ```
 
@@ -88,9 +122,31 @@ Owner: Human
 ```txt
 Area: OpenClaw
 Status: RISK
-What happened: packages/agent currently contains deterministic A/C/D triage fallback only. The upstream OpenClaw repo was cloned for research outside ARKA-github at D:\Projekan\Macam2Hackathon\ARKA\_research\openclaw and documented in docs/openclaw-research-and-integration-plan.md, but no OpenClaw source/runtime has been imported, modified, installed, or verified inside ARKA yet.
+What happened: packages/agent currently contains deterministic A/C/D triage fallback only. The upstream OpenClaw repo was cloned for research outside ARKA-github at D:\Projekan\Macam2Hackathon\ARKA\_research\openclaw and copied as a repo-local source fork under openclaw/. ARKA added workspace/skill draft files under openclaw/workspaces/arka/. Local install, targeted strict-smoke build, direct source CLI help/version/gateway-help, local dev gateway connectivity, ARKA skill loading, and MiniMax model discovery are verified, but plugin registration, model-backed ARKA triage response, and ARKA gateway calls are not verified yet.
 Why it matters: ARKA's product story says the agent is built on top of OpenClaw. OpenClaw is a full gateway/runtime/plugin system, not just a local adapter function. The deterministic fallback is useful for MVP resilience, but it must not be mistaken for a real OpenClaw-backed agent.
-Next action: Run an OpenClaw smoke setup or create an ARKA OpenClaw workspace skill/plugin plan. Choose whether ARKA uses OpenClaw as a sidecar gateway plus plugin/skill, a fork/submodule, or a copied-source strategy. Do not claim real OpenClaw integration until the gateway/plugin path is implemented and verified.
+Next action: Debug a successful model-backed OpenClaw agent turn, then implement and verify the ARKA plugin/tool path. Keep `pnpm.cmd run verify:arka-openclaw` passing as the cross-layer regression gate. Do not claim packages/agent integration until ARKA actually calls the OpenClaw gateway/plugin.
+Owner: Both
+```
+
+### 2026-04-29 - OpenClaw Smoke Setup Not Verified
+
+```txt
+Area: OpenClaw / Gateway Setup
+Status: RISK
+What happened: S2B inspected the local OpenClaw research clone and produced docs/openclaw-s2b-handoff.md. S2C copied OpenClaw source into openclaw/ as a local fork and intentionally avoided global install. Manual local install completed with pnpm 10.33.0, and `pnpm.cmd --dir openclaw run build:strict-smoke` passed. Direct local source CLI help/version/gateway-help passed through `node openclaw\openclaw.mjs`. After `ui:build`, the dev gateway started on 127.0.0.1:19001 and `node openclaw\openclaw.mjs --dev gateway status` reported `Connectivity probe: ok`, `Capability: connected-no-operator-scope`, and `Listening: 127.0.0.1:19001`.
+Why it matters: ARKA can now claim local OpenClaw gateway connectivity smoke and ARKA skill loading, but still cannot claim a model-backed ARKA agent response, Telegram, plugin integration, or packages/agent OpenClaw integration until those paths are verified.
+Next action: Debug the `node openclaw\openclaw.mjs --dev agent --message ...` path. The MiniMax provider is discovered with auth, but the first small ARKA prompt timed out after 4 minutes and was stopped.
+Owner: Both
+```
+
+### 2026-04-29 - OpenClaw Full Build Deferred
+
+```txt
+Area: OpenClaw / Local Source Fork
+Status: DEFERRED
+What happened: OpenClaw local install and targeted strict-smoke build are verified, but the full `pnpm.cmd --dir openclaw run build` did not complete during manual testing. It reached `runtime-postbuild` and appeared to take too long on the HDD/laptop environment, so it was stopped. Build stamps were later produced by `build:strict-smoke`.
+Why it matters: The local fork can pass a targeted smoke build and CLI checks, but ARKA should not claim the full OpenClaw production build is verified until the full build command exits successfully.
+Next action: Only if full production build verification is required, rerun `pnpm.cmd --dir openclaw run build` from an interactive terminal with enough time and disk headroom. Otherwise proceed to gateway/UI-asset smoke using the verified strict-smoke build.
 Owner: Both
 ```
 

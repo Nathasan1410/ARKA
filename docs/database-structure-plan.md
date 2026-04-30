@@ -25,7 +25,9 @@ OpenClaw research impact:
 OpenClaw is a sidecar gateway/runtime/plugin/skills system.
 The ARKA database should store ARKA-owned outputs from OpenClaw, not OpenClaw internal session state.
 Do not mirror OpenClaw transcripts into the ARKA DB for P0.
-If needed later, add optional references such as triage_source, openclaw_run_id, openclaw_session_id, or channel_message_ref.
+The local OpenClaw fork, dev gateway connectivity, ARKA skill loading, and MiniMax model discovery are verified.
+Model-backed ARKA triage, ARKA plugin writes, and packages/agent gateway calls are not verified yet.
+If needed later, add optional references such as triage_source, openclaw_run_id, openclaw_session_id, openclaw_model_ref, openclaw_skill_name, or channel_message_ref.
 ```
 
 Database boundary remains:
@@ -38,7 +40,8 @@ OpenClaw must not overwrite AuditEvent reconciliation facts.
 Current implementation note:
 
 - `triageSource` is worth storing now because ARKA already distinguishes deterministic fallback vs future OpenClaw runtime output at the agent boundary, and the dashboard/docs need that truthfulness to survive persistence.
-- OpenClaw run/session/message references remain deferred until a real sidecar/plugin write path exists.
+- `triageSource` is already represented in the schema.
+- OpenClaw run/session/message/model/skill references remain deferred until a real sidecar/plugin write path exists.
 
 ## P0 Models
 

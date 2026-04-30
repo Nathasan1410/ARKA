@@ -1,6 +1,6 @@
 # ARKA P0 Implementation Plan
 
-Last updated: 2026-04-29
+Last updated: 2026-04-30
 
 This is the implementation plan for turning the current ARKA planning docs into a working hackathon MVP.
 
@@ -250,15 +250,32 @@ createActionLogForTriage(...)
 createCaseNoteForTriage(...)
 ```
 
-Before claiming OpenClaw integration:
+Current OpenClaw setup status:
 
 ```txt
-1. Run OpenClaw smoke setup or document why it is blocked.
-2. Create an ARKA OpenClaw workspace skill or plugin plan.
-3. Prefer sidecar gateway + plugin/skill before vendoring or forking OpenClaw.
-4. Document reused OpenClaw code/framework in docs/reused-libraries.md only if code/dependency is added to ARKA.
-5. Keep ARKA-specific behavior in packages/agent as a wrapper around AuditEvent input/output.
-6. Keep deterministic fallback available if OpenClaw runtime/provider fails.
+OpenClaw source fork under openclaw/: verified.
+Local install: verified.
+Strict-smoke build: verified.
+Direct source CLI help/version/gateway-help: verified.
+Local dev gateway connectivity: verified.
+ARKA arka-audit workspace skill loading: verified.
+MiniMax model discovery/auth: verified.
+Model-backed ARKA agent turn: not verified.
+ARKA OpenClaw read-only plugin skeleton: implemented / static-smoke and extension-test verified.
+OpenClaw gateway discovery/load of the plugin: not verified.
+packages/agent gateway/client call path: not implemented.
+OpenClaw Telegram for ARKA: not implemented.
+```
+
+Before claiming ARKA is OpenClaw-integrated:
+
+```txt
+1. Verify a model-backed OpenClaw agent turn with the ARKA workspace/skill loaded.
+2. Create and verify an ARKA OpenClaw plugin/tool path, starting read-only.
+3. Connect packages/agent to the OpenClaw gateway/plugin and keep deterministic fallback on failure.
+4. Return OPENCLAW_RUNTIME only after a verified gateway/plugin response.
+5. Persist OpenClaw run/session/message refs only after the real path exists.
+6. Keep deterministic fallback available if OpenClaw runtime/provider fails or times out.
 ```
 
 P0 deterministic rules:
@@ -288,8 +305,9 @@ Test that triage does not mutate reconciliation facts.
 Truthfulness:
 
 ```txt
-If deterministic only, label OpenClaw as deterministic fallback only / no verified OpenClaw runtime in README and docs/real-vs-simulated.md.
-Do not claim full OpenClaw runtime unless verified.
+If deterministic fallback is used, label it as deterministic fallback even though local OpenClaw setup is partially verified.
+Gateway connectivity, skill loading, and model discovery are not the same as ARKA app integration.
+Do not claim OpenClaw-backed triage unless ARKA actually sends/receives through OpenClaw gateway/plugin.
 ```
 
 ## 6. Phase 5 - Local Persistence / Database
@@ -586,7 +604,7 @@ Goal: show owner-facing OpenClaw behavior without risking the proof demo.
 P0 baseline:
 
 ```txt
-Dashboard-simulated Telegram/OpenClaw conversation.
+Dashboard-simulated OpenClaw/Telegram conversation if model-backed OpenClaw turn or Telegram channel remains unstable.
 Owner alert/recommendation visible in dashboard.
 Owner approval preview visible.
 ActionLog / CaseNote recorded.
@@ -602,20 +620,21 @@ Dashboard fallback still remains available.
 Current verified direction:
 
 ```txt
-Library: grammY
-Deployment: webhook for Vercel/Next.js, polling for local/dev fallback
-Required: TELEGRAM_BOT_TOKEN
-Webhook requires HTTPS URL and optional secret token
+OpenClaw has channel/runtime support, and ARKA now has a local OpenClaw source fork plus verified dev gateway connectivity.
+OpenClaw Telegram is still not implemented for ARKA.
+If ARKA-owned Telegram is chosen instead, grammY remains the lightweight fallback library.
+Dashboard simulation remains the P0-safe fallback.
 ```
 
 Implementation steps:
 
 ```txt
-1. Build dashboard simulation first.
-2. Add route handler for Telegram webhook only if time and deployment are ready.
-3. Send owner alert for State C/D if bot is configured.
-4. Do not make Telegram wait on slow 0G Storage or chain work.
-5. Record ActionLog / CaseNote regardless of transport.
+1. Keep dashboard simulation working first.
+2. Prefer OpenClaw Telegram channel only after model-backed OpenClaw turns and ARKA plugin/client path are stable.
+3. Use ARKA-owned grammY only if OpenClaw channel setup becomes a blocker and the demo still needs real Telegram.
+4. Send owner alert for State C/D only if bot/channel is configured and verified.
+5. Do not make Telegram wait on slow 0G Storage or chain work.
+6. Record ActionLog / CaseNote regardless of transport.
 ```
 
 Verification:

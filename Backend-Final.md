@@ -12,6 +12,8 @@ OpenClaw research impact:
 OpenClaw is a sidecar gateway/runtime/plugin/skills system.
 Backend should expose controlled AuditEvent context to OpenClaw later, but must not depend on OpenClaw to create AuditEvents.
 packages/agent deterministic fallback can be used when OpenClaw gateway/plugin is unavailable.
+Local OpenClaw source/install/strict-smoke/gateway/skill/MiniMax discovery are verified.
+Model-backed ARKA OpenClaw response, plugin tools, packages/agent gateway calls, and OpenClaw Telegram are not verified.
 ```
 
 Backend ARKA harus menjawab satu pertanyaan utama:

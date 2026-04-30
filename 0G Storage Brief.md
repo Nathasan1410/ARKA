@@ -24,6 +24,16 @@ Final positioning:
 
 > **ARKA uses 0G Storage to store sealed Audit Proof Packages, not to run daily operational queries.**
 
+Current implementation status:
+
+```txt
+Local proof package creation: PARTIAL (packages/core can build deterministic AuditEvent proof package JSON and local SHA-256 hash).
+0G Storage upload: PLANNED / NOT IMPLEMENTED.
+0G Storage SDK/CLI upload verification: NOT VERIFIED.
+OpenClaw proof behavior: OpenClaw may explain or recommend proof actions later, but backend/proof layer owns upload.
+Do not claim STORED_ON_0G until a real upload succeeds and ProofRecord is updated with returned storage metadata.
+```
+
 ---
 
 ## 1. Core Storage Principle
@@ -53,7 +63,7 @@ If no, keep it local or move it to future.
 
 ## 2. Storage Decision for MVP
 
-For MVP, ARKA stores proof packages as JSON files on 0G Storage.
+For MVP, ARKA should store proof packages as JSON files on 0G Storage after the upload path is implemented and verified.
 
 P0 decision:
 
@@ -631,7 +641,7 @@ Access Control Clarification:
 For demo:
 
 ```txt
-All demo AuditEvents can be stored to 0G Storage.
+All demo AuditEvents can be eligible for 0G Storage once the upload path is implemented and verified.
 
 Reason:
 
@@ -720,7 +730,7 @@ Storage Proof vs Chain Proof:
 
 ## 13. Dashboard / OpenClaw Display Rule
 
-After package is stored on 0G Storage, Dashboard should show:
+After a package is really stored on 0G Storage, Dashboard should show:
 
 ```txt
 proof status
@@ -731,7 +741,7 @@ chain registration status if available
 verify button / verify action
 ```
 
-OpenClaw should be able to say:
+OpenClaw should be able to say this only after backend/proof layer has verified the stored package metadata:
 
 ```txt
 This case has been sealed on 0G Storage.

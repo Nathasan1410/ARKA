@@ -503,7 +503,21 @@ OpenClaw implementation status must be displayed honestly:
 If only packages/agent fallback is active, label it as deterministic fallback / OpenClaw preview.
 If OpenClaw gateway + ARKA skill/plugin is running, label it as OpenClaw-backed.
 Do not claim real OpenClaw runtime from deterministic fallback alone.
+Gateway connectivity, skill loading, and model discovery are setup milestones, not proof that ARKA app triage is OpenClaw-backed.
+Only label a case as OpenClaw-backed after ARKA sends the AuditEvent through a verified OpenClaw gateway/plugin/client path and receives an output.
 ```
+
+Ownership note:
+
+```txt
+OpenClaw is the central triage surface, not the owner of AuditEvent facts.
+Backend/core owns AuditEvent creation and immutable reconciliation facts.
+Database owns ARKA evidence and proof metadata, not OpenClaw schema truth.
+Proof creation and 0G upload are backend/proof responsibilities.
+0G Chain registration is a proof-anchor responsibility, not an OpenClaw responsibility.
+```
+
+For the next implementation split, use `docs/openclaw-cross-layer-next-slices.md` as the worker-order reference.
 
 P0 required panel states:
 
@@ -992,6 +1006,7 @@ State C or D creates an AuditEvent Proof Package.
 0G Chain registration status is visible.
 Owner alert/recommendation is visible through Telegram or dashboard simulation.
 README / real-vs-simulated clearly states what is real and what is simulated.
+OpenClaw remains visibly central but does not own facts, schema, upload, or registration.
 ```
 
 Best MVP if time:

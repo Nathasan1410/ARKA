@@ -2,6 +2,215 @@
 
 This document tracks material AI-assisted work in ARKA.
 
+## 2026-04-30 - OpenClaw Docs Truthfulness Patch
+
+### AI Tool Used
+- OpenAI Codex CLI (GPT-5.x)
+- GPT-5.4-mini worker sessions for read-only repo/docs verification
+
+### What AI Helped With
+- Rechecked ARKA Markdown docs after the local OpenClaw fork and `arka-audit` plugin skeleton work.
+- Patched stale wording that still implied no plugin skeleton existed or pointed workers at an older external plugin package path.
+- Preserved the important boundary that the plugin skeleton static smoke and extension-local tests are verified, but gateway discovery/load, model-backed ARKA response, packages/agent gateway calls, and OpenClaw Telegram are still unverified.
+
+### Files / Areas Affected
+- `AGENTS.md`
+- `Arka - OpenClaw Agent.md`
+- `docs/openclaw-cross-layer-next-slices.md`
+- `docs/openclaw-local-fork-plan.md`
+- `docs/openclaw-s2b-handoff.md`
+- `docs/parallel-codex-session-prompts.md`
+- `docs/reused-libraries.md`
+- `docs/technical-stack-brief.md`
+- `CHANGELOG.md`
+- `docs/ai-attribution.md`
+
+### Human Review
+- Pending / to be confirmed by repo owner.
+
+### Verification
+- Read-only worker verification plus local `rg` stale-claim search.
+- `git diff --check`
+- `pnpm.cmd run verify:arka-openclaw`
+
+## 2026-04-30 - OpenClaw Plugin Skeleton Planning
+
+### AI Tool Used
+- OpenAI Codex CLI (GPT-5.x)
+
+### What AI Helped With
+- Inspected the local OpenClaw fork for plugin SDK structure, manifest shape, and bundled extension patterns.
+- Drafted an implementation-ready docs-only skeleton plan for the first ARKA OpenClaw plugin pass.
+- Implemented the first read-only `arka-audit` OpenClaw plugin skeleton with an unavailable `get_audit_event` tool.
+- Added extension-local tests for the `arka-audit` OpenClaw plugin skeleton.
+- Updated the local-fork plan to point at the new plugin skeleton plan and keep the first pass focused on a read-only `get_audit_event` tool.
+- Recorded the documentation milestone in the changelog.
+
+### Files / Areas Affected
+- `docs/openclaw-plugin-skeleton-plan.md`
+- `docs/openclaw-local-fork-plan.md`
+- `openclaw/extensions/arka-audit/package.json`
+- `openclaw/extensions/arka-audit/openclaw.plugin.json`
+- `openclaw/extensions/arka-audit/index.ts`
+- `openclaw/extensions/arka-audit/index.test.ts`
+- `openclaw/extensions/arka-audit/src/get-audit-event.ts`
+- `test/arka-openclaw.verify.test.ts`
+- `technical-debt.md`
+- `CHANGELOG.md`
+- `docs/ai-attribution.md`
+
+### Human Review
+- Pending / to be confirmed by repo owner.
+
+### Verification
+- Documentation-only update.
+- Inspected the OpenClaw local fork docs and examples for plugin SDK structure and extension layout.
+- `pnpm.cmd --dir openclaw run test:extension arka-audit`
+- Static tsx smoke checks passed for plugin entrypoint import, tool registration, and unavailable read-only response.
+- `pnpm.cmd run test:arka-openclaw`
+- `pnpm.cmd run verify:arka-openclaw`
+- Broader OpenClaw checks timed out and are recorded in `technical-debt.md`.
+
+## 2026-04-30 - OpenClaw Test Stability And Next-Slice Planning
+
+### AI Tool Used
+- OpenAI Codex CLI (GPT-5.x)
+- GPT-5.4-mini worker sessions for bounded docs/research tasks
+
+### What AI Helped With
+- Fixed the ARKA/OpenClaw secret-scan regression test so it no longer walks the entire local OpenClaw source fork on HDD.
+- Kept the secret guard meaningful by scanning ARKA repo env files and bounded OpenClaw env locations without storing or echoing secrets.
+- Added cross-layer next-slice planning for frontend, backend, database, proof, 0G Storage, and 0G Chain sequencing.
+
+### Files / Areas Affected
+- `test/arka-openclaw.verify.test.ts`
+- `docs/openclaw-cross-layer-next-slices.md`
+- `docs/mvp-demo-interaction-brief.md`
+- `CHANGELOG.md`
+- `docs/ai-attribution.md`
+
+### Human Review
+- Pending / to be confirmed by repo owner.
+
+### Verification
+- `pnpm.cmd run test:arka-openclaw`
+- `pnpm.cmd run verify:arka-openclaw`
+
+## 2026-04-30 - OpenClaw Cross-Layer Alignment
+
+### AI Tool Used
+- OpenAI Codex CLI (GPT-5.x)
+
+### What AI Helped With
+- Re-assessed how the verified local OpenClaw fork, gateway smoke, ARKA skill loading, and MiniMax model discovery affect ARKA's frontend, backend/API, database, proof, 0G Storage, 0G Chain, Telegram, and security boundaries.
+- Rewrote the OpenClaw impact assessment as a current cross-layer integration plan.
+- Updated implementation, stack, database, code-map, MVP interaction, local-fork, and truthfulness docs so they stay honest about what is verified versus still unimplemented.
+- Audited root-level ARKA briefs and tracker docs for stale OpenClaw, Telegram, 0G Storage, and 0G Chain wording.
+- Recorded Telegram token handling as a security follow-up without storing or repeating the token.
+
+### Files / Areas Affected
+- `docs/openclaw-impact-assessment.md`
+- `docs/code-map.md`
+- `docs/implementation-plan.md`
+- `docs/technical-stack-brief.md`
+- `docs/database-structure-plan.md`
+- `docs/mvp-demo-interaction-brief.md`
+- `docs/openclaw-local-fork-plan.md`
+- `docs/real-vs-simulated.md`
+- `AGENTS.md`
+- `Arka - OpenClaw Agent.md`
+- `0G Storage Brief.md`
+- `ARKA 0G Chain Brief — Concept Draft.md`
+- `ARKA Demo Scenario Brief — Draft.md`
+- `Backend-Final.md`
+- `Database.md`
+- `checklist.md`
+- `docs/project-brief.md`
+- `docs/parallel-codex-session-prompts.md`
+- `docs/openclaw-s2b-handoff.md`
+- `docs/0g-chain-brief.md`
+- `technical-debt.md`
+- `CHANGELOG.md`
+- `docs/ai-attribution.md`
+
+### Human Review
+- Pending / to be confirmed by repo owner.
+
+### Verification
+- Documentation alignment pass.
+- `pnpm.cmd run verify:arka-openclaw` passed after the documentation alignment.
+
+## 2026-04-29 - OpenClaw Local Fork And ARKA Workspace Draft
+
+### AI Tool Used
+- OpenAI Codex CLI (GPT-5.x)
+
+### What AI Helped With
+- Inspected the OpenClaw research clone, package metadata, license, source size, and workspace/plugin/skills documentation.
+- Copied OpenClaw public source into `openclaw/` as a repo-local fork while excluding generated artifacts, dependencies, local config, and secrets.
+- Added ARKA-specific OpenClaw workspace guidance and the `arka-audit` skill draft.
+- Added executable cross-layer ARKA/OpenClaw verification coverage for the local fork, workspace skill, backend/core AuditEvent facts, agent fallback behavior, and secret-file guardrails.
+- Attempted a local-only OpenClaw dependency install, monitored progress, stopped the long-running install by operator direction, and removed partial `node_modules`.
+- Documented manual local install/build/gateway smoke commands and precise truthfulness status.
+
+### Files / Areas Affected
+- `openclaw/`
+- `openclaw/workspaces/arka/AGENTS.md`
+- `openclaw/workspaces/arka/SOUL.md`
+- `openclaw/workspaces/arka/TOOLS.md`
+- `openclaw/workspaces/arka/skills/arka-audit/SKILL.md`
+- `test/arka-openclaw.verify.test.ts`
+- `package.json`
+- `.gitignore`
+- `docs/openclaw-local-fork-plan.md`
+- `docs/reused-libraries.md`
+- `docs/real-vs-simulated.md`
+- `technical-debt.md`
+- `CHANGELOG.md`
+- `docs/ai-attribution.md`
+
+### Human Review
+- Pending / to be confirmed by repo owner.
+
+### Verification
+- Confirmed OpenClaw upstream clone commit `e27fe55a` and MIT license.
+- Confirmed copied `openclaw/` excludes `.git`, `node_modules`, `dist`, build output, logs, cache/artifact folders, and `.env*`.
+- Manual local-only OpenClaw install completed with pnpm 10.33.0.
+- `pnpm.cmd --dir openclaw run build:strict-smoke` completed successfully and generated build stamps.
+- Direct source CLI checks passed with `node openclaw\openclaw.mjs --help`, `node openclaw\openclaw.mjs --version`, and `node openclaw\openclaw.mjs gateway --help`.
+- `pnpm.cmd --dir openclaw run ui:build` completed manually, and local dev gateway connectivity was verified on `127.0.0.1:19001`.
+- `node openclaw\openclaw.mjs --dev skills list` reports `arka-audit` ready from `openclaw-workspace`.
+- `node openclaw\openclaw.mjs --dev models list --provider minimax` reports `minimax/MiniMax-M2.7` with `auth=yes`.
+- A small model-backed ARKA prompt timed out after 4 minutes and was stopped, so model-backed OpenClaw triage remains unverified.
+- `pnpm.cmd run verify:arka-openclaw` passed, including OpenClaw fork/workspace verification, shared tests, core/backend tests, agent tests, and root typecheck.
+- Full OpenClaw production build, model-backed ARKA triage, and packages/agent gateway integration remain unverified.
+
+## 2026-04-29 - OpenClaw S2B Integration Handoff
+
+### AI Tool Used
+- OpenAI Codex CLI (GPT-5.x)
+
+### What AI Helped With
+- Inspected the local OpenClaw research clone outside `ARKA-github`.
+- Summarized OpenClaw as a gateway, embedded agent runtime, workspace, skills, plugins, tools, and channel system.
+- Produced an implementation-ready handoff for ARKA's OpenClaw sidecar gateway plus ARKA skill/plugin integration path.
+- Documented smoke setup prerequisites, commands, skill workspace shape, plugin tool contracts, Telegram tradeoffs, and next worker tasks.
+- Recorded that no OpenClaw install, gateway run, plugin load, or Telegram integration was verified.
+
+### Files / Areas Affected
+- `docs/openclaw-s2b-handoff.md`
+- `technical-debt.md`
+- `CHANGELOG.md`
+- `docs/ai-attribution.md`
+
+### Human Review
+- Pending / to be confirmed by repo owner.
+
+### Verification
+- Documentation-only update.
+- Inspected the OpenClaw research clone at `D:\Projekan\Macam2Hackathon\ARKA\_research\openclaw`.
+- Checked `node --version`, `pnpm.cmd --version`, and `Get-Command openclaw`; `openclaw` was not available on PATH.
+
 ## 2026-04-29 - S1-S5 Remediation Report Consolidation
 
 ### AI Tool Used
@@ -106,7 +315,7 @@ This document tracks material AI-assisted work in ARKA.
 ### Verification
 - Cloned `https://github.com/openclaw/openclaw` into `D:\Projekan\Macam2Hackathon\ARKA\_research\openclaw`.
 - Inspected upstream README, package metadata, architecture docs, agent runtime docs, agent loop docs, plugin docs, skills docs, workspace docs, configuration docs, and Telegram docs.
-- No OpenClaw install/run was performed yet.
+- This older research-only note has been superseded by later local-fork work: OpenClaw source now exists under `openclaw/`; local install, strict-smoke, direct CLI, gateway status, and skill loading are documented as verified, while model-backed ARKA response and ARKA app integration remain unverified.
 
 ## 2026-04-29 - OpenClaw Adapter Boundary Refactor
 

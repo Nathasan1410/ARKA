@@ -2,7 +2,77 @@
 
 All meaningful ARKA changes should be recorded here in human-readable language.
 
+## 2026-04-30
+
+### Changed
+- Updated the OpenClaw impact assessment into a current cross-layer plan for frontend, backend/API, database, `packages/agent`, proof, 0G Storage, 0G Chain, Telegram, security, and the local `openclaw/` fork.
+- Updated implementation, stack, database, code-map, MVP interaction, local-fork, and truthfulness docs so they reflect the verified local OpenClaw fork/gateway/skill/MiniMax setup without claiming model-backed ARKA integration.
+- Updated root-level briefs and tracker docs (`AGENTS.md`, `Arka - OpenClaw Agent.md`, `0G Storage Brief.md`, `ARKA 0G Chain Brief — Concept Draft.md`, `ARKA Demo Scenario Brief — Draft.md`, `Backend-Final.md`, `Database.md`, `checklist.md`, `docs/project-brief.md`, `docs/parallel-codex-session-prompts.md`, and the historical S2B handoff) so they no longer preserve stale OpenClaw or proof claims.
+- Refined OpenClaw status wording across docs after a verification pass so the read-only `arka-audit` plugin skeleton is credited as static-smoke and extension-test verified while gateway plugin load, model-backed ARKA response, packages/agent gateway calls, and Telegram remain unverified.
+- Recorded Telegram token handling as human-needed security debt without storing the token.
+
+### Added
+- Added `docs/openclaw-plugin-skeleton-plan.md` with an implementation-ready docs-only plan for the first ARKA OpenClaw plugin skeleton under `openclaw/extensions/arka-audit/`.
+- Updated `docs/openclaw-local-fork-plan.md` to point at the new skeleton plan and keep the first pass focused on a single read-only `get_audit_event` tool.
+- Added `docs/openclaw-cross-layer-next-slices.md` to define the ordered frontend, backend, DB, proof, storage, and chain slices after OpenClaw became the central triage track.
+- Added the read-only ARKA OpenClaw plugin skeleton under `openclaw/extensions/arka-audit/` with a single `get_audit_event` tool that returns `status: unavailable` until a real ARKA backend/API read path exists.
+- Added extension-local tests for `openclaw/extensions/arka-audit/` covering manifest shape, tool registration, read-only unavailable output, immutable fact policy, explicit non-goals, and missing AuditEvent id rejection.
+- Extended `test/arka-openclaw.verify.test.ts` to cover the plugin manifest, bundled extension metadata, read-only status, and explicit non-goals.
+
+### Fixed
+- Hardened `test/arka-openclaw.verify.test.ts` so the secret-file guard no longer recursively scans the entire local OpenClaw fork on HDD. It now skips large vendor/build directories and checks only bounded ARKA/OpenClaw env-file locations.
+
+### Why
+- OpenClaw is central to ARKA's Layer-1 triage story, so every sector needs a clear boundary: OpenClaw reads AuditEvents and appends safe triage outputs, while backend/core own facts and the proof layer owns 0G execution.
+
+### Verification
+- Documentation alignment pass.
+- `pnpm.cmd run verify:arka-openclaw` passed after the documentation alignment.
+- `pnpm.cmd run test:arka-openclaw` passed after the secret-scan test fix.
+- `pnpm.cmd run verify:arka-openclaw` passed after the test fix.
+- `pnpm.cmd --dir openclaw run test:extension arka-audit` passed after adding extension-local tests.
+- Static tsx smoke checks passed for importing the plugin entrypoint, registering `get_audit_event`, and executing the unavailable read-only response.
+- `pnpm.cmd run test:arka-openclaw` passed after adding extension-local plugin coverage.
+- `pnpm.cmd run verify:arka-openclaw` passed after adding extension-local plugin coverage.
+- Broader OpenClaw checks timed out in this HDD environment: `build:strict-smoke`, `test:contracts:plugins`, and lockfile-only install refresh.
+
 ## 2026-04-29
+
+### Added
+- Copied upstream OpenClaw source into `openclaw/` as a repo-local source fork for ARKA-specific OpenClaw-side work.
+- Added an ARKA OpenClaw workspace draft under `openclaw/workspaces/arka/` with `AGENTS.md`, `SOUL.md`, `TOOLS.md`, and the `arka-audit` skill.
+- Added `docs/openclaw-local-fork-plan.md` with local fork attribution, excluded artifacts, manual install/build/smoke commands, verified vs unverified status, and next steps.
+- Added `test/arka-openclaw.verify.test.ts` and root scripts `test:arka-openclaw` / `verify:arka-openclaw` to cover the OpenClaw fork, ARKA workspace skill, backend/core AuditEvent creation, agent fallback, and cross-package verification.
+- Updated reused-library, truthfulness, attribution, and technical-debt docs for the local OpenClaw fork.
+
+### Why
+- Moves OpenClaw from external research-only toward a repo-local source fork that can be built and modified for ARKA later, without pretending that runtime integration already exists.
+
+### Verification
+- Verified the copied fork excludes `.git`, `node_modules`, `dist`, build output, logs, cache/artifact folders, and `.env*` files.
+- Verified `openclaw/LICENSE`, `openclaw/package.json`, and `openclaw/pnpm-lock.yaml` are present.
+- Manual local-only `pnpm.cmd --dir openclaw install --reporter append-only` completed with pnpm 10.33.0.
+- `pnpm.cmd --dir openclaw run build:strict-smoke` completed and produced build stamps.
+- Direct source CLI checks passed with `node openclaw\openclaw.mjs --help`, `node openclaw\openclaw.mjs --version`, and `node openclaw\openclaw.mjs gateway --help`.
+- `pnpm.cmd --dir openclaw run ui:build` completed manually, and the local dev gateway became reachable on `127.0.0.1:19001`.
+- `node openclaw\openclaw.mjs --dev gateway status` reported `Connectivity probe: ok`, `Capability: connected-no-operator-scope`, and `Listening: 127.0.0.1:19001`.
+- `node openclaw\openclaw.mjs --dev skills list` reports `arka-audit` ready from `openclaw-workspace`.
+- `node openclaw\openclaw.mjs --dev models list --provider minimax` reports `minimax/MiniMax-M2.7` with `auth=yes`.
+- A small model-backed ARKA prompt timed out after 4 minutes and was stopped, so model-backed OpenClaw triage remains unverified.
+- `pnpm.cmd run verify:arka-openclaw` passed, including OpenClaw fork/workspace verification, shared tests, core/backend tests, agent tests, and root typecheck.
+- Full `pnpm.cmd --dir openclaw run build`, model-backed OpenClaw triage, and ARKA packages/agent gateway integration remain unverified.
+
+### Added
+- Added `docs/openclaw-s2b-handoff.md` with an implementation-ready OpenClaw integration handoff covering gateway/runtime concepts, ARKA sidecar recommendation, smoke setup commands, workspace skill plan, plugin tool contracts, Telegram decision, and next worker slices.
+- Updated `technical-debt.md` to record that OpenClaw smoke setup was researched but not installed or verified because no global install approval, model credentials, or Telegram token were provided.
+
+### Why
+- Keeps ARKA honest that `packages/agent` is still only an OpenClaw-facing deterministic fallback while giving the next worker a concrete path to real gateway/plugin/skill integration.
+
+### Verification
+- Documentation-only update.
+- Inspected the local OpenClaw research clone at `D:\Projekan\Macam2Hackathon\ARKA\_research\openclaw`.
+- Confirmed local Node and pnpm versions; `openclaw` was not on PATH.
 
 ### Added
 - Consolidated S1-S5 remediation reports into `docs/remediation-plan.md`.

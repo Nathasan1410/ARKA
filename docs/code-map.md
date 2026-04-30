@@ -1,6 +1,6 @@
 # ARKA Code Map
 
-This is the intended repo map after the first scaffold pass. It is a planning doc only.
+This is the current repo map for the ARKA MVP implementation boundary.
 
 ## Scaffold Tree
 
@@ -9,7 +9,10 @@ apps/web
 packages/shared
 packages/core
 packages/agent
+packages/db
 contracts
+openclaw
+test
 docs
 ```
 
@@ -98,6 +101,60 @@ Must not include:
 - Database schema ownership
 - Proof upload or chain anchoring logic
 
+### `packages/db`
+
+Owns the Drizzle/Postgres schema for ARKA operational evidence, triage outputs, and proof metadata.
+
+Must include:
+
+- Actor, product, inventory item, usage rule, order, movement, and AuditEvent tables
+- Append-only CaseNote and ActionLog records
+- StaffClarificationRequest records
+- ProofRecord status and metadata
+- `triageSource` so deterministic fallback and OpenClaw-backed output stay distinguishable after persistence
+
+Must not include:
+
+- Core reconciliation rules
+- OpenClaw internal session/transcript mirroring for P0
+- UI presentation state
+- Contract source or proof package assembly logic
+
+### `openclaw`
+
+Owns the repo-local public OpenClaw source fork and ARKA OpenClaw-side workspace/skill/plugin work.
+
+Current verified status:
+
+- OpenClaw source fork exists under `openclaw/`
+- Local install is verified
+- Strict-smoke build is verified
+- Direct source CLI help/version/gateway-help are verified
+- Local dev gateway connectivity is verified
+- ARKA `arka-audit` workspace skill loading is verified
+- MiniMax model discovery/auth is verified
+
+Still unverified / not implemented:
+
+- Full production build
+- Model-backed ARKA agent response
+- ARKA OpenClaw plugin/tool integration
+- `packages/agent` calling the OpenClaw gateway/plugin
+- OpenClaw Telegram flow for ARKA
+
+Must include:
+
+- Upstream OpenClaw source and license attribution
+- ARKA workspace/skill files under `openclaw/workspaces/arka`
+- Future OpenClaw-side ARKA plugin/tool code after the SDK path is confirmed
+
+Must not include:
+
+- `.git`, `node_modules`, `dist`, generated build output, logs, caches, or secrets as committed project source
+- MiniMax/API keys or Telegram tokens
+- ARKA database schema ownership
+- 0G Storage upload or 0G Chain registrar ownership
+
 ### `contracts`
 
 Owns smart contracts and deployment artifacts for proof anchoring.
@@ -146,8 +203,9 @@ Sequence:
 1. Define shared types and enums.
 2. Implement core deterministic reconciliation.
 3. Add an OpenClaw-facing client boundary with deterministic fallback on top of AuditEvent output.
-4. Add `apps/web` screens and handlers that consume the shared/core layer.
+4. Add `apps/web` screens and handlers that consume the shared/core/agent layer.
 5. Add database schema work after the above contracts are stable.
-6. Add `contracts` and proof anchoring once the P0 loop is stable.
+6. Use `openclaw/` for OpenClaw-side workspace/skill/plugin work, while `packages/agent` remains the ARKA app-facing client/fallback boundary.
+7. Add `contracts` and proof anchoring once the P0 loop is stable.
 
 The database is not the first implementation layer. Drizzle schema should follow shared types and core logic, not define them.

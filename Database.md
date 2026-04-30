@@ -45,7 +45,9 @@ OpenClaw research impact:
 OpenClaw is a sidecar gateway/runtime/plugin/skills system.
 The local DB stores ARKA-owned OpenClaw outputs, not OpenClaw internal runtime/session state.
 For P0, do not mirror OpenClaw transcripts into the ARKA DB.
-If needed later, store references such as triage_source, openclaw_run_id, openclaw_session_id, or channel_message_ref.
+Local OpenClaw source/install/strict-smoke/gateway/skill/MiniMax discovery are verified.
+Model-backed ARKA OpenClaw response, plugin writes, packages/agent gateway calls, and OpenClaw Telegram are not verified.
+Store triage_source now; add openclaw_run_id, openclaw_session_id, openclaw_model_ref, openclaw_skill_name, or channel_message_ref only after a real plugin/client write path exists.
 ```
 
 Anti-bloat test:
@@ -618,9 +620,9 @@ Some may be simulated or represented lightly for demo, but should not expand MVP
 
 Note:
 
-DailyReportSnapshot being later does not mean daily report is later.
+DailyReportSnapshot being later does not block lightweight reporting.
 
-Daily report is P0 as an OpenClaw feature, but it can be generated dynamically from existing AuditEvents and ActionLogs during MVP.
+Daily report is not required for the P0 A/C/D proof demo. If shown, it should be generated dynamically from existing AuditEvents and ActionLogs without implying real OpenClaw channel integration.
 
 ---
 

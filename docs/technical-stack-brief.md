@@ -29,7 +29,7 @@ contracts             AuditProofRegistry.sol and deployment scripts
 packages/core         pure audit/reconciliation/proof logic
 packages/shared       shared types, enums, validation schemas
 packages/agent        ARKA agent client boundary and deterministic fallback
-packages/openclaw-plugin-arka  optional later OpenClaw plugin after smoke setup
+openclaw/extensions/arka-audit  repo-local OpenClaw plugin skeleton; gateway load still unverified
 docs                  briefs, attribution, real-vs-simulated, reused libraries
 hardware              optional P1 only
 ```
@@ -367,8 +367,11 @@ Current research result:
 OpenClaw is a local-first gateway/runtime/plugin/skills system.
 It is not just a small agent function to import into packages/agent.
 Research clone lives outside the repo at D:\Projekan\Macam2Hackathon\ARKA\_research\openclaw.
-OpenClaw has not been installed, modified, or verified as ARKA runtime integration yet.
-See docs/openclaw-research-and-integration-plan.md.
+OpenClaw source is also copied as a repo-local source fork under openclaw/.
+Local install, strict-smoke build, direct source CLI checks, local dev gateway connectivity, ARKA skill loading, and MiniMax model discovery are verified.
+Read-only `arka-audit` plugin skeleton static smoke is verified.
+Model-backed ARKA agent response, OpenClaw gateway discovery/load of the plugin, packages/agent gateway calls, and OpenClaw Telegram are not verified or implemented yet.
+See docs/openclaw-local-fork-plan.md and docs/openclaw-impact-assessment.md.
 ```
 
 MVP behavior:
@@ -383,12 +386,11 @@ OpenClaw writes triage/resolution state, notes, action logs, clarification reque
 Implementation posture:
 
 ```txt
-Start with deterministic policy/scripted triage for the core demo.
-Run OpenClaw smoke setup before claiming OpenClaw runtime.
-Use OpenClaw through a sidecar gateway plus ARKA skill/plugin if setup is stable.
+Start with deterministic policy/scripted triage for demo resilience.
+Use the locally verified OpenClaw sidecar gateway plus ARKA skill/plugin path as the real integration direction.
 Use packages/agent to call OpenClaw or fall back to deterministic policy.
 Deterministic triage must work even if OpenClaw runtime or LLM integration slips.
-The MVP should not depend on the agent runtime being fully integrated.
+The MVP should not depend on model-backed OpenClaw being fully integrated unless that path is verified.
 Do not build multi-agent swarm for MVP.
 ```
 
@@ -402,10 +404,11 @@ The OpenClaw story matters, but demo reliability still requires deterministic fa
 Needs verification:
 
 ```txt
-OpenClaw install/run smoke test on this machine.
-Whether native Windows is enough or WSL2 is needed.
-Whether ARKA should use OpenClaw Telegram or ARKA-owned grammY for P0.
+Successful model-backed OpenClaw agent turn using the ARKA workspace/skill.
+Whether full OpenClaw production build is needed beyond strict-smoke build.
 Whether ARKA plugin starts inside OpenClaw gateway and can expose safe AuditEvent tools.
+Whether packages/agent can call the gateway/plugin reliably with deterministic fallback on timeout.
+Whether ARKA should use OpenClaw Telegram or ARKA-owned grammY for P0/P1.
 ```
 
 ## 9. Telegram Flow
@@ -452,8 +455,9 @@ Direct Bot API avoids dependency but slows down conversation handling.
 Real vs simulated:
 
 ```txt
-Telegram delivery should be REAL if time allows.
-OpenClaw reasoning can be PARTIAL or scripted if LLM/runtime setup is not stable.
+Telegram delivery should be REAL only after a real bot/channel message is sent and verified.
+OpenClaw reasoning remains PARTIAL/scripted until a model-backed ARKA response and plugin/client path are verified.
+Do not store Telegram bot tokens in the repo; use local `.env` only.
 Staff/owner accounts can be demo Telegram accounts.
 ```
 
