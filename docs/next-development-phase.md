@@ -11,21 +11,17 @@ It intentionally prioritizes **Web2 MVP reliability** (scenario cards -> AuditEv
 - Postgres must not be described as REAL until migrations are applied to a real DB and the run history survives a server restart.
 - 0G Storage, 0G Chain anchoring, Telegram, and full OpenClaw gateway/plugin runtime are still not implemented/verified for ARKA.
 
-## 1. Phase 1 (P0): Make Postgres Persistence REAL for the Demo Loop
+## 1. Phase 1 (P0): Make Postgres Persistence REAL for the Demo Loop (Supabase REST API)
 
 Goal: the A/C/D + Admin Simulation loop survives server restarts and is clearly labeled as Postgres-backed.
 
-1. Provide a real `DATABASE_URL` (local or hosted Postgres).
-2. Apply migrations: `pnpm.cmd --filter @arka/db run migrate`
-3. Enable Postgres demo repository: set `ARKA_DEMO_REPOSITORY=postgres`
-4. Restart `@arka/web` and verify in the dashboard:
-   - Run State A, State C, State D, and one Admin Simulation run.
-   - Restart the server again.
-   - Confirm the history persists and the persistence status indicates Postgres is active.
+1.  **Configure Environment:** The `DATABASE_URL` and Supabase keys are populated in `.env`.
+2.  **Supabase Initialization:** The `dashboard_demo_runs` table was created manually via the Supabase SQL editor using `supabase-init.sql`.
+3.  **Refactor `demo-run-service.ts`:** The `postgresDemoRunRepository` was rewritten to interact with the Supabase REST API (`@supabase/supabase-js`) via `dashboard-demo-run-store.ts`. (COMPLETED)
+4.  **Verify:** The UI correctly persists case history across node server restarts. (COMPLETED)
 
 Truthfulness rule:
-
-- Only after this passes should `docs/real-vs-simulated.md` be updated to reflect REAL Postgres persistence for the demo loop.
+- `docs/real-vs-simulated.md` can now be updated to reflect REAL persistence for the demo loop via Supabase.
 
 ## 2. Phase 2 (P0): Tighten Evidence Persistence Semantics
 
@@ -50,7 +46,7 @@ Goal: one real State C or D case uploads a proof package to 0G Storage and ancho
 Rules:
 
 - Do not claim 0G Storage upload works until a real upload is implemented and verified.
-- Do not claim 0G Chain anchoring works until a real deploy/tx/anchor is implemented and verified.
+- **0G Chain Anchoring:** The `AuditProofRegistry.sol` contract is already deployed to the 0G Galileo Testnet at `0xEA4a472F0123fC9889650be807A1FF5EF780029F`. (COMPLETED). The backend `viem` call remains to be implemented.
 - Proof failures must not delete or invalidate an AuditEvent.
 
 ## 4. Phase 4 (P1): OpenClaw Runtime + Telegram
