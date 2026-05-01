@@ -1,5 +1,9 @@
--- Run this in your Supabase SQL Editor to create the necessary table for the MVP dashboard.
--- Because the direct IPv4 Postgres connection failed, we are using the Supabase HTTPS REST API.
+-- Optional helper: run this in your Supabase SQL Editor if you choose to host the
+-- MVP dashboard demo-run history in Supabase Postgres.
+--
+-- This file only creates the `dashboard_demo_runs` table used by the ARKA demo loop.
+-- It does not change ARKA truthfulness status by itself. Treat Supabase as PLANNED
+-- until the app is wired + verified end-to-end.
 
 CREATE TABLE IF NOT EXISTS "dashboard_demo_runs" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
@@ -13,7 +17,5 @@ CREATE TABLE IF NOT EXISTS "dashboard_demo_runs" (
 
 CREATE INDEX IF NOT EXISTS "dashboard_demo_runs_scenario_idx" ON "dashboard_demo_runs" ("scenario_key");
 
--- Important: Since we are connecting using the ANON key for the backend in this hackathon MVP,
--- we must temporarily disable Row Level Security (RLS) on this table so the backend can insert data freely.
--- In a real production environment, you would use a Service Role Key or configure RLS policies.
-ALTER TABLE "dashboard_demo_runs" DISABLE ROW LEVEL SECURITY;
+-- NOTE (security): Do NOT disable RLS by default. If you plan to write/read this table
+-- from the app, decide on an auth model and then create appropriate policies.
