@@ -19,7 +19,9 @@ type CaseView = 'run-movement' | 'order-evidence' | 'simulation' | 'proof';
 export function DashboardShell({ initialState }: DashboardShellProps) {
   const [runs, setRuns] = useState<DashboardRun[]>(initialState.history);
   const [selectedCaseId, setSelectedCaseId] = useState(initialState.run.caseId);
+  const [selectedScenarioKey, setSelectedScenarioKey] = useState<ScenarioKeyType>(initialState.run.scenario.scenarioKey);
   const [activeView, setActiveView] = useState<CaseView>('run-movement');
+  const [autoRunProofFlow, setAutoRunProofFlow] = useState(false);
   const [adminOrderQuantity, setAdminOrderQuantity] = useState(String(initialState.run.auditEvent.orderQuantity));
   const [adminMovementGrams, setAdminMovementGrams] = useState(String(initialState.run.auditEvent.actualMovementGrams));
   const [manualStorageRootHash, setManualStorageRootHash] = useState(initialState.run.proofRecord.storageRootHash ?? '');
@@ -33,6 +35,69 @@ export function DashboardShell({ initialState }: DashboardShellProps) {
   const selectedRun = useMemo(() => {
     return runs.find((run) => run.caseId === selectedCaseId) ?? runs[0];
   }, [runs, selectedCaseId]);
+
+  function applyRunResult(result: RunScenarioResponse, nextView: CaseView) {
+    setRuns(result.history);
+    setSelectedCaseId(result.run.caseId);
+    setSelectedScenarioKey(result.run.scenario.scenarioKey);
+    setAdminOrderQuantity(String(result.run.auditEvent.orderQuantity));
+    setAdminMovementGrams(String(result.run.auditEvent.actualMovementGrams));
+    setManualStorageRootHash(result.run.proofRecord.storageRootHash ?? '');
+    setActiveView(nextView);
+  }
+
+  async function runAutoProofForCase(caseId: string) {
+    setIsRunningProofStorage(true);
+    setRunError(null);
+
+    try {
+      const storageResponse = await fetch('/api/demo/proof/store', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ caseId }),
+      });
+
+      const storagePayload = (await storageResponse.json().catch(() => null)) as
+        | ({ error?: string } & RunScenarioResponse)
+        | null;
+
+      if (storagePayload?.run && storagePayload.history) {
+        applyRunResult(storagePayload as RunScenarioResponse, 'proof');
+      }
+
+      if (!storageResponse.ok) {
+        throw new Error(storagePayload?.error ?? `Proof upload failed with HTTP ${storageResponse.status}`);
+      }
+
+      const storageResult = storagePayload as RunScenarioResponse;
+      setIsRunningProofStorage(false);
+      setIsRunningProofRegistration(true);
+
+      const registerResponse = await fetch('/api/demo/proof/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          caseId: storageResult.run.caseId,
+          storageRootHash: storageResult.run.proofRecord.storageRootHash ?? null,
+        }),
+      });
+
+      const registerPayload = (await registerResponse.json().catch(() => null)) as
+        | ({ error?: string } & RunScenarioResponse)
+        | null;
+
+      if (registerPayload?.run && registerPayload.history) {
+        applyRunResult(registerPayload as RunScenarioResponse, 'proof');
+      }
+
+      if (!registerResponse.ok) {
+        throw new Error(registerPayload?.error ?? `Proof registration failed with HTTP ${registerResponse.status}`);
+      }
+    } finally {
+      setIsRunningProofStorage(false);
+      setIsRunningProofRegistration(false);
+    }
+  }
 
   async function handleRunScenario(scenarioKey: ScenarioKeyType) {
     setIsRunningScenario(true);
@@ -50,12 +115,14 @@ export function DashboardShell({ initialState }: DashboardShellProps) {
       }
 
       const result = (await response.json()) as RunScenarioResponse;
-      setRuns(result.history);
-      setSelectedCaseId(result.run.caseId);
-      setAdminOrderQuantity(String(result.run.auditEvent.orderQuantity));
-      setAdminMovementGrams(String(result.run.auditEvent.actualMovementGrams));
-      setManualStorageRootHash(result.run.proofRecord.storageRootHash ?? '');
-      setActiveView(result.run.auditEvent.triageOutcome === TriageOutcome.AUTO_CLEAR ? 'order-evidence' : 'simulation');
+      applyRunResult(
+        result,
+        result.run.auditEvent.triageOutcome === TriageOutcome.AUTO_CLEAR ? 'order-evidence' : 'simulation',
+      );
+
+      if (autoRunProofFlow) {
+        await runAutoProofForCase(result.run.caseId);
+      }
     } catch (error) {
       setRunError(error instanceof Error ? error.message : 'Scenario route failed.');
     } finally {
@@ -80,12 +147,14 @@ export function DashboardShell({ initialState }: DashboardShellProps) {
       }
 
       const result = (await response.json()) as RunScenarioResponse;
-      setRuns(result.history);
-      setSelectedCaseId(result.run.caseId);
-      setAdminOrderQuantity(String(result.run.auditEvent.orderQuantity));
-      setAdminMovementGrams(String(result.run.auditEvent.actualMovementGrams));
-      setManualStorageRootHash(result.run.proofRecord.storageRootHash ?? '');
-      setActiveView(result.run.auditEvent.triageOutcome === TriageOutcome.AUTO_CLEAR ? 'order-evidence' : 'simulation');
+      applyRunResult(
+        result,
+        result.run.auditEvent.triageOutcome === TriageOutcome.AUTO_CLEAR ? 'order-evidence' : 'simulation',
+      );
+
+      if (autoRunProofFlow) {
+        await runAutoProofForCase(result.run.caseId);
+      }
     } catch (error) {
       setRunError(error instanceof Error ? error.message : 'Movement simulation failed.');
     } finally {
@@ -110,6 +179,7 @@ export function DashboardShell({ initialState }: DashboardShellProps) {
 
   function handleSelectRun(run: DashboardRun) {
     setSelectedCaseId(run.caseId);
+    setSelectedScenarioKey(run.scenario.scenarioKey);
     setAdminOrderQuantity(String(run.auditEvent.orderQuantity));
     setAdminMovementGrams(String(run.auditEvent.actualMovementGrams));
     setManualStorageRootHash(run.proofRecord.storageRootHash ?? '');
@@ -131,10 +201,7 @@ export function DashboardShell({ initialState }: DashboardShellProps) {
       }
 
       const result = (await response.json()) as RunScenarioResponse;
-      setRuns(result.history);
-      setSelectedCaseId(result.run.caseId);
-      setManualStorageRootHash(result.run.proofRecord.storageRootHash ?? '');
-      setActiveView('simulation');
+      applyRunResult(result, 'simulation');
     } catch (error) {
       setRunError(error instanceof Error ? error.message : 'Agent simulation failed.');
     } finally {
@@ -165,10 +232,7 @@ export function DashboardShell({ initialState }: DashboardShellProps) {
       }
 
       const result = payload as RunScenarioResponse;
-      setRuns(result.history);
-      setSelectedCaseId(result.run.caseId);
-      setManualStorageRootHash(result.run.proofRecord.storageRootHash ?? '');
-      setActiveView('proof');
+      applyRunResult(result, 'proof');
     } catch (error) {
       setRunError(error instanceof Error ? error.message : 'Proof registration failed.');
     } finally {
@@ -198,10 +262,7 @@ export function DashboardShell({ initialState }: DashboardShellProps) {
       }
 
       const result = payload as RunScenarioResponse;
-      setRuns(result.history);
-      setSelectedCaseId(result.run.caseId);
-      setManualStorageRootHash(result.run.proofRecord.storageRootHash ?? '');
-      setActiveView('proof');
+      applyRunResult(result, 'proof');
     } catch (error) {
       setRunError(error instanceof Error ? error.message : 'Proof upload failed.');
     } finally {
@@ -252,12 +313,17 @@ export function DashboardShell({ initialState }: DashboardShellProps) {
               <div className="scenario-select-row">
                 <select 
                   className="scenario-select"
-                  disabled={isRunningScenario}
+                  disabled={
+                    isRunningScenario ||
+                    isRunningAdminSimulation ||
+                    isRunningAgentAction ||
+                    isRunningProofStorage ||
+                    isRunningProofRegistration
+                  }
                   onChange={(e) => {
-                    const key = e.target.value as ScenarioKeyType;
-                    void handleRunScenario(key);
+                    setSelectedScenarioKey(e.target.value as ScenarioKeyType);
                   }}
-                  value={selectedRun.scenario.scenarioKey}
+                  value={selectedScenarioKey}
                 >
                   {scenarioCards.map((card) => (
                     <option key={card.key} value={card.key}>
@@ -267,17 +333,43 @@ export function DashboardShell({ initialState }: DashboardShellProps) {
                 </select>
                 <button 
                   className="action-button primary-action compact"
-                  disabled={isRunningScenario}
-                  onClick={() => void handleRunScenario(selectedRun.scenario.scenarioKey as ScenarioKeyType)}
+                  disabled={
+                    isRunningScenario ||
+                    isRunningAdminSimulation ||
+                    isRunningAgentAction ||
+                    isRunningProofStorage ||
+                    isRunningProofRegistration
+                  }
+                  onClick={() => void handleRunScenario(selectedScenarioKey)}
                   type="button"
                 >
                   Run
                 </button>
               </div>
+              <label className="auto-proof-toggle">
+                <input
+                  checked={autoRunProofFlow}
+                  disabled={
+                    isRunningScenario ||
+                    isRunningAdminSimulation ||
+                    isRunningAgentAction ||
+                    isRunningProofStorage ||
+                    isRunningProofRegistration
+                  }
+                  onChange={(e) => setAutoRunProofFlow(e.target.checked)}
+                  type="checkbox"
+                />
+                <div>
+                  <span className="label">Auto-run 0G proof flow</span>
+                  <p className="toggle-copy">
+                    After each new case, upload to 0G Storage and then register on 0G Chain automatically.
+                  </p>
+                </div>
+              </label>
               <div className="scenario-preview-box">
-                <span className="scenario-title">{scenarioCards.find(c => c.key === selectedRun.scenario.scenarioKey)?.title}</span>
-                <p className="scenario-line">Expected result: {scenarioCards.find(c => c.key === selectedRun.scenario.scenarioKey)?.expectedOutcome}</p>
-                <p className="scenario-line">Triage: {scenarioCards.find(c => c.key === selectedRun.scenario.scenarioKey)?.triagePath}</p>
+                <span className="scenario-title">{scenarioCards.find(c => c.key === selectedScenarioKey)?.title}</span>
+                <p className="scenario-line">Expected result: {scenarioCards.find(c => c.key === selectedScenarioKey)?.expectedOutcome}</p>
+                <p className="scenario-line">Triage: {scenarioCards.find(c => c.key === selectedScenarioKey)?.triagePath}</p>
               </div>
             </div>
             {runError ? <p className="error-text">{runError}</p> : null}

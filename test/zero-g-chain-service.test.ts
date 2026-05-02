@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import {
+  formatZeroGChainError,
   readZeroGChainConfig,
   registerProofOnZeroGChain,
   resolveStorageRootHash,
@@ -85,5 +86,23 @@ describe('zero-g-chain-service', () => {
         storageRootHash: '0xroot',
       }),
     );
+  });
+
+  it('formats known contract errors into operator-friendly messages', () => {
+    expect(
+      formatZeroGChainError({
+        data: {
+          errorName: 'UnauthorizedRegistrar',
+        },
+      }),
+    ).toContain('not authorized');
+
+    expect(
+      formatZeroGChainError({
+        data: {
+          errorName: 'HashAlreadyRegistered',
+        },
+      }),
+    ).toContain('already registered');
   });
 });

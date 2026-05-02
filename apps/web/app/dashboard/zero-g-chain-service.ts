@@ -6,6 +6,71 @@ import { readEnvWithFallback } from './env-fallback';
 
 const auditProofRegistryAbi = [
   {
+    type: 'error',
+    name: 'UnauthorizedAdmin',
+    inputs: [{ name: 'caller', type: 'address' }],
+  },
+  {
+    type: 'error',
+    name: 'UnauthorizedRegistrar',
+    inputs: [{ name: 'caller', type: 'address' }],
+  },
+  {
+    type: 'error',
+    name: 'AlreadyRegistrar',
+    inputs: [{ name: 'registrar', type: 'address' }],
+  },
+  {
+    type: 'error',
+    name: 'NotRegistrar',
+    inputs: [{ name: 'registrar', type: 'address' }],
+  },
+  {
+    type: 'error',
+    name: 'CannotRemoveAdmin',
+    inputs: [],
+  },
+  {
+    type: 'error',
+    name: 'EmptyCaseId',
+    inputs: [],
+  },
+  {
+    type: 'error',
+    name: 'EmptyPackageHash',
+    inputs: [],
+  },
+  {
+    type: 'error',
+    name: 'HashAlreadyRegistered',
+    inputs: [{ name: 'packageHash', type: 'string' }],
+  },
+  {
+    type: 'error',
+    name: 'ProofNotFound',
+    inputs: [{ name: 'packageHash', type: 'string' }],
+  },
+  {
+    type: 'function',
+    name: 'getProof',
+    stateMutability: 'view',
+    inputs: [{ name: '_localPackageHash', type: 'string' }],
+    outputs: [
+      {
+        type: 'tuple',
+        components: [
+          { name: 'caseId', type: 'string' },
+          { name: 'proofType', type: 'string' },
+          { name: 'localPackageHash', type: 'string' },
+          { name: 'storageRootHash', type: 'string' },
+          { name: 'previousProofHash', type: 'string' },
+          { name: 'registeredBy', type: 'address' },
+          { name: 'registeredAt', type: 'uint256' },
+        ],
+      },
+    ],
+  },
+  {
     type: 'function',
     name: 'registerProof',
     stateMutability: 'nonpayable',
@@ -131,18 +196,45 @@ async function executeZeroGChainRegistration(
     transport,
   });
 
-  const txHash = await walletClient.writeContract({
-    address: config.registryAddress,
-    abi: auditProofRegistryAbi,
-    functionName: 'registerProof',
-    args: [
-      input.caseId,
-      input.proofType,
-      input.localPackageHash,
-      input.storageRootHash,
-      input.previousProofHash ?? '',
-    ],
-  });
+  try {
+    await publicClient.readContract({
+      address: config.registryAddress,
+      abi: auditProofRegistryAbi,
+      functionName: 'getProof',
+      args: [input.localPackageHash],
+    });
+
+    throw new Error(
+      `This proof hash is already registered on 0G Chain: ${input.localPackageHash}. Use a fresh case or avoid retrying the same proof after a successful anchor.`,
+    );
+  } catch (error) {
+    if (getKnownContractErrorName(error) !== 'ProofNotFound') {
+      if (error instanceof Error && error.message.includes('already registered on 0G Chain')) {
+        throw error;
+      }
+
+      throw new Error(formatZeroGChainError(error));
+    }
+  }
+
+  let txHash: Hex;
+
+  try {
+    txHash = await walletClient.writeContract({
+      address: config.registryAddress,
+      abi: auditProofRegistryAbi,
+      functionName: 'registerProof',
+      args: [
+        input.caseId,
+        input.proofType,
+        input.localPackageHash,
+        input.storageRootHash,
+        input.previousProofHash ?? '',
+      ],
+    });
+  } catch (error) {
+    throw new Error(formatZeroGChainError(error));
+  }
 
   const receipt = await publicClient.waitForTransactionReceipt({ hash: txHash });
 
@@ -178,4 +270,81 @@ export async function registerProofOnZeroGChain(
     storageRootHash: input.storageRootHash.trim(),
     previousProofHash: input.previousProofHash?.trim() || '',
   });
+}
+
+function getKnownContractErrorName(error: unknown): string | null {
+  const queue: unknown[] = [error];
+  const seen = new Set<unknown>();
+
+  while (queue.length > 0) {
+    const current = queue.shift();
+    if (!current || seen.has(current) || typeof current !== 'object') {
+      continue;
+    }
+
+    seen.add(current);
+
+    if ('data' in current && current.data && typeof current.data === 'object') {
+      const data = current.data as { errorName?: unknown };
+      if (typeof data.errorName === 'string') {
+        return data.errorName;
+      }
+    }
+
+    if ('errorName' in current && typeof (current as { errorName?: unknown }).errorName === 'string') {
+      return (current as { errorName: string }).errorName;
+    }
+
+    if ('walk' in current && typeof (current as { walk?: unknown }).walk === 'function') {
+      try {
+        let found: string | null = null;
+        (current as { walk: (fn: (err: unknown) => boolean | void) => void }).walk((nested) => {
+          const nestedName = getKnownContractErrorName(nested);
+          if (nestedName) {
+            found = nestedName;
+            return true;
+          }
+
+          return false;
+        });
+        if (found) {
+          return found;
+        }
+      } catch {
+        // Ignore walk errors and continue with generic traversal.
+      }
+    }
+
+    if ('cause' in current) {
+      queue.push((current as { cause?: unknown }).cause);
+    }
+  }
+
+  return null;
+}
+
+export function formatZeroGChainError(error: unknown): string {
+  const errorName = getKnownContractErrorName(error);
+
+  if (errorName === 'UnauthorizedRegistrar') {
+    return 'The configured registrar wallet is not authorized in AuditProofRegistry. Add this wallet as a registrar on the deployed contract first.';
+  }
+
+  if (errorName === 'HashAlreadyRegistered') {
+    return 'This proof hash was already registered on 0G Chain. Avoid retrying the same proof after a successful anchor, or generate a fresh case.';
+  }
+
+  if (errorName === 'EmptyCaseId') {
+    return '0G Chain registration failed because caseId was empty.';
+  }
+
+  if (errorName === 'EmptyPackageHash') {
+    return '0G Chain registration failed because localPackageHash was empty.';
+  }
+
+  if (error instanceof Error) {
+    return error.message;
+  }
+
+  return '0G Chain registration failed.';
 }

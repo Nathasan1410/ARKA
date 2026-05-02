@@ -18,6 +18,55 @@ This document tracks material AI-assisted work in ARKA.
 ### Verification
 - `pnpm.cmd --filter @arka/web build`
 
+## 2026-05-02 - Optional Auto-Proof Toggle
+
+### AI Tool Used
+- OpenAI Codex CLI (GPT-5.x)
+
+### What AI Helped With
+- Added a small dashboard-level option to auto-run the proof flow for newly created cases without removing the existing manual controls.
+- Reused the current proof routes so the automatic path still follows the same `0G Storage -> 0G Chain` sequence and the same truthfulness/error handling as the manual buttons.
+- Kept the scope narrow by making this a UI-driven toggle instead of a deeper backend mode change.
+
+### Human Direction
+- Requested an optional automatic mode for the demo so the operator does not always need to click both proof actions manually.
+
+### Verification
+- `pnpm.cmd --filter @arka/web build`
+
+## 2026-05-02 - 0G Chain Revert Hardening
+
+### AI Tool Used
+- OpenAI Codex CLI (GPT-5.x)
+
+### What AI Helped With
+- Updated the dashboard `viem` ABI for `AuditProofRegistry` so custom contract errors can be decoded instead of surfacing only raw selectors.
+- Added a preflight `getProof` read to catch already-anchored `localPackageHash` values before sending another chain transaction.
+- Translated common decoded contract failures such as unauthorized registrar and duplicate proof hash into operator-friendly messages for the dashboard flow.
+
+### Human Direction
+- Requested a fix for the recurring `registerProof` revert path that had been surfacing as an opaque selector in the UI.
+
+### Verification
+- `pnpm.cmd exec vitest run test/zero-g-chain-service.test.ts`
+- `pnpm.cmd --filter @arka/web build`
+
+## 2026-05-02 - Scenario Selector Execution Fix
+
+### AI Tool Used
+- OpenAI Codex CLI (GPT-5.x)
+
+### What AI Helped With
+- Fixed a demo-critical dashboard bug where changing the selected scenario in the dropdown immediately triggered a run.
+- Split scenario selection state from scenario execution so the dropdown only changes the chosen scenario and the `Run` button is the sole execution control.
+- Kept the fix local to the dashboard shell without changing the backend route contract.
+
+### Human Direction
+- Reported that the case selector was bugged because it executed without the operator clicking `Run`.
+
+### Verification
+- `pnpm.cmd --filter @arka/web build`
+
 ## 2026-05-02 - Web Build Dependency Repair + MVP Smoke
 
 ### AI Tool Used

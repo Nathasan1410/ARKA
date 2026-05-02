@@ -16,6 +16,9 @@ Command note: examples in this changelog use Codespaces/Linux defaults (`/worksp
 - Added honest 0G Storage failure handling so missing env/testnet issues move proof state to `FAILED_TO_STORE` with explicit retry/IPFS fallback guidance instead of implying storage success.
 - Verified the live Web3 proof flow end-to-end outside the Next route harness: a real canonical proof package uploaded to 0G Storage, returned a real storage root hash plus storage transaction hash, and then anchored successfully on 0G Chain with a real chain transaction hash.
 - Polished the judge-facing proof panel so fully verified cases now show a clear `REAL` Web3 proof banner plus direct explorer links for the 0G storage and chain transaction hashes.
+- Added an optional dashboard toggle to auto-run the proof flow for new cases: after scenario/admin execution, ARKA can now upload to 0G Storage and then register on 0G Chain automatically while preserving the manual proof buttons.
+- Hardened the 0G Chain registration service against opaque contract reverts: the ABI now includes the registry custom errors, duplicate proof hashes are preflight-checked through `getProof`, and decoded chain failures are translated into operator-friendly messages.
+- Fixed the scenario selector in `Scenario Control` so changing the dropdown no longer executes a run immediately. Scenario selection is now separate from execution, and only the `Run` button starts a new case.
 
 ### Verification
 - `pnpm.cmd --filter @arka/shared test`
@@ -30,6 +33,10 @@ Command note: examples in this changelog use Codespaces/Linux defaults (`/worksp
 - Local runtime smoke for `POST /api/demo/proof/store` with missing env confirmed dashboard reachability plus a truthful `ZG_CHAIN_RPC_URL` error response
 - Direct service-level live verification from `apps/web` using `pnpm.cmd exec tsx`: `runDashboardScenario('STATE_C')`, `storeProofOnZeroGForRun(caseId)`, and `registerProofOnChainForRun(caseId, null)` all succeeded with real 0G transaction hashes
 - `pnpm.cmd --filter @arka/web build` after proof-panel UI polish
+- `pnpm.cmd --filter @arka/web build` after adding the optional auto-proof toggle
+- `pnpm.cmd exec vitest run test/zero-g-chain-service.test.ts`
+- `pnpm.cmd --filter @arka/web build` after hardening the 0G chain error handling
+- `pnpm.cmd --filter @arka/web build` after fixing the scenario-selector execution bug
 
 ## 2026-05-01
 
