@@ -14,7 +14,7 @@ Reconciliation Engine: PARTIAL (pure core A/C/D used by local demo API route and
 OpenClaw triage: PARTIAL (repo-local OpenClaw fork under `openclaw/`; Codespaces path is `/workspaces/ARKA`. Verified: local install, strict-smoke build with `OPENCLAW_A2UI_SKIP_MISSING=1`, direct CLI help/version, dev gateway connectivity, ARKA workspace/skill loading, MiniMax model discovery, one model-backed `infer model run --local` ARKA State C response, read-only `arka-audit` extension tests, and gateway discovery/load of `arka-audit` when enabled in an isolated profile. Unverified/blocked: a full OpenClaw `agent --agent main --message ...` session turn returning a final assistant response via the gateway (current runs time out waiting for a final response even when provider auth works for `infer`), any ARKA `packages/agent` gateway client seam, and any Telegram integration.)
 Dashboard UI: PARTIAL (Next.js `/dashboard` shell consumes local demo API route results for A/C/D and admin movement simulation, Order + Movement + AuditEvent detail, deterministic triage panel, dashboard-only simulated owner/staff/final-decision interaction, and local proof record/hash display. Demo history defaults to in-memory; optional Postgres demo persistence is available and verified when enabled.)
 0G Storage upload: PLANNED
-0G Chain registry: PLANNED
+0G Chain registry: PARTIAL (the dashboard now exposes a real backend `viem` registration path through `POST /api/demo/proof/register`, but live chain anchoring is still unverified until a real registrar wallet, RPC access, and a real storage root hash are used successfully end-to-end.)
 Hardware input: PLANNED (optional)
 CCTV clip: PLANNED (metadata only for MVP)
 YOLO: FUTURE / PLACEHOLDER

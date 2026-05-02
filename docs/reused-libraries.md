@@ -2,7 +2,7 @@
 
 Track reused libraries, starter kits, templates, and copied public examples.
 
-## Current List (2026-04-29)
+## Current List (2026-05-02)
 
 ```txt
 Next.js (declared in apps/web package manifest; installed through pnpm lockfile)
@@ -14,6 +14,8 @@ eslint / eslint-config-next (declared in apps/web package manifest; installed, l
 drizzle-orm / drizzle-kit (declared for packages/db schema + migration generation)
 pg (declared for the Postgres DB package)
 Vitest (declared at the workspace root for shared/core unit testing)
+@supabase/ssr (declared in apps/web package manifest for Supabase SSR/browser helpers used by the web app utilities)
+viem (declared in apps/web package manifest for 0G Chain proof registration from the dashboard backend route)
 OpenClaw (MIT-licensed upstream source copied as a local fork under openclaw/ from https://github.com/openclaw/openclaw at commit e27fe55a; ARKA added workspace/skill draft files and a read-only arka-audit plugin skeleton)
 ```
 

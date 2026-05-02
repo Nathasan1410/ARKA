@@ -168,10 +168,10 @@ Owner: Both
 
 ```txt
 Area: 0G Chain
-Status: PARTIAL (Contract Implemented, Deployment Pending)
-What happened: The `AuditProofRegistry.sol` smart contract exists under `contracts/` and can be compiled/tested locally, but no verified deployment / on-chain transaction / anchor lookup has been recorded in this repo.
+Status: NEEDS_HUMAN
+What happened: The `AuditProofRegistry.sol` contract is already present and the dashboard now includes a real backend `viem` registration path (`/api/demo/proof/register`) that updates proof state and surfaces registrar/RPC errors honestly. Live verification is still blocked in this session because the required 0G chain env vars and a funded registrar wallet were not available here.
 Why it matters: ARKA must not claim real chain anchoring until a real deploy + tx + verification is completed and documented.
-Next action: Provide a funded test wallet, deploy to the intended 0G testnet, and verify one `registerProof` transaction end-to-end before any “REAL chain anchoring” claim.
+Next action: Set `ZG_CHAIN_RPC_URL`, `ZG_CHAIN_ID`, `ZG_REGISTRAR_PRIVATE_KEY`, and `AUDIT_PROOF_REGISTRY_ADDRESS`, then verify one `POST /api/demo/proof/register` run end-to-end with a real storage root hash before any “REAL chain anchoring” claim.
 Owner: Both
 ```
 
@@ -190,10 +190,10 @@ Owner: Human
 
 ```txt
 Area: OpenClaw
-Status: RISK
-What happened: packages/agent currently contains deterministic A/C/D triage fallback only. OpenClaw is present as a repo-local source fork under `openclaw/`, and the ARKA workspace exists under `openclaw/workspaces/arka/`. Verified: local install, strict-smoke build (with the current A2UI skip flag), direct CLI smoke, local dev gateway connectivity, ARKA skill loading, MiniMax model discovery, one model-backed `infer model run --local` State C response, and gateway discovery/load of the read-only `arka-audit` extension when enabled in an isolated profile. Unverified: a full gateway-backed `agent` session turn returning a final response, and any ARKA app-level gateway/plugin client calls. Note: the CLI gateway path was updated to use a start/wait/cache flow instead of relying on a single long-lived `expectFinal` gateway RPC, to avoid premature client timeouts during longer agent turns.
-Why it matters: ARKA's product story says the agent is built on top of OpenClaw. OpenClaw is a full gateway/runtime/plugin system, not just a local adapter function. The deterministic fallback is useful for MVP resilience, but it must not be mistaken for a real OpenClaw-backed agent.
-Next action: Debug a successful full OpenClaw agent session turn, then implement and verify the ARKA plugin/tool path. Keep `pnpm run verify:arka-openclaw` passing as the cross-layer regression gate. Do not claim packages/agent integration until ARKA actually calls the OpenClaw gateway/plugin.
+Status: DEFERRED
+What happened: packages/agent currently contains deterministic A/C/D triage fallback only. OpenClaw is present as a repo-local source fork under `openclaw/`, and bounded smokes exist, but a full gateway-backed ARKA app integration remains unverified. Per `docs/hackathon-survival-plan.md`, real OpenClaw runtime work is cut from the current 48-hour submission-critical path so remaining effort can focus on verifiable Web3 delivery.
+Why it matters: ARKA must stay honest: the dashboard simulation is acceptable for the hackathon triage story, but it must not be presented as a real OpenClaw-backed agent. Deferring this work protects submission reliability.
+Next action: Do not resume real OpenClaw runtime work until the Web3 proof flow is complete and verified, or unless the human explicitly reprioritizes it after submission needs are met.
 Owner: Both
 ```
 

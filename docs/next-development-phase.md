@@ -1,5 +1,7 @@
 # Next Development Phase (DB-First Web2 MVP)
 
+> Hackathon note (2026-05-02): for the current 48-hour submission push, the active execution priority is [`docs/hackathon-survival-plan.md`](./hackathon-survival-plan.md). The submission-critical path is Web3 only: `0G Chain`, then `0G Storage` or a documented IPFS fallback. Real OpenClaw runtime and Telegram are deferred unless Web3 delivery is already complete and verified.
+
 This document is an execution plan for the *next* ARKA development phase.
 
 It intentionally prioritizes **Web2 MVP reliability** (scenario cards -> AuditEvent -> dashboard) before any Web3 (0G) or OpenClaw runtime integration.
@@ -46,10 +48,10 @@ Goal: one real State C or D case uploads a proof package to 0G Storage and ancho
 Rules:
 
 - Do not claim 0G Storage upload works until a real upload is implemented and verified.
-- **0G Chain Anchoring:** The `AuditProofRegistry.sol` contract is already deployed to the 0G Galileo Testnet at `0xEA4a472F0123fC9889650be807A1FF5EF780029F`. (COMPLETED). The backend `viem` call remains to be implemented.
+- **0G Chain Anchoring:** The `AuditProofRegistry.sol` contract is already deployed to the 0G Galileo Testnet at `0xEA4a472F0123fC9889650be807A1FF5EF780029F`. The backend `viem` call now exists in the dashboard proof flow, but live end-to-end verification still requires registrar env vars and a real storage root hash.
 - Proof failures must not delete or invalidate an AuditEvent.
 
-## 4. Phase 4 (P1): OpenClaw Runtime + Telegram
+## 4. Phase 4 (Deferred For Hackathon): OpenClaw Runtime + Telegram
 
 Goal: replace dashboard-only simulated conversation with a verified OpenClaw-backed triage interaction path.
 
@@ -57,6 +59,7 @@ Rules:
 
 - Do not claim real OpenClaw-backed ARKA triage until the gateway/plugin/client path is verified end-to-end.
 - Do not claim Telegram works until a real bot/channel flow is verified.
+- Do not spend current submission-critical time here until the Web3 proof path is complete.
 
 ## 5. Definition of Done for This Phase
 

@@ -1,8 +1,16 @@
 # ARKA Checklist (Planning -> Implementation Tracker)
 
-Last updated: 2026-04-30
+Last updated: 2026-05-02
 
 This file tracks the current implementation status. `docs/real-vs-simulated.md` remains the source of truth for feature-claim wording.
+
+Hackathon execution note:
+
+```txt
+Active submission-critical path follows docs/hackathon-survival-plan.md.
+Finish real/verifiable Web3 proof flow first: 0G Chain, then 0G Storage or documented IPFS fallback.
+OpenClaw runtime and Telegram are deferred from the critical path for the current submission push.
+```
 
 Core architecture to preserve:
 
@@ -45,11 +53,11 @@ Required scenario cards for P0: State A (CLEAR), State C (REQUEST_EXPLANATION), 
 | 4 | Usage Batch | NEEDS_DETAIL | P0 backend-only if needed | NOT_IMPLEMENTED | Keep UI out of P0 unless required to prevent false alerts. | `Backend-Final.md`, `Database.md` |
 | 5 | Reconciliation Engine | READY | P0 Run Reconciliation | PARTIAL | Pure A/C/D core reconciliation is verified and consumed by the local demo API route. Optional Postgres demo persistence exists, but a fully DB-backed workflow (read/write AuditEvents as the source of truth) is still not verified. | `docs/mvp-demo-interaction-brief.md`, `Backend-Final.md` |
 | 6 | AuditEvent Generator | READY | P0 list + detail | PARTIAL | Local demo API route creates A/C/D AuditEvents and dashboard consumes returned results. Optional Postgres demo persistence exists (history + best-effort evidence writes) but remains unverified until migrations are applied and a restart test passes. | `docs/mvp-demo-interaction-brief.md`, `Backend-Final.md`, `Database.md` |
-| 7 | OpenClaw Triage Layer | NEEDS_DETAIL | P0 OpenClaw panel + triageOutcome | PARTIAL | Deterministic fallback and dashboard-only simulated agent interaction are verified; local OpenClaw source/install/strict-smoke/gateway/skill/MiniMax discovery, one local model-backed ARKA State C inference response, and gateway discovery/load of the read-only `arka-audit` plugin are verified; full OpenClaw agent session response and packages/agent gateway calls remain unverified (CLI gateway flow is now robust, but a successful end-to-end agent turn still needs to be reproduced). OpenClaw Telegram is not implemented or verified. | `Arka - OpenClaw Agent.md`, `docs/openclaw-local-fork-plan.md`, `docs/openclaw-impact-assessment.md` |
-| 8 | Telegram Conversation Flow | NEEDS_DETAIL | P0 real or simulated; staff reply optional | PARTIAL | Dashboard simulation covers owner approval, simulated staff send/reply, and final decision. Real Telegram bot/channel flow is not implemented or verified. Do not store tokens in repo. | `docs/mvp-demo-interaction-brief.md`, `docs/technical-stack-brief.md` |
+| 7 | OpenClaw Triage Layer | NEEDS_DETAIL | P0 OpenClaw panel + triageOutcome | PARTIAL | Deterministic fallback and dashboard-only simulated agent interaction are verified. Real OpenClaw runtime remains deferred from the current hackathon critical path per `docs/hackathon-survival-plan.md`; do not spend submission-critical time here until Web3 proof delivery is complete. | `Arka - OpenClaw Agent.md`, `docs/openclaw-local-fork-plan.md`, `docs/openclaw-impact-assessment.md`, `docs/hackathon-survival-plan.md` |
+| 8 | Telegram Conversation Flow | NEEDS_DETAIL | P0 real or simulated; staff reply optional | PARTIAL | Dashboard simulation covers owner approval, simulated staff send/reply, and final decision. Real Telegram bot/channel flow is not implemented or verified and is deferred from the current hackathon critical path. Do not store tokens in repo. | `docs/mvp-demo-interaction-brief.md`, `docs/technical-stack-brief.md`, `docs/hackathon-survival-plan.md` |
 | 9 | Dashboard / Audit Arena | READY | P0 single-page panels | PARTIAL | Local `/dashboard` case console now keeps scenario runner, admin movement simulation, case summary, AuditEvent loop, simulated triage, and proof status connected; manual browser verification remains needed. | `docs/mvp-demo-interaction-brief.md`, `docs/technical-stack-brief.md` |
-| 10 | 0G Storage Proof Package | NEEDS_DETAIL | P0 proof panel statuses | PARTIAL | Local demo API route returns proof-record-shaped metadata and local package hash; real 0G Storage upload is not implemented or verified. | `0G Storage Brief.md`, `docs/mvp-demo-interaction-brief.md`, `docs/technical-stack-brief.md` |
-| 11 | 0G Chain Proof Registry | NEEDS_DETAIL | P0 proof panel statuses | NOT_IMPLEMENTED | Confirm 0G testnet RPC/chain ID/faucet; implement and verify real AuditProofRegistry deploy/call before claiming chain anchoring. | `docs/0g-chain-brief.md`, `ARKA 0G Chain Brief — Concept Draft.md` |
+| 10 | 0G Storage Proof Package | NEEDS_DETAIL | P0 proof panel statuses | PARTIAL | Active hackathon-critical item. Local demo API route returns proof-record-shaped metadata and local package hash; real 0G Storage upload is not implemented or verified yet. If 0G testnet flow blocks, pivot immediately to a documented IPFS fallback per `docs/hackathon-survival-plan.md`. | `0G Storage Brief.md`, `docs/mvp-demo-interaction-brief.md`, `docs/technical-stack-brief.md`, `docs/hackathon-survival-plan.md` |
+| 11 | 0G Chain Proof Registry | NEEDS_DETAIL | P0 proof panel statuses | PARTIAL | Dashboard proof panel now includes a real backend `viem` registration path and `/api/demo/proof/register` route. Live end-to-end verification still needs 0G chain env vars, funded registrar access, and a real storage root hash before claiming chain anchoring as real. | `docs/0g-chain-brief.md`, `ARKA 0G Chain Brief — Concept Draft.md` |
 | 12 | Demo Video + README | NEEDS_DETAIL | P0 demo packaging | NOT_IMPLEMENTED | Draft after at least one A/C/D path works end-to-end; keep real-vs-simulated claims honest. | `AGENTS.md`, `docs/real-vs-simulated.md`, `docs/mvp-demo-interaction-brief.md` |
 
 ## Current Implementation Notes

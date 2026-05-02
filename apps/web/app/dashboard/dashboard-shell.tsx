@@ -22,9 +22,11 @@ export function DashboardShell({ initialState }: DashboardShellProps) {
   const [activeView, setActiveView] = useState<CaseView>('run-movement');
   const [adminOrderQuantity, setAdminOrderQuantity] = useState(String(initialState.run.auditEvent.orderQuantity));
   const [adminMovementGrams, setAdminMovementGrams] = useState(String(initialState.run.auditEvent.actualMovementGrams));
+  const [manualStorageRootHash, setManualStorageRootHash] = useState(initialState.run.proofRecord.storageRootHash ?? '');
   const [isRunningScenario, setIsRunningScenario] = useState(false);
   const [isRunningAgentAction, setIsRunningAgentAction] = useState(false);
   const [isRunningAdminSimulation, setIsRunningAdminSimulation] = useState(false);
+  const [isRunningProofRegistration, setIsRunningProofRegistration] = useState(false);
   const [runError, setRunError] = useState<string | null>(null);
 
   const selectedRun = useMemo(() => {
@@ -51,6 +53,7 @@ export function DashboardShell({ initialState }: DashboardShellProps) {
       setSelectedCaseId(result.run.caseId);
       setAdminOrderQuantity(String(result.run.auditEvent.orderQuantity));
       setAdminMovementGrams(String(result.run.auditEvent.actualMovementGrams));
+      setManualStorageRootHash(result.run.proofRecord.storageRootHash ?? '');
       setActiveView(result.run.auditEvent.triageOutcome === TriageOutcome.AUTO_CLEAR ? 'order-evidence' : 'simulation');
     } catch (error) {
       setRunError(error instanceof Error ? error.message : 'Scenario route failed.');
@@ -80,6 +83,7 @@ export function DashboardShell({ initialState }: DashboardShellProps) {
       setSelectedCaseId(result.run.caseId);
       setAdminOrderQuantity(String(result.run.auditEvent.orderQuantity));
       setAdminMovementGrams(String(result.run.auditEvent.actualMovementGrams));
+      setManualStorageRootHash(result.run.proofRecord.storageRootHash ?? '');
       setActiveView(result.run.auditEvent.triageOutcome === TriageOutcome.AUTO_CLEAR ? 'order-evidence' : 'simulation');
     } catch (error) {
       setRunError(error instanceof Error ? error.message : 'Movement simulation failed.');
@@ -107,6 +111,7 @@ export function DashboardShell({ initialState }: DashboardShellProps) {
     setSelectedCaseId(run.caseId);
     setAdminOrderQuantity(String(run.auditEvent.orderQuantity));
     setAdminMovementGrams(String(run.auditEvent.actualMovementGrams));
+    setManualStorageRootHash(run.proofRecord.storageRootHash ?? '');
   }
 
   async function handleAgentAction(action: SimulatedAgentAction) {
@@ -127,11 +132,46 @@ export function DashboardShell({ initialState }: DashboardShellProps) {
       const result = (await response.json()) as RunScenarioResponse;
       setRuns(result.history);
       setSelectedCaseId(result.run.caseId);
+      setManualStorageRootHash(result.run.proofRecord.storageRootHash ?? '');
       setActiveView('simulation');
     } catch (error) {
       setRunError(error instanceof Error ? error.message : 'Agent simulation failed.');
     } finally {
       setIsRunningAgentAction(false);
+    }
+  }
+
+  async function handleProofRegistration() {
+    setIsRunningProofRegistration(true);
+    setRunError(null);
+
+    try {
+      const response = await fetch('/api/demo/proof/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          caseId: selectedRun.caseId,
+          storageRootHash: manualStorageRootHash.trim() || null,
+        }),
+      });
+
+      const payload = (await response.json().catch(() => null)) as
+        | ({ error?: string } & RunScenarioResponse)
+        | null;
+
+      if (!response.ok) {
+        throw new Error(payload?.error ?? `Proof registration failed with HTTP ${response.status}`);
+      }
+
+      const result = payload as RunScenarioResponse;
+      setRuns(result.history);
+      setSelectedCaseId(result.run.caseId);
+      setManualStorageRootHash(result.run.proofRecord.storageRootHash ?? '');
+      setActiveView('proof');
+    } catch (error) {
+      setRunError(error instanceof Error ? error.message : 'Proof registration failed.');
+    } finally {
+      setIsRunningProofRegistration(false);
     }
   }
 
@@ -326,7 +366,15 @@ export function DashboardShell({ initialState }: DashboardShellProps) {
           ) : null}
           {activeView === 'order-evidence' ? <EvidenceView selectedRun={selectedRun} movementDifference={movementDifference} /> : null}
           {activeView === 'simulation' ? <AgentView selectedRun={selectedRun} /> : null}
-          {activeView === 'proof' ? <ProofView selectedRun={selectedRun} /> : null}
+          {activeView === 'proof' ? (
+            <ProofView
+              isRunningProofRegistration={isRunningProofRegistration}
+              manualStorageRootHash={manualStorageRootHash}
+              onManualStorageRootHashChange={setManualStorageRootHash}
+              onRegisterProof={() => void handleProofRegistration()}
+              selectedRun={selectedRun}
+            />
+          ) : null}
         </section>
       </div>
     </main>
@@ -524,7 +572,21 @@ function AgentView({ selectedRun }: { selectedRun: DashboardRun }) {
   );
 }
 
-function ProofView({ selectedRun }: { selectedRun: DashboardRun }) {
+function ProofView({
+  selectedRun,
+  manualStorageRootHash,
+  onManualStorageRootHashChange,
+  onRegisterProof,
+  isRunningProofRegistration,
+}: {
+  selectedRun: DashboardRun;
+  manualStorageRootHash: string;
+  onManualStorageRootHashChange: (value: string) => void;
+  onRegisterProof: () => void;
+  isRunningProofRegistration: boolean;
+}) {
+  const chainAlreadyRegistered = Boolean(selectedRun.proofRecord.chainTxHash);
+
   return (
     <section className="detail-grid">
       <article className="panel detail-span">
@@ -541,6 +603,32 @@ function ProofView({ selectedRun }: { selectedRun: DashboardRun }) {
           <Kv label="0G Storage tx" value={selectedRun.proofRecord.storageTxHash ?? 'Not started'} />
           <Kv label="0G Chain tx" value={selectedRun.proofRecord.chainTxHash ?? 'Not registered'} />
           <Kv label="Retry state" value={selectedRun.proofRecord.retryState} />
+        </div>
+      </article>
+      <article className="panel detail-span">
+        <h2>0G Chain Registration</h2>
+        <p className="panel-subtitle">
+          Step 1 uses a real chain registrar call, but until in-app 0G Storage upload exists you may need to paste a real external
+          storage root hash here before anchoring.
+        </p>
+        <div className="admin-form">
+          <label>
+            <span className="label">External 0G storage root hash</span>
+            <input
+              onChange={(event) => onManualStorageRootHashChange(event.target.value)}
+              placeholder="Paste a real 0G storage root hash"
+              type="text"
+              value={manualStorageRootHash}
+            />
+          </label>
+          <button
+            className="action-button primary-action"
+            disabled={isRunningProofRegistration || chainAlreadyRegistered}
+            onClick={onRegisterProof}
+            type="button"
+          >
+            {chainAlreadyRegistered ? 'Already registered on 0G Chain' : 'Register proof on 0G Chain'}
+          </button>
         </div>
       </article>
       <article className="panel detail-span">

@@ -11,7 +11,9 @@ import {
   upsertDashboardDemoRun,
 } from '@arka/db';
 import {
+  AuditProofStatus,
   CaseType,
+  ChainStatus,
   demoScenarioSeeds,
   demoWorldSeed,
   MovementDirection,
@@ -32,6 +34,7 @@ import type {
   SimulatedAgentInteraction,
   SimulatedAgentTimelineEntry,
 } from './dashboard-data';
+import { registerProofOnZeroGChain, resolveStorageRootHash } from './zero-g-chain-service';
 
 const INITIAL_SCENARIO = ScenarioKey.STATE_A;
 const WINDOW_START_HOUR = 15;
@@ -272,6 +275,115 @@ export async function runSimulatedAgentAction(
     history: nextHistory,
     persistence: repository.persistenceStatus(),
   };
+}
+
+export async function registerProofOnChainForRun(
+  caseId: string,
+  manualStorageRootHash: string | null,
+): Promise<RunScenarioResponse | null> {
+  const repository = getDemoRunRepository();
+  const history = await repository.getHistory();
+  const currentRun = history.find((run) => run.caseId === caseId);
+
+  if (!currentRun) {
+    return null;
+  }
+
+  if (currentRun.proofRecord.chainTxHash) {
+    return {
+      run: currentRun,
+      history,
+      persistence: repository.persistenceStatus(),
+    };
+  }
+
+  const suppliedStorageRootHash = manualStorageRootHash?.trim() || null;
+
+  try {
+    const storageRootHash = resolveStorageRootHash(currentRun.proofRecord.storageRootHash, suppliedStorageRootHash);
+    const registration = await registerProofOnZeroGChain({
+      caseId: currentRun.caseId,
+      proofType: currentRun.proofRecord.proofType,
+      localPackageHash: currentRun.proofRecord.localPackageHash,
+      storageRootHash,
+    });
+
+    const nextHistory = await repository.updateRun(caseId, (run) => {
+      const resolvedStorageRootHash = run.proofRecord.storageRootHash ?? storageRootHash;
+
+      return {
+        ...run,
+        proofSummary:
+          resolvedStorageRootHash === storageRootHash && run.proofRecord.storageRootHash === null
+            ? '0G Chain registration succeeded using a manually supplied external 0G storage root hash. In-app 0G Storage upload is still pending.'
+            : '0G Chain registration succeeded for this proof package. Storage root hash and chain anchor are now linked in the demo record.',
+        proofRecord: {
+          ...run.proofRecord,
+          auditProofStatus: AuditProofStatus.REGISTERED_ON_CHAIN,
+          chainStatus: ChainStatus.ANCHOR_CONFIRMED,
+          storageRootHash: resolvedStorageRootHash,
+          chainTxHash: registration.chainTxHash,
+          lastErrorMessage: null,
+          failureState: 'No failed upload or registration',
+          retryState: `0G Chain anchor confirmed at block ${registration.blockNumber.toString()}.`,
+        },
+        auditEvent: {
+          ...run.auditEvent,
+          auditProofStatus: AuditProofStatus.REGISTERED_ON_CHAIN,
+          chainStatus: ChainStatus.ANCHOR_CONFIRMED,
+        },
+      };
+    });
+
+    const nextRun = nextHistory.find((run) => run.caseId === caseId);
+
+    if (!nextRun) {
+      return null;
+    }
+
+    return {
+      run: nextRun,
+      history: nextHistory,
+      persistence: repository.persistenceStatus(),
+    };
+  } catch (error) {
+    const failureMessage = error instanceof Error ? error.message : '0G Chain registration failed.';
+    const nextHistory = await repository.updateRun(caseId, (run) => {
+      const resolvedStorageRootHash = run.proofRecord.storageRootHash ?? suppliedStorageRootHash;
+      const hasStorageRootHash = Boolean(resolvedStorageRootHash);
+
+      return {
+        ...run,
+        proofSummary: hasStorageRootHash
+          ? '0G Chain registration failed after a storage root hash was available. Retry after fixing chain connectivity or registrar configuration.'
+          : '0G Chain registration could not start because no real 0G storage root hash was available yet.',
+        proofRecord: {
+          ...run.proofRecord,
+          chainStatus: ChainStatus.FAILED_TO_REGISTER,
+          storageRootHash: resolvedStorageRootHash,
+          lastErrorMessage: failureMessage,
+          failureState: failureMessage,
+          retryState: 'Retry the chain registration after the registrar env vars, RPC access, and storage root hash are confirmed.',
+        },
+        auditEvent: {
+          ...run.auditEvent,
+          chainStatus: ChainStatus.FAILED_TO_REGISTER,
+        },
+      };
+    });
+
+    const nextRun = nextHistory.find((run) => run.caseId === caseId);
+
+    if (!nextRun) {
+      return null;
+    }
+
+    return {
+      run: nextRun,
+      history: nextHistory,
+      persistence: repository.persistenceStatus(),
+    };
+  }
 }
 
 export function parseScenarioKey(value: unknown): ScenarioKeyType | null {

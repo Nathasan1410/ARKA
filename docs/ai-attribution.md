@@ -2,6 +2,47 @@
 
 This document tracks material AI-assisted work in ARKA.
 
+## 2026-05-02 - Web Build Dependency Repair + MVP Smoke
+
+### AI Tool Used
+- OpenAI Codex CLI (GPT-5.x)
+
+### What AI Helped With
+- Audited the repo-local MVP path by checking docs, package manifests, dashboard route handlers, and verification scripts.
+- Identified that the current demo blocker was not the ARKA MVP logic itself, but a missing `@supabase/ssr` dependency referenced by `apps/web/utils/supabase/*`.
+- Added the missing dependency and re-ran tests, typechecks, production build, and local runtime smoke requests for the dashboard and demo API routes.
+
+### Human Direction
+- Asked whether the current project could be made demo-ready for the hackathon MVP.
+
+### Verification
+- `pnpm.cmd install`
+- `pnpm.cmd --filter @arka/shared test`
+- `pnpm.cmd --filter @arka/core test`
+- `pnpm.cmd --filter @arka/agent test`
+- `pnpm.cmd run typecheck`
+- `pnpm.cmd --filter @arka/web build`
+- Local runtime smoke via `pnpm.cmd --filter @arka/web exec next start --hostname 127.0.0.1 --port 3010` plus PowerShell requests to `/dashboard`, `/api/demo/run-scenario`, and `/api/demo/admin-movement`
+
+## 2026-05-02 - 0G Chain Dashboard Backend Slice
+
+### AI Tool Used
+- OpenAI Codex CLI (GPT-5.x)
+
+### What AI Helped With
+- Audited the existing proof flow and identified the smallest truthful insertion point for real 0G Chain work: a backend registrar service plus a dashboard proof action, without pretending 0G Storage was already implemented.
+- Added a `viem`-backed 0G Chain registration service, a new `POST /api/demo/proof/register` route, a dashboard proof-panel action, and unit coverage for env parsing and executor wiring.
+- Preserved truthfulness by separating chain registration from 0G Storage status, and by surfacing `FAILED_TO_REGISTER` with explicit retry guidance when env vars or RPC access are missing.
+
+### Human Direction
+- Requested step-by-step implementation of 0G and OpenClaw work, with progress reported after each step for review.
+
+### Verification
+- `pnpm.cmd exec vitest run test/zero-g-chain-service.test.ts`
+- `pnpm.cmd run typecheck`
+- `pnpm.cmd --filter @arka/web build`
+- Local runtime smoke via `pnpm.cmd --filter @arka/web exec next start --hostname 127.0.0.1 --port 3010`, `POST /api/demo/run-scenario`, and `POST /api/demo/proof/register`
+
 ## 2026-05-01 - Demo Evidence Persistence Idempotency (DB)
 
 ### AI Tool Used

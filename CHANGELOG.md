@@ -4,6 +4,25 @@ All meaningful ARKA changes should be recorded here in human-readable language.
 
 Command note: examples in this changelog use Codespaces/Linux defaults (`/workspaces/ARKA`, `pnpm`, `openclaw/openclaw.mjs`). Older entries may still contain Windows-specific spellings like `pnpm.cmd` and backslashes.
 
+## 2026-05-02
+
+### Fixed
+- Added the missing `@supabase/ssr` dependency to `apps/web` so the Next.js production build no longer fails during TypeScript resolution.
+- Re-verified the dashboard MVP runtime path after dependency install: `/dashboard`, `POST /api/demo/run-scenario`, and `POST /api/demo/admin-movement` respond successfully in a local server smoke run.
+- Added a real 0G Chain backend registration slice for the dashboard proof flow: `apps/web` now includes a `viem`-backed registrar service, `POST /api/demo/proof/register`, and a proof-panel action for registering a case against the deployed `AuditProofRegistry`.
+- Added honest failure handling for missing chain env vars or registrar connectivity so the dashboard records `FAILED_TO_REGISTER` plus retry guidance instead of implying chain success.
+- Re-aligned the active execution plan to the hackathon survival pivot: Web3 proof delivery is the only submission-critical path; real OpenClaw runtime and Telegram are now explicitly deferred.
+
+### Verification
+- `pnpm.cmd --filter @arka/shared test`
+- `pnpm.cmd --filter @arka/core test`
+- `pnpm.cmd --filter @arka/agent test`
+- `pnpm.cmd run typecheck`
+- `pnpm.cmd --filter @arka/web build`
+- Local runtime smoke via `pnpm.cmd --filter @arka/web exec next start --hostname 127.0.0.1 --port 3010` plus PowerShell requests to `/dashboard`, `/api/demo/run-scenario`, and `/api/demo/admin-movement`
+- `pnpm.cmd exec vitest run test/zero-g-chain-service.test.ts`
+- Local runtime smoke for `POST /api/demo/proof/register` with missing env confirmed dashboard reachability plus a truthful `ZG_CHAIN_RPC_URL` error response
+
 ## 2026-05-01
 
 ### Fixed

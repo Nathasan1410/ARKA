@@ -13,9 +13,11 @@
     "@arka/core": "workspace:*",
     "@arka/db": "workspace:*",
     "@arka/shared": "workspace:*",
+    "@supabase/ssr": "latest",
     "next": "latest",
     "react": "latest",
-    "react-dom": "latest"
+    "react-dom": "latest",
+    "viem": "latest"
   },
   "devDependencies": {
     "@types/node": "latest",
