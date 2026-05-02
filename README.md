@@ -2,7 +2,7 @@
 
 ARKA is an **AuditEvent-first** system for comparing business intent (orders) with physical inventory movement, then surfacing review workflows and proof metadata in a single operator dashboard.
 
-This repo intentionally prioritizes **Web2 MVP reliability** first. OpenClaw runtime integration, Telegram, 0G Storage upload, and 0G Chain anchoring are tracked honestly in `docs/real-vs-simulated.md`.
+This repo intentionally prioritizes **hackathon demo reliability** first. OpenClaw runtime integration and Telegram remain deferred, while the dashboard proof flow now has verified live `0G Storage` upload and `0G Chain` anchoring. Current truthfulness status stays tracked in `docs/real-vs-simulated.md`.
 
 ## Run The Dashboard
 

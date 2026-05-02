@@ -9,11 +9,13 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@0gfoundation/0g-storage-ts-sdk": "latest",
     "@arka/agent": "workspace:*",
     "@arka/core": "workspace:*",
     "@arka/db": "workspace:*",
     "@arka/shared": "workspace:*",
     "@supabase/ssr": "latest",
+    "ethers": "latest",
     "next": "latest",
     "react": "latest",
     "react-dom": "latest",

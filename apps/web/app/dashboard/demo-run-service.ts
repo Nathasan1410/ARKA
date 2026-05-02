@@ -18,6 +18,7 @@ import {
   demoWorldSeed,
   MovementDirection,
   ScenarioKey,
+  StorageStatus,
   TriageOutcome,
   type ScenarioKey as ScenarioKeyType,
 } from '@arka/shared';
@@ -35,6 +36,7 @@ import type {
   SimulatedAgentTimelineEntry,
 } from './dashboard-data';
 import { registerProofOnZeroGChain, resolveStorageRootHash } from './zero-g-chain-service';
+import { storeCanonicalProofOnZeroG } from './zero-g-storage-service';
 
 const INITIAL_SCENARIO = ScenarioKey.STATE_A;
 const WINDOW_START_HOUR = 15;
@@ -133,7 +135,7 @@ const postgresDemoRunRepository: DemoRunRepository = {
         evidenceWindowEndAt: run.evidenceWindowEndedAt,
         proofHash: run.proofRecord.localPackageHash,
         chainTransactionHash: run.proofRecord.chainTxHash,
-        storageUri: null,
+        storageUri: run.proofRecord.storageRootHash ? `0g://${run.proofRecord.storageRootHash}` : null,
         lastErrorMessage: run.proofRecord.lastErrorMessage,
       });
     } catch (error) {
@@ -181,7 +183,7 @@ const postgresDemoRunRepository: DemoRunRepository = {
         evidenceWindowEndAt: next.evidenceWindowEndedAt,
         proofHash: next.proofRecord.localPackageHash,
         chainTransactionHash: next.proofRecord.chainTxHash,
-        storageUri: null,
+        storageUri: next.proofRecord.storageRootHash ? `0g://${next.proofRecord.storageRootHash}` : null,
         lastErrorMessage: next.proofRecord.lastErrorMessage,
       });
     } catch (error) {
@@ -275,6 +277,89 @@ export async function runSimulatedAgentAction(
     history: nextHistory,
     persistence: repository.persistenceStatus(),
   };
+}
+
+export async function storeProofOnZeroGForRun(caseId: string): Promise<RunScenarioResponse | null> {
+  const repository = getDemoRunRepository();
+  const history = await repository.getHistory();
+  const currentRun = history.find((run) => run.caseId === caseId);
+
+  if (!currentRun) {
+    return null;
+  }
+
+  if (currentRun.proofRecord.storageTxHash && currentRun.proofRecord.storageRootHash) {
+    return {
+      run: currentRun,
+      history,
+      persistence: repository.persistenceStatus(),
+    };
+  }
+
+  try {
+    const proofArtifact = await buildProofArtifactForRun(currentRun);
+    const upload = await storeCanonicalProofOnZeroG(proofArtifact.canonicalJson);
+    const nextHistory = await repository.updateRun(caseId, (run) => ({
+      ...run,
+      proofSummary:
+        '0G Storage upload succeeded. The proof package now has a real storage root hash and can be anchored on 0G Chain.',
+      proofRecord: {
+        ...run.proofRecord,
+        auditProofStatus: AuditProofStatus.STORED_ON_0G,
+        storageStatus: StorageStatus.STORED,
+        storageRootHash: upload.storageRootHash,
+        storageTxHash: upload.storageTxHash,
+        lastErrorMessage: null,
+        failureState: 'No failed upload or registration',
+        retryState: 'Ready for 0G Chain anchoring.',
+      },
+      auditEvent: {
+        ...run.auditEvent,
+        auditProofStatus: AuditProofStatus.STORED_ON_0G,
+        storageStatus: StorageStatus.STORED,
+      },
+    }));
+    const nextRun = nextHistory.find((run) => run.caseId === caseId);
+
+    if (!nextRun) {
+      return null;
+    }
+
+    return {
+      run: nextRun,
+      history: nextHistory,
+      persistence: repository.persistenceStatus(),
+    };
+  } catch (error) {
+    const failureMessage = error instanceof Error ? error.message : '0G Storage upload failed.';
+    const nextHistory = await repository.updateRun(caseId, (run) => ({
+      ...run,
+      proofSummary:
+        '0G Storage upload failed. Retry the 0G path first; if the testnet remains unstable, pivot to the documented IPFS fallback for the hackathon demo.',
+      proofRecord: {
+        ...run.proofRecord,
+        storageStatus: StorageStatus.FAILED_TO_STORE,
+        lastErrorMessage: failureMessage,
+        failureState: failureMessage,
+        retryState: 'Retry 0G Storage upload. If instability persists, switch to the documented IPFS fallback path.',
+      },
+      auditEvent: {
+        ...run.auditEvent,
+        storageStatus: StorageStatus.FAILED_TO_STORE,
+      },
+    }));
+    const nextRun = nextHistory.find((run) => run.caseId === caseId);
+
+    if (!nextRun) {
+      return null;
+    }
+
+    return {
+      run: nextRun,
+      history: nextHistory,
+      persistence: repository.persistenceStatus(),
+    };
+  }
 }
 
 export async function registerProofOnChainForRun(
@@ -423,6 +508,44 @@ function parseCaseNumber(caseId: string): number {
   const suffix = parts.length > 1 ? parts[1] : '';
   const parsed = parseInt(suffix, 10);
   return Number.isFinite(parsed) ? parsed : 0;
+}
+
+async function buildProofArtifactForRun(run: DashboardRun) {
+  const isAdminSimulation = run.actionLog.includes('admin_movement_simulation_saved');
+  const triageOutcome = run.auditEvent.triageOutcome ?? TriageOutcome.AUTO_CLEAR;
+  const backendRecommendedAction = getBackendRecommendedAction(run.auditEvent, triageOutcome);
+  const proofArtifact = await createAuditEventProofPackageArtifact({
+    auditEvent: run.auditEvent,
+    supportingSummaries: {
+      orderSummary: {
+        orderId: run.orderId,
+      },
+      movementSummary: {
+        movementId: run.movementId,
+      },
+      usageRuleSummary: {
+        ruleId: 'RULE-PROTEIN-SHAKE-WHEY-001',
+      },
+      evidenceWindow: {
+        startedAt: run.evidenceWindowStartedAt,
+        endedAt: run.evidenceWindowEndedAt,
+        sourceRef: isAdminSimulation ? 'local-dashboard-admin-simulation' : 'local-dashboard-scenario',
+        summary: isAdminSimulation
+          ? `${run.auditEvent.inventoryItemName} movement was entered in the dashboard admin simulation for ${run.auditEvent.productName}.`
+          : `${run.auditEvent.inventoryItemName} movement reviewed for ${run.auditEvent.productName} order window ${run.evidenceWindowLabel} ICT.`,
+      },
+      evidenceCompleteness: isAdminSimulation
+        ? 'Dashboard admin simulation only; no raw CCTV, no 0G upload, and no chain anchor in this route.'
+        : 'Local fixture summaries only; no raw CCTV, no 0G upload, and no chain anchor in this route.',
+      backendRecommendedAction,
+    },
+  });
+
+  if (proofArtifact.localPackageHash !== run.proofRecord.localPackageHash) {
+    throw new Error('Rebuilt proof package hash did not match the stored local hash for this run.');
+  }
+
+  return proofArtifact;
 }
 
 async function getPostgresDbOrNull() {

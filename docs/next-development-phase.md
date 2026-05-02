@@ -47,7 +47,7 @@ Goal: one real State C or D case uploads a proof package to 0G Storage and ancho
 
 Rules:
 
-- Do not claim 0G Storage upload works until a real upload is implemented and verified.
+- Do not claim 0G Storage upload works until a real upload is implemented and verified. The backend 0G Storage call now exists in the dashboard proof flow, but live end-to-end verification still requires the storage env vars and a successful testnet upload.
 - **0G Chain Anchoring:** The `AuditProofRegistry.sol` contract is already deployed to the 0G Galileo Testnet at `0xEA4a472F0123fC9889650be807A1FF5EF780029F`. The backend `viem` call now exists in the dashboard proof flow, but live end-to-end verification still requires registrar env vars and a real storage root hash.
 - Proof failures must not delete or invalidate an AuditEvent.
 

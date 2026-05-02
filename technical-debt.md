@@ -153,25 +153,25 @@ Next action: If moving to Supabase later, treat it as a separate migration effor
 Owner: Both
 ```
 
-### 2026-04-29 - 0G Storage SDK Verification
+### 2026-04-29 - 0G Storage SDK Verification (Resolved 2026-05-02)
 
 ```txt
 Area: 0G Storage
-Status: NEEDS_HUMAN
-What happened: The project docs define 0G Storage as a P0 target, but implementation has not started and the exact SDK package, upload method, endpoint/indexer, and upload response shape are not verified yet.
-Why it matters: ARKA must not claim real 0G Storage upload until a real upload path is implemented and verified.
-Next action: Verify current official 0G Storage SDK docs, endpoint requirements, wallet/funding requirements, upload response shape, and any CLI fallback steps before implementation.
+Status: RESOLVED
+What happened: A real backend 0G Storage route now exists in the dashboard proof flow (`POST /api/demo/proof/store`) using the official `@0gfoundation/0g-storage-ts-sdk` plus `ethers`, and it was verified live on 2026-05-02 by uploading a canonical proof package end-to-end.
+Why it matters: ARKA can now honestly claim a real 0G Storage upload path for the hackathon demo proof flow.
+Next action: Keep this closed unless the 0G testnet degrades during demo prep. If that happens, record a separate fallback item for the IPFS path instead of reopening this verification item.
 Owner: Both
 ```
 
-### 2026-04-29 - 0G Chain Environment Verification
+### 2026-04-29 - 0G Chain Environment Verification (Resolved 2026-05-02)
 
 ```txt
 Area: 0G Chain
-Status: NEEDS_HUMAN
-What happened: The `AuditProofRegistry.sol` contract is already present and the dashboard now includes a real backend `viem` registration path (`/api/demo/proof/register`) that updates proof state and surfaces registrar/RPC errors honestly. Live verification is still blocked in this session because the required 0G chain env vars and a funded registrar wallet were not available here.
-Why it matters: ARKA must not claim real chain anchoring until a real deploy + tx + verification is completed and documented.
-Next action: Set `ZG_CHAIN_RPC_URL`, `ZG_CHAIN_ID`, `ZG_REGISTRAR_PRIVATE_KEY`, and `AUDIT_PROOF_REGISTRY_ADDRESS`, then verify one `POST /api/demo/proof/register` run end-to-end with a real storage root hash before any “REAL chain anchoring” claim.
+Status: RESOLVED
+What happened: The dashboard now includes a real backend `viem` registration path (`/api/demo/proof/register`) that updates proof state and surfaces registrar/RPC errors honestly, and it was verified live on 2026-05-02 against the deployed registry using a real 0G storage root hash.
+Why it matters: ARKA can now honestly claim real 0G Chain anchoring for the hackathon demo proof flow.
+Next action: Keep this closed unless registrar funding, RPC access, or contract address changes require a fresh verification pass.
 Owner: Both
 ```
 

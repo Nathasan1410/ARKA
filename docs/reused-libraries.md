@@ -16,6 +16,8 @@ pg (declared for the Postgres DB package)
 Vitest (declared at the workspace root for shared/core unit testing)
 @supabase/ssr (declared in apps/web package manifest for Supabase SSR/browser helpers used by the web app utilities)
 viem (declared in apps/web package manifest for 0G Chain proof registration from the dashboard backend route)
+@0gfoundation/0g-storage-ts-sdk (declared in apps/web package manifest for real 0G Storage uploads from the dashboard backend route)
+ethers (declared in apps/web package manifest as the official peer dependency used by the 0G Storage TypeScript SDK)
 OpenClaw (MIT-licensed upstream source copied as a local fork under openclaw/ from https://github.com/openclaw/openclaw at commit e27fe55a; ARKA added workspace/skill draft files and a read-only arka-audit plugin skeleton)
 ```
 

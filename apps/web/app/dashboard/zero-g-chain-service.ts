@@ -2,6 +2,7 @@ import { createPublicClient, createWalletClient, defineChain, http, isAddress, t
 import { privateKeyToAccount } from 'viem/accounts';
 
 import type { ProofType } from '@arka/shared';
+import { readEnvWithFallback } from './env-fallback';
 
 const auditProofRegistryAbi = [
   {
@@ -47,7 +48,7 @@ type ZeroGChainRegistrationExecutor = (
 ) => Promise<ZeroGChainRegistrationResult>;
 
 function readRequiredEnv(name: string, env: NodeJS.ProcessEnv): string {
-  const value = env[name]?.trim();
+  const value = readEnvWithFallback(name, env);
 
   if (!value) {
     throw new Error(`Missing required env var: ${name}`);

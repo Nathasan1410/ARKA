@@ -26,6 +26,7 @@ export function DashboardShell({ initialState }: DashboardShellProps) {
   const [isRunningScenario, setIsRunningScenario] = useState(false);
   const [isRunningAgentAction, setIsRunningAgentAction] = useState(false);
   const [isRunningAdminSimulation, setIsRunningAdminSimulation] = useState(false);
+  const [isRunningProofStorage, setIsRunningProofStorage] = useState(false);
   const [isRunningProofRegistration, setIsRunningProofRegistration] = useState(false);
   const [runError, setRunError] = useState<string | null>(null);
 
@@ -172,6 +173,39 @@ export function DashboardShell({ initialState }: DashboardShellProps) {
       setRunError(error instanceof Error ? error.message : 'Proof registration failed.');
     } finally {
       setIsRunningProofRegistration(false);
+    }
+  }
+
+  async function handleProofStorageUpload() {
+    setIsRunningProofStorage(true);
+    setRunError(null);
+
+    try {
+      const response = await fetch('/api/demo/proof/store', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          caseId: selectedRun.caseId,
+        }),
+      });
+
+      const payload = (await response.json().catch(() => null)) as
+        | ({ error?: string } & RunScenarioResponse)
+        | null;
+
+      if (!response.ok) {
+        throw new Error(payload?.error ?? `Proof upload failed with HTTP ${response.status}`);
+      }
+
+      const result = payload as RunScenarioResponse;
+      setRuns(result.history);
+      setSelectedCaseId(result.run.caseId);
+      setManualStorageRootHash(result.run.proofRecord.storageRootHash ?? '');
+      setActiveView('proof');
+    } catch (error) {
+      setRunError(error instanceof Error ? error.message : 'Proof upload failed.');
+    } finally {
+      setIsRunningProofStorage(false);
     }
   }
 
@@ -368,9 +402,11 @@ export function DashboardShell({ initialState }: DashboardShellProps) {
           {activeView === 'simulation' ? <AgentView selectedRun={selectedRun} /> : null}
           {activeView === 'proof' ? (
             <ProofView
+              isRunningProofStorage={isRunningProofStorage}
               isRunningProofRegistration={isRunningProofRegistration}
               manualStorageRootHash={manualStorageRootHash}
               onManualStorageRootHashChange={setManualStorageRootHash}
+              onStoreProof={() => void handleProofStorageUpload()}
               onRegisterProof={() => void handleProofRegistration()}
               selectedRun={selectedRun}
             />
@@ -576,16 +612,21 @@ function ProofView({
   selectedRun,
   manualStorageRootHash,
   onManualStorageRootHashChange,
+  onStoreProof,
   onRegisterProof,
+  isRunningProofStorage,
   isRunningProofRegistration,
 }: {
   selectedRun: DashboardRun;
   manualStorageRootHash: string;
   onManualStorageRootHashChange: (value: string) => void;
+  onStoreProof: () => void;
   onRegisterProof: () => void;
+  isRunningProofStorage: boolean;
   isRunningProofRegistration: boolean;
 }) {
   const chainAlreadyRegistered = Boolean(selectedRun.proofRecord.chainTxHash);
+  const storageAlreadyUploaded = Boolean(selectedRun.proofRecord.storageTxHash && selectedRun.proofRecord.storageRootHash);
 
   return (
     <section className="detail-grid">
@@ -606,10 +647,27 @@ function ProofView({
         </div>
       </article>
       <article className="panel detail-span">
+        <h2>0G Storage Upload</h2>
+        <p className="panel-subtitle">
+          Upload the canonical proof JSON to 0G Storage first. This should produce the real storage root hash that the chain anchor
+          step uses next.
+        </p>
+        <div className="admin-form">
+          <button
+            className="action-button primary-action"
+            disabled={isRunningProofStorage || storageAlreadyUploaded}
+            onClick={onStoreProof}
+            type="button"
+          >
+            {storageAlreadyUploaded ? 'Already uploaded to 0G Storage' : 'Upload proof to 0G Storage'}
+          </button>
+        </div>
+      </article>
+      <article className="panel detail-span">
         <h2>0G Chain Registration</h2>
         <p className="panel-subtitle">
-          Step 1 uses a real chain registrar call, but until in-app 0G Storage upload exists you may need to paste a real external
-          storage root hash here before anchoring.
+          Register the proof on 0G Chain using the stored root hash. If upload did not run in-app, you can still paste a real
+          external root hash manually.
         </p>
         <div className="admin-form">
           <label>
