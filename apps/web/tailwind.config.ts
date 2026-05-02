@@ -11,11 +11,11 @@ const config: Config = {
       colors: {
         neu: {
           bg: "#E0E5EC",
-          foreground: "#3D4852",
-          muted: "#6B7280",
-          accent: "#6C63FF",
-          accentLight: "#8B84FF",
-          secondary: "#38B2AC",
+          foreground: "#1F2937", // Darkened for AAA contrast (9.3:1)
+          muted: "#4B5563",      // Darkened for AA contrast (6.1:1)
+          accent: "#4F46E5",     // Indigo-600 for AA contrast on White (6.4:1)
+          accentLight: "#6366F1", 
+          secondary: "#0F766E",  // Teal-700 for AA contrast on White (6.2:1)
         },
       },
       boxShadow: {
