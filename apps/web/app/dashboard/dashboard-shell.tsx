@@ -627,22 +627,75 @@ function ProofView({
 }) {
   const chainAlreadyRegistered = Boolean(selectedRun.proofRecord.chainTxHash);
   const storageAlreadyUploaded = Boolean(selectedRun.proofRecord.storageTxHash && selectedRun.proofRecord.storageRootHash);
+  const proofIsFullyVerified = storageAlreadyUploaded && chainAlreadyRegistered;
+  const storageExplorerUrl = getZeroGExplorerUrl(selectedRun.proofRecord.storageTxHash);
+  const chainExplorerUrl = getZeroGExplorerUrl(selectedRun.proofRecord.chainTxHash);
 
   return (
     <section className="detail-grid">
       <article className="panel detail-span">
         <h2>Local Proof Package</h2>
         <p className="panel-subtitle">{selectedRun.proofSummary}</p>
+        {proofIsFullyVerified ? (
+          <div className="proof-verification-card">
+            <div>
+              <span className="label">Verified Web3 proof</span>
+              <h3>Stored on 0G and anchored on 0G Chain</h3>
+              <p>
+                This case now has a real storage transaction hash, a real storage root hash, and a real on-chain proof anchor.
+              </p>
+            </div>
+            <div className="proof-snapshot">
+              <span className="status-pill" data-tone="success">Proof: REAL</span>
+              <span className="status-pill" data-tone="success">Storage: VERIFIED</span>
+              <span className="status-pill" data-tone="success">Chain: VERIFIED</span>
+            </div>
+            <div className="proof-link-row">
+              {storageExplorerUrl ? (
+                <a className="proof-link" href={storageExplorerUrl} rel="noreferrer" target="_blank">
+                  Open storage tx
+                </a>
+              ) : null}
+              {chainExplorerUrl ? (
+                <a className="proof-link" href={chainExplorerUrl} rel="noreferrer" target="_blank">
+                  Open chain tx
+                </a>
+              ) : null}
+            </div>
+          </div>
+        ) : null}
         <div className="panel-grid wide">
           <Kv label="Proof record ID" value={selectedRun.proofRecord.proofRecordId} />
           <Kv label="Proof type" value={selectedRun.proofRecord.proofType} />
-          <Kv label="Audit proof status" value={selectedRun.proofRecord.auditProofStatus} />
-          <Kv label="Storage status" value={selectedRun.proofRecord.storageStatus} />
-          <Kv label="Chain status" value={selectedRun.proofRecord.chainStatus} />
+          <Kv
+            label="Audit proof status"
+            value={selectedRun.proofRecord.auditProofStatus}
+            tone={getProofTone(selectedRun.proofRecord.auditProofStatus)}
+          />
+          <Kv
+            label="Storage status"
+            value={selectedRun.proofRecord.storageStatus}
+            tone={getStorageTone(selectedRun.proofRecord.storageStatus)}
+          />
+          <Kv
+            label="Chain status"
+            value={selectedRun.proofRecord.chainStatus}
+            tone={getChainTone(selectedRun.proofRecord.chainStatus)}
+          />
           <Kv label="Local package hash" value={selectedRun.proofRecord.localPackageHash} code />
           <Kv label="0G Storage root" value={selectedRun.proofRecord.storageRootHash ?? 'Not started'} />
-          <Kv label="0G Storage tx" value={selectedRun.proofRecord.storageTxHash ?? 'Not started'} />
-          <Kv label="0G Chain tx" value={selectedRun.proofRecord.chainTxHash ?? 'Not registered'} />
+          <Kv
+            label="0G Storage tx"
+            value={selectedRun.proofRecord.storageTxHash ?? 'Not started'}
+            href={storageExplorerUrl}
+            linkLabel="Open explorer"
+          />
+          <Kv
+            label="0G Chain tx"
+            value={selectedRun.proofRecord.chainTxHash ?? 'Not registered'}
+            href={chainExplorerUrl}
+            linkLabel="Open explorer"
+          />
           <Kv label="Retry state" value={selectedRun.proofRecord.retryState} />
         </div>
       </article>
@@ -727,11 +780,33 @@ function renderAgentActionLabel(action: SimulatedAgentAction): string {
   return 'Mark reviewed';
 }
 
-function Kv({ label, value, code = false }: { label: string; value: number | string | null; code?: boolean }) {
+function Kv({
+  label,
+  value,
+  code = false,
+  href,
+  linkLabel,
+  tone,
+}: {
+  label: string;
+  value: number | string | null;
+  code?: boolean;
+  href?: string | null;
+  linkLabel?: string;
+  tone?: 'success' | 'warning' | 'danger' | 'info';
+}) {
   return (
     <div className="kv-row">
       <strong>{label}</strong>
-      {code ? <code className="hash-value">{value}</code> : <span>{value}</span>}
+      <div className="kv-value-stack">
+        {tone ? <span className="status-pill" data-tone={tone}>{value}</span> : null}
+        {code ? <code className="hash-value">{value}</code> : tone ? null : <span>{value}</span>}
+        {href ? (
+          <a className="proof-link" href={href} rel="noreferrer" target="_blank">
+            {linkLabel ?? 'Open'}
+          </a>
+        ) : null}
+      </div>
     </div>
   );
 }
@@ -761,4 +836,31 @@ function getSeverityTone(severity: string): 'success' | 'warning' | 'danger' {
   if (severity === 'NORMAL') return 'success';
   if (severity === 'CRITICAL_REVIEW') return 'danger';
   return 'warning';
+}
+
+function getProofTone(status: string): 'success' | 'warning' | 'danger' | 'info' {
+  if (status === 'REGISTERED_ON_CHAIN') return 'success';
+  if (status === 'STORED_ON_0G') return 'info';
+  return 'warning';
+}
+
+function getStorageTone(status: string): 'success' | 'warning' | 'danger' | 'info' {
+  if (status === 'STORED') return 'success';
+  if (status === 'FAILED_TO_STORE') return 'danger';
+  return 'warning';
+}
+
+function getChainTone(status: string): 'success' | 'warning' | 'danger' | 'info' {
+  if (status === 'ANCHOR_CONFIRMED') return 'success';
+  if (status === 'FAILED_TO_REGISTER') return 'danger';
+  return 'warning';
+}
+
+function getZeroGExplorerUrl(txHash: string | null): string | null {
+  const trimmed = txHash?.trim();
+  if (!trimmed) {
+    return null;
+  }
+
+  return `https://chainscan-galileo.0g.ai/tx/${trimmed}`;
 }

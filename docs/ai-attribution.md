@@ -2,6 +2,22 @@
 
 This document tracks material AI-assisted work in ARKA.
 
+## 2026-05-02 - Proof Panel Demo Polish
+
+### AI Tool Used
+- OpenAI Codex CLI (GPT-5.x)
+
+### What AI Helped With
+- Refined the dashboard proof panel so a fully verified case now communicates the judge-facing state more clearly instead of only showing raw status strings and hashes.
+- Added a dedicated `REAL` proof verification banner, success-toned proof/storage/chain status pills, and direct explorer links for the returned 0G storage and chain transaction hashes.
+- Kept the change surgical by reusing the existing dashboard component structure and shared global styling system.
+
+### Human Direction
+- Requested the next plan step after live Web3 verification: polish the proof UI and make the demo path cleaner.
+
+### Verification
+- `pnpm.cmd --filter @arka/web build`
+
 ## 2026-05-02 - Web Build Dependency Repair + MVP Smoke
 
 ### AI Tool Used

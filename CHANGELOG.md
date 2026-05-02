@@ -15,6 +15,7 @@ Command note: examples in this changelog use Codespaces/Linux defaults (`/worksp
 - Added a real 0G Storage backend slice for the dashboard proof flow using the official `@0gfoundation/0g-storage-ts-sdk` and `ethers`, plus a new `POST /api/demo/proof/store` route and proof-panel upload action.
 - Added honest 0G Storage failure handling so missing env/testnet issues move proof state to `FAILED_TO_STORE` with explicit retry/IPFS fallback guidance instead of implying storage success.
 - Verified the live Web3 proof flow end-to-end outside the Next route harness: a real canonical proof package uploaded to 0G Storage, returned a real storage root hash plus storage transaction hash, and then anchored successfully on 0G Chain with a real chain transaction hash.
+- Polished the judge-facing proof panel so fully verified cases now show a clear `REAL` Web3 proof banner plus direct explorer links for the 0G storage and chain transaction hashes.
 
 ### Verification
 - `pnpm.cmd --filter @arka/shared test`
@@ -28,6 +29,7 @@ Command note: examples in this changelog use Codespaces/Linux defaults (`/worksp
 - Local runtime smoke for `POST /api/demo/proof/register` with missing env confirmed dashboard reachability plus a truthful `ZG_CHAIN_RPC_URL` error response
 - Local runtime smoke for `POST /api/demo/proof/store` with missing env confirmed dashboard reachability plus a truthful `ZG_CHAIN_RPC_URL` error response
 - Direct service-level live verification from `apps/web` using `pnpm.cmd exec tsx`: `runDashboardScenario('STATE_C')`, `storeProofOnZeroGForRun(caseId)`, and `registerProofOnChainForRun(caseId, null)` all succeeded with real 0G transaction hashes
+- `pnpm.cmd --filter @arka/web build` after proof-panel UI polish
 
 ## 2026-05-01
 
