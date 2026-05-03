@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import type { ReactNode } from 'react';
+import { ArkaLogo } from './components/arka-logo';
 
 const proofStatuses = [
   {
@@ -161,7 +162,7 @@ export default function LandingPage() {
             aria-label="ARKA home"
           >
             <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-neu-bg shadow-extruded-sm">
-              <span className="h-6 w-6 rounded-full bg-neu-accent shadow-inset-sm" />
+              <ArkaLogo className="h-8 w-8" />
             </span>
             <span className="font-display text-2xl font-extrabold">ARKA</span>
           </Link>
@@ -214,6 +215,19 @@ export default function LandingPage() {
         <section className="mx-auto grid min-h-screen max-w-7xl place-items-center px-5 pb-20 pt-32 sm:px-6 lg:px-10">
           <div className="grid w-full max-w-full gap-12 lg:grid-cols-2 lg:items-center">
             <div className="max-w-3xl">
+              <div className="mb-6 flex items-center gap-4">
+                <div className="flex h-20 w-20 items-center justify-center rounded-[28px] bg-neu-bg shadow-extruded">
+                  <ArkaLogo className="h-14 w-14" />
+                </div>
+                <div className="rounded-[28px] bg-neu-bg px-5 py-4 shadow-inset-sm">
+                  <p className="text-xs font-extrabold uppercase tracking-[0.24em] text-neu-accent">
+                    Audit-Proof Identity
+                  </p>
+                  <p className="mt-2 text-sm font-bold text-neu-muted">
+                    Inventory variance, triage, and 0G proof under one mark.
+                  </p>
+                </div>
+              </div>
               <p className="mb-5 flex max-w-full flex-wrap justify-center gap-x-1 rounded-full px-5 py-2 text-center text-[10px] font-extrabold uppercase leading-5 text-neu-accent shadow-inset-sm sm:inline-flex sm:text-xs">
                 <span>AuditEvent generator</span>
                 <span>+</span>
@@ -240,8 +254,8 @@ export default function LandingPage() {
               </div>
             </div>
 
-            <div className="relative min-h-[760px] w-full sm:min-h-[640px]">
-              <div className="absolute inset-x-0 top-0 mx-auto h-[540px] max-w-xl rounded-[48px] bg-neu-bg shadow-inset-deep" />
+            <div className="relative min-h-[980px] w-full sm:min-h-[900px] lg:min-h-[860px]">
+              <div className="absolute inset-x-0 top-0 mx-auto h-[880px] max-w-xl rounded-[48px] bg-neu-bg shadow-inset-deep sm:h-[820px]" />
               <div className="absolute left-4 right-4 top-8 rounded-[32px] bg-neu-bg p-5 shadow-extruded transition-all duration-500 hover:-translate-y-1 hover:shadow-extruded-hover sm:left-1/2 sm:right-auto sm:w-[34rem] sm:-translate-x-1/2 sm:p-7">
                 <div className="flex flex-col items-start gap-4 sm:flex-row sm:justify-between">
                   <div>

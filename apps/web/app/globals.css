@@ -91,6 +91,29 @@ textarea {
   margin-bottom: 32px;
 }
 
+.topbar-brand {
+  display: flex;
+  align-items: flex-start;
+  gap: 18px;
+}
+
+.topbar-logo-shell {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  width: 72px;
+  height: 72px;
+  border-radius: 24px;
+  background: var(--bg-elevated);
+  box-shadow: var(--shadow);
+}
+
+.topbar-logo {
+  width: 52px;
+  height: 52px;
+}
+
 .eyebrow {
   margin: 0 0 8px;
   color: var(--accent);
@@ -953,6 +976,10 @@ textarea {
 
   .topbar {
     flex-direction: column;
+  }
+
+  .topbar-brand {
+    align-items: center;
   }
 
   .status-stack {

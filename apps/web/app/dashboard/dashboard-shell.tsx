@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from 'react';
 import { demoScenarioSeeds, demoWorldSeed, ScenarioKey, TriageOutcome, type ScenarioKey as ScenarioKeyType } from '@arka/shared';
+import { ArkaLogo } from '../components/arka-logo';
 import {
   scenarioCards,
   type AdminSimulationInput,
@@ -307,12 +308,17 @@ export function DashboardShell({ initialState }: DashboardShellProps) {
   return (
     <main className="app-shell">
       <header className="topbar">
-        <div>
-          <p className="eyebrow">ARKA Operator Console</p>
-          <h1>Reconcile intent vs reality.</h1>
-          <p>
-            Protein Shake demo: 3 orders = 90g expected Whey Protein usage. Run movements to see how ARKA reconciles differences, assigns triage outcomes, and tracks local proofs.
-          </p>
+        <div className="topbar-brand">
+          <div className="topbar-logo-shell" aria-hidden="true">
+            <ArkaLogo className="topbar-logo" />
+          </div>
+          <div>
+            <p className="eyebrow">ARKA Operator Console</p>
+            <h1>Reconcile intent vs reality.</h1>
+            <p>
+              Protein Shake demo: 3 orders = 90g expected Whey Protein usage. Run movements to see how ARKA reconciles differences, assigns triage outcomes, and tracks local proofs.
+            </p>
+          </div>
         </div>
         <div className="status-stack">
           <span className="chip" data-tone="info">API route - LOCAL</span>
