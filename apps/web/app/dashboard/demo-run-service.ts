@@ -52,6 +52,7 @@ type DemoRunRepository = {
   saveRun(run: DashboardRun): Promise<DashboardRun[]>;
   updateRun(caseId: string, updater: (run: DashboardRun) => DashboardRun): Promise<DashboardRun[]>;
   persistenceStatus(): DashboardPersistenceStatus;
+  resetHistory(): Promise<void>;
 };
 
 const memoryRuns: DashboardRun[] = [];
@@ -78,6 +79,10 @@ const inMemoryDemoRunRepository: DemoRunRepository = {
 
     memoryRuns[runIndex] = updater(memoryRuns[runIndex]);
     return [...memoryRuns];
+  },
+  async resetHistory() {
+    memoryRuns.length = 0;
+    totalRuns = 0;
   },
   persistenceStatus() {
     if (process.env.DATABASE_URL) {
@@ -197,6 +202,14 @@ const postgresDemoRunRepository: DemoRunRepository = {
     }
 
     return this.getHistory();
+  },
+  async resetHistory() {
+    await inMemoryDemoRunRepository.resetHistory();
+    const ok = await getPostgresDbOrNull();
+    if (ok) {
+      const { clearDashboardDemoRuns } = await import('@arka/db');
+      await clearDashboardDemoRuns();
+    }
   },
   persistenceStatus() {
     return postgresDemoStatus ?? {
@@ -494,7 +507,7 @@ export function parseSimulatedAgentAction(value: unknown): SimulatedAgentAction 
   return null;
 }
 
-function getDemoRunRepository(): DemoRunRepository {
+export function getDemoRunRepository(): DemoRunRepository {
   const requested = process.env[DEMO_REPOSITORY_ENV]?.trim().toLowerCase();
   if (requested === DEMO_REPOSITORY_POSTGRES) {
     return postgresDemoRunRepository;

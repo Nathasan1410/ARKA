@@ -1,50 +1,33 @@
-# ARKA (Hackathon MVP)
+# ARKA
 
-ARKA is an **AuditEvent-first** system for comparing business intent (orders) with physical inventory movement, then surfacing review workflows and proof metadata in a single operator dashboard.
+**Immutable Auditing for the Physical World**
 
-This repo intentionally prioritizes **hackathon demo reliability** first. OpenClaw runtime integration and Telegram remain deferred, while the dashboard proof flow now has verified live `0G Storage` upload and `0G Chain` anchoring. Current truthfulness status stays tracked in `docs/real-vs-simulated.md`.
+ARKA reconciles physical reality with business intent. By comparing point-of-sale orders with physical inventory movements, ARKA automatically generates immutable audit proofs of operational truth.
 
-## Run The Dashboard
+For this ETHGlobal hackathon submission, we focus on providing unshakeable trust for physical operations using the 0G Network.
 
-1. Install deps:
+## Web3 Proof & Infrastructure
 
-```sh
-pnpm install
-```
+ARKA leverages the high-throughput 0G Network to ensure that every physical audit event is tamper-proof and verifiable:
 
-2. Start the web app:
+*   **0G Storage:** We compile the physical evidence (order data, usage rules, movement logs, and triage outcomes) into a canonical JSON blob. This blob is uploaded to 0G Storage, generating a cryptographic storage root hash.
+*   **0G Chain:** The storage root hash and local package hash are then anchored on the 0G Galileo Testnet via our smart contract, permanently linking the physical event to a decentralized ledger.
 
-```sh
-pnpm --dir apps/web dev
-```
+### Deployed Contract
+**0G Galileo Testnet Contract Address:** `0xEA4a472F0123fC9889650be807A1FF5EF780029F`
 
-3. Open:
+## MVP Architecture & Honesty Statement
 
-```txt
-http://localhost:3010/dashboard
-```
+Our original vision included integrating a complex AI Agent framework (OpenClaw) for dynamic incident triage. However, to guarantee a stable and cohesive experience for the hackathon judges, we made a strategic pivot:
 
-## Optional: Postgres Demo Persistence (Not “REAL” Until Verified)
+1.  **Fully Functional Web3 Evidence Anchoring:** The entire Web3 flow—compiling evidence, uploading to 0G Storage, and registering the proof on the 0G Chain—is live and functional.
+2.  **Deterministic AI Triage (UI Fallback):** For this MVP submission, the AI Triage component is running via a deterministic UI fallback. The dashboard provides a robust simulation of the agent's behavior, ensuring demo stability while demonstrating the exact intended user experience.
 
-1. Set `DATABASE_URL` in your local environment (do not commit secrets).
-2. Apply migrations:
+## The Problem Solved
 
-```sh
-pnpm --filter @arka/db run migrate
-```
+In physical operations (like a cafe or retail store), inventory disappears due to spills, theft, or untracked mistakes. Traditional systems only know what was sold, not what was actually used.
 
-3. Enable Postgres demo repository:
-
-```txt
-ARKA_DEMO_REPOSITORY=postgres
-```
-
-4. Restart the server and verify history survives a restart before claiming persistence as REAL.
-
-## Docs
-
-- Truthfulness status: `docs/real-vs-simulated.md`
-- MVP interaction brief: `docs/mvp-demo-interaction-brief.md`
-- Implementation plan: `docs/implementation-plan.md`
-- Code ownership map: `docs/code-map.md`
-
+ARKA bridges this gap:
+1.  **Ingest:** Connects Point-of-Sale (expected usage) with smart scales or IoT (actual usage).
+2.  **Reconcile:** Automatically detects variances (e.g., 90g expected vs. 150g used).
+3.  **Secure:** Anchors the evidence on the 0G Network, creating an undeniable, immutable record of the discrepancy for owners and auditors.

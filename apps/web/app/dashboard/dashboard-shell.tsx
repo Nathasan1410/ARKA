@@ -99,6 +99,26 @@ export function DashboardShell({ initialState }: DashboardShellProps) {
     }
   }
 
+  async function handleResetHistory() {
+    try {
+      setRunError(null);
+      const response = await fetch('/api/demo/reset', { method: 'DELETE' });
+      if (!response.ok) throw new Error('Reset failed');
+      
+      // Instead of empty runs which breaks the UI, run the initial scenario
+      const scenarioResponse = await fetch('/api/demo/run-scenario', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ scenarioKey: 'STATE_A' }),
+      });
+      if (!scenarioResponse.ok) throw new Error('Failed to re-initialize');
+      const result = await scenarioResponse.json();
+      applyRunResult(result, 'run-movement');
+    } catch (error) {
+      setRunError(error instanceof Error ? error.message : 'Reset failed.');
+    }
+  }
+
   async function handleRunScenario(scenarioKey: ScenarioKeyType) {
     setIsRunningScenario(true);
     setRunError(null);
@@ -376,7 +396,15 @@ export function DashboardShell({ initialState }: DashboardShellProps) {
           </section>
 
           <section className="panel">
-            <h2>Case History</h2>
+            <div className="flex justify-between items-center">
+              <h2>Case History</h2>
+              <button 
+                onClick={handleResetHistory}
+                className="px-4 py-2 text-xs rounded-2xl font-bold text-neu-danger bg-neu-bg shadow-extruded hover:-translate-y-px hover:shadow-extruded-hover active:translate-y-0.5 active:shadow-inset-sm transition-all duration-300 focus:ring-2 focus:ring-neu-danger focus:outline-none"
+              >
+                Reset Demo
+              </button>
+            </div>
             <div className="history-scroll-box">
               <div className="history-list compact">
                 {runs.map((run) => (

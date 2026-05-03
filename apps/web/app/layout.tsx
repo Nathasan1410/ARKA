@@ -18,8 +18,8 @@ const plusJakartaSans = Plus_Jakarta_Sans({
 });
 
 export const metadata: Metadata = {
-  title: 'ARKA - Immutable Auditing',
-  description: 'Cryptographically anchored operational evidence and triage.',
+  title: 'ARKA - AuditEvent Proof Layer',
+  description: 'AuditEvent generation, OpenClaw-compatible triage, and 0G proof anchoring for physical operations.',
 };
 
 export default function RootLayout({

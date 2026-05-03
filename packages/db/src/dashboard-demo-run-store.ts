@@ -42,6 +42,11 @@ export async function getDashboardDemoRun(caseId: string): Promise<unknown | nul
   return (rows[0]?.runPayload as unknown) ?? null;
 }
 
+export async function clearDashboardDemoRuns(): Promise<void> {
+  const db = getDb();
+  await db.delete(dashboardDemoRuns);
+}
+
 export async function upsertDashboardDemoRun(args: {
   caseId: string;
   scenarioKey: ScenarioKey;
