@@ -1,6 +1,6 @@
 # ARKA Checklist (Planning -> Implementation Tracker)
 
-Last updated: 2026-05-02
+Last updated: 2026-05-03
 
 This file tracks the current implementation status. `docs/real-vs-simulated.md` remains the source of truth for feature-claim wording.
 
@@ -80,7 +80,7 @@ These are not complete P0 features until they are wired into API/UI, persisted o
 |---:|---|---|---|---|
 | 13 | Real hardware input | EARLY | NOT_IMPLEMENTED | Optional credibility layer; keep behind simulator and do not block P0. |
 | 14 | CCTV evidence window / clip reference | NEEDS_DETAIL | NOT_IMPLEMENTED | MVP remains metadata-only; no raw CCTV upload to 0G. |
-| 15 | Landing page | EARLY | NOT_IMPLEMENTED | Only after dashboard works. |
+| 15 | Landing page | READY | PARTIAL | Root `/` now has a docs-aligned neumorphic landing page covering the product thesis, A/C/D demo world, architecture boundary, and honest 0G/OpenClaw status. Verified with `pnpm --filter @arka/web build` plus local HTTP/headless Chrome screenshot checks; still needs final human judge-flow review before submission. |
 | 16 | Pattern summary lite | NEEDS_DETAIL | NOT_IMPLEMENTED | Simple counts only; not a full pattern analyzer. |
 | 17 | OpenClaw Telegram channel | NEEDS_DETAIL | NOT_IMPLEMENTED | P1 unless P0 proof/demo path is already stable. |
 | 18 | ARKA OpenClaw plugin tools | NEEDS_DETAIL | NOT_IMPLEMENTED | Start read-only with `get_audit_event`, then append-only tools. |

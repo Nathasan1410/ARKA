@@ -114,7 +114,7 @@ function NeuLink({
   return (
     <Link
       href={href}
-      className={`inline-flex min-h-12 items-center justify-center rounded-2xl px-6 text-sm font-bold transition-all duration-300 ease-out hover:-translate-y-px hover:shadow-extruded-hover focus:outline-none focus:ring-2 focus:ring-neu-accent focus:ring-offset-2 focus:ring-offset-neu-bg sm:px-8 ${
+      className={`inline-flex min-h-12 w-full items-center justify-center rounded-2xl px-6 text-sm font-bold transition-all duration-300 ease-out hover:-translate-y-px hover:shadow-extruded-hover focus:outline-none focus:ring-2 focus:ring-neu-accent focus:ring-offset-2 focus:ring-offset-neu-bg sm:w-auto sm:px-8 ${
         variant === 'primary' ? primary : secondary
       }`}
     >
@@ -140,7 +140,7 @@ function StatusPill({ status }: { status: string }) {
 
 export default function LandingPage() {
   return (
-    <div className="min-h-screen overflow-hidden bg-neu-bg text-neu-foreground selection:bg-neu-accent selection:text-white">
+    <div className="min-h-screen w-full max-w-[100vw] overflow-x-clip bg-neu-bg text-neu-foreground selection:bg-neu-accent selection:text-white">
       <div className="pointer-events-none fixed inset-0 z-0 overflow-hidden">
         <div className="absolute -right-36 top-16 h-[34rem] w-[34rem] rounded-full opacity-60 shadow-extruded animate-float">
           <div className="absolute inset-10 rounded-full shadow-inset-deep">
@@ -153,8 +153,8 @@ export default function LandingPage() {
         />
       </div>
 
-      <header className="fixed left-0 top-0 z-50 w-full bg-neu-bg/80 px-4 py-4 backdrop-blur-md sm:px-6 lg:px-10">
-        <nav className="mx-auto flex max-w-7xl items-center justify-between gap-4" aria-label="Primary navigation">
+      <header className="fixed inset-x-0 top-0 z-50 max-w-[100vw] bg-neu-bg/80 px-4 py-4 backdrop-blur-md sm:px-6 lg:px-10">
+        <nav className="mx-auto flex w-full max-w-7xl items-center justify-between gap-4" aria-label="Primary navigation">
           <Link
             href="/"
             className="flex min-h-12 items-center gap-3 rounded-2xl px-2 focus:outline-none focus:ring-2 focus:ring-neu-accent focus:ring-offset-2 focus:ring-offset-neu-bg"
@@ -184,7 +184,7 @@ export default function LandingPage() {
             </NeuLink>
           </div>
 
-          <details className="group relative md:hidden">
+          <details className="group fixed right-4 top-4 z-[60] md:hidden">
             <summary className="flex h-12 w-12 cursor-pointer list-none items-center justify-center rounded-2xl bg-neu-bg shadow-extruded transition-all duration-300 group-open:shadow-inset-sm focus:outline-none focus:ring-2 focus:ring-neu-accent focus:ring-offset-2 focus:ring-offset-neu-bg">
               <span className="sr-only">Open navigation</span>
               <span className="grid gap-1.5">
@@ -212,10 +212,14 @@ export default function LandingPage() {
 
       <main className="relative z-10">
         <section className="mx-auto grid min-h-screen max-w-7xl place-items-center px-5 pb-20 pt-32 sm:px-6 lg:px-10">
-          <div className="grid w-full gap-12 lg:grid-cols-[minmax(0,0.95fr)_minmax(390px,1.05fr)] lg:items-center">
+          <div className="grid w-full max-w-full gap-12 lg:grid-cols-2 lg:items-center">
             <div className="max-w-3xl">
-              <p className="mb-5 inline-flex rounded-full px-5 py-2 text-xs font-extrabold uppercase text-neu-accent shadow-inset-sm">
-                AuditEvent generator + OpenClaw triage + 0G proof
+              <p className="mb-5 flex max-w-full flex-wrap justify-center gap-x-1 rounded-full px-5 py-2 text-center text-[10px] font-extrabold uppercase leading-5 text-neu-accent shadow-inset-sm sm:inline-flex sm:text-xs">
+                <span>AuditEvent generator</span>
+                <span>+</span>
+                <span>OpenClaw triage</span>
+                <span>+</span>
+                <span>0G proof</span>
               </p>
               <h1 className="font-display text-6xl font-extrabold leading-none text-neu-foreground sm:text-7xl lg:text-8xl">
                 ARKA
@@ -236,22 +240,22 @@ export default function LandingPage() {
               </div>
             </div>
 
-            <div className="relative min-h-[640px] w-full">
+            <div className="relative min-h-[760px] w-full sm:min-h-[640px]">
               <div className="absolute inset-x-0 top-0 mx-auto h-[540px] max-w-xl rounded-[48px] bg-neu-bg shadow-inset-deep" />
-              <div className="absolute left-1/2 top-8 w-[min(92%,34rem)] -translate-x-1/2 rounded-[32px] bg-neu-bg p-5 shadow-extruded transition-all duration-500 hover:-translate-y-1 hover:shadow-extruded-hover sm:p-7">
-                <div className="flex items-start justify-between gap-4">
+              <div className="absolute left-4 right-4 top-8 rounded-[32px] bg-neu-bg p-5 shadow-extruded transition-all duration-500 hover:-translate-y-1 hover:shadow-extruded-hover sm:left-1/2 sm:right-auto sm:w-[34rem] sm:-translate-x-1/2 sm:p-7">
+                <div className="flex flex-col items-start gap-4 sm:flex-row sm:justify-between">
                   <div>
                     <p className="text-xs font-extrabold uppercase text-neu-muted">AuditEvent</p>
-                    <h2 className="mt-2 font-display text-2xl font-extrabold text-neu-foreground">
+                    <h2 className="mt-2 font-display text-xl font-extrabold text-neu-foreground sm:text-2xl">
                       CASE-STATE-C
                     </h2>
                   </div>
-                  <span className="rounded-full px-3 py-2 text-xs font-extrabold text-neu-accent shadow-inset-sm">
+                  <span className="max-w-full rounded-full px-3 py-2 text-[10px] font-extrabold text-neu-accent shadow-inset-sm sm:text-xs">
                     REQUEST_EXPLANATION
                   </span>
                 </div>
 
-                <div className="mt-7 grid grid-cols-2 gap-4">
+                <div className="mt-7 grid gap-4 sm:grid-cols-2">
                   <div className="rounded-2xl bg-neu-bg p-4 shadow-inset">
                     <span className="text-xs font-bold uppercase text-neu-muted">Expected</span>
                     <strong className="mt-3 block text-3xl font-extrabold text-neu-foreground">90g</strong>

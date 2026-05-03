@@ -4,6 +4,17 @@ All meaningful ARKA changes should be recorded here in human-readable language.
 
 Command note: examples in this changelog use Codespaces/Linux defaults (`/workspaces/ARKA`, `pnpm`, `openclaw/openclaw.mjs`). Older entries may still contain Windows-specific spellings like `pnpm.cmd` and backslashes.
 
+## 2026-05-03
+
+### Changed
+- Rebuilt the root landing page around ARKA's current docs: AuditEvent-first positioning, A/C/D protein bar demo states, strict architecture boundaries, and truthful `REAL`/`PARTIAL` claims for 0G and OpenClaw.
+- Tightened the Soft UI/neumorphic homepage composition while keeping the dashboard route untouched.
+
+### Verification
+- `pnpm --filter @arka/web build`
+- Local runtime smoke at `http://127.0.0.1:3012/` returned HTTP 200.
+- Chrome headless desktop/mobile screenshots were captured for visual checks. `agent-browser` was unavailable on this machine, so Chrome headless was used as the local fallback.
+
 ## 2026-05-02
 
 ### Fixed

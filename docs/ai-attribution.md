@@ -2,6 +2,24 @@
 
 This document tracks material AI-assisted work in ARKA.
 
+## 2026-05-03 - Docs-Aligned Landing Page
+
+### AI Tool Used
+- OpenAI Codex CLI (GPT-5.x)
+
+### What AI Helped With
+- Reviewed the root and `docs/` ARKA briefs to align landing-page copy with the AuditEvent-first architecture, A/C/D demo scenario, proof-layer boundaries, and current real-vs-simulated status.
+- Rebuilt `apps/web/app/page.tsx` into a neumorphic landing page that avoids ERP/POS/HR overreach and labels OpenClaw as partial while presenting verified 0G Storage and 0G Chain work accurately.
+- Updated the changelog and checklist status for the landing-page milestone.
+
+### Human Direction
+- Requested an all-out landing-page improvement based on the existing Soft UI prompt and the ARKA docs.
+
+### Verification
+- `pnpm --filter @arka/web build`
+- Local HTTP smoke for `/`
+- Chrome headless desktop/mobile screenshots for visual review
+
 ## 2026-05-02 - Proof Panel Demo Polish
 
 ### AI Tool Used
